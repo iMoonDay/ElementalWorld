@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "elemworld",
+  "version": "${version}",
+  "name": "Elemental World",
+  "description": "",
+  "authors": [
+    "iMoonDay"
+  ],
+  "contact": {
+    "repo": "https://github.com/iMoonDay/ElementalWorld"
+  },
+  "license": "MIT",
+  "icon": "assets/elemworld/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.imoonday.elemworld.client.ElementalWorldClient"
+    ],
+    "main": [
+      "com.imoonday.elemworld.ElementalWorld"
+    ]
+  },
+  "mixins": [
+    "elemworld.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.19",
+    "fabric": "*",
+    "minecraft": "1.19.4"
+  },
+  "custom": {
+    "loom:injected_interfaces": {
+      "net/minecraft/class_1799": [
+        "com/imoonday/elemworld/api/EWItemStack"
+      ]
+    }
+  }
+}
