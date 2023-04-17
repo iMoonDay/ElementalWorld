@@ -4,7 +4,11 @@
   "package": "com.imoonday.elemworld.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "ItemStackMixin"
+    "ArgumentTypesMixin",
+    "EnderPearlEntityMixin",
+    "ItemStackMixin",
+    "LivingEntityMixin",
+    "PlayerInventoryMixin"
   ],
   "client": [
   ],

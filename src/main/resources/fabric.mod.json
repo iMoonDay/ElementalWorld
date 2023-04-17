@@ -33,6 +33,9 @@
     "loom:injected_interfaces": {
       "net/minecraft/class_1799": [
         "com/imoonday/elemworld/api/EWItemStack"
+      ],
+      "net/minecraft/class_1309": [
+        "com/imoonday/elemworld/api/EWLivingEntity"
       ]
     }
   }
