@@ -3,6 +3,10 @@ package com.imoonday.elemworld.api;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageType;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectCategory;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.text.MutableText;
@@ -18,8 +22,10 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.IntFunction;
 
+import static com.imoonday.elemworld.ElementalWorld.id;
 import static net.minecraft.entity.damage.DamageTypes.*;
 
 public enum Element implements StringIdentifiable {
@@ -83,20 +89,20 @@ public enum Element implements StringIdentifiable {
 
     public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
         long time = world.getTimeOfDay();
-        switch (this.id) {
-            case 2 -> {
+        switch (this) {
+            case WOOD -> {
                 return state.isIn(BlockTags.LOGS) ? 1.5f : miningSpeedMultiplier;
             }
-            case 8 -> {
+            case ROCK -> {
                 return state.isIn(BlockTags.NEEDS_STONE_TOOL) ? 2.0f : miningSpeedMultiplier;
             }
-            case 11 -> {
+            case LIGHT -> {
                 return time >= 1000 && time < 13000 ? miningSpeedMultiplier : 1.0f;
             }
-            case 12 -> {
+            case DARKNESS -> {
                 return time < 1000 || time >= 13000 ? (world.getLightLevel(entity.getBlockPos()) == 0 ? 3.0f : miningSpeedMultiplier) : 1.0f;
             }
-            case 15 -> {
+            case SOUND -> {
                 return entity.isSubmergedInWater() ? 1.5f : miningSpeedMultiplier;
             }
         }
@@ -105,14 +111,14 @@ public enum Element implements StringIdentifiable {
 
     public float getDamageMultiplier(World world, LivingEntity entity) {
         long time = world.getTimeOfDay();
-        switch (this.id) {
-            case 11 -> {
+        switch (this) {
+            case LIGHT -> {
                 return time >= 1000 && time < 13000 ? damageMultiplier : 1.0f;
             }
-            case 12 -> {
+            case DARKNESS -> {
                 return time < 1000 || time >= 13000 ? (world.getLightLevel(entity.getBlockPos()) == 0 ? 3.0f : damageMultiplier) : 1.0f;
             }
-            case 15 -> {
+            case SOUND -> {
                 return entity.isSubmergedInWater() ? 1.5f : damageMultiplier;
             }
         }
@@ -121,14 +127,14 @@ public enum Element implements StringIdentifiable {
 
     public float getProtectionMultiplier(World world, LivingEntity entity) {
         long time = world.getTimeOfDay();
-        switch (this.id) {
-            case 11 -> {
+        switch (this) {
+            case LIGHT -> {
                 return time >= 1000 && time < 13000 ? protectionMultiplier : 1.0f;
             }
-            case 12 -> {
+            case DARKNESS -> {
                 return time < 1000 || time >= 13000 ? (world.getLightLevel(entity.getBlockPos()) == 0 ? 3.0f : protectionMultiplier) : 1.0f;
             }
-            case 15 -> {
+            case SOUND -> {
                 return entity.isSubmergedInWater() ? 1.5f : protectionMultiplier;
             }
         }
@@ -166,7 +172,7 @@ public enum Element implements StringIdentifiable {
 
     @Nullable
     public static MutableText getElementsText(ArrayList<Element> elements) {
-        MutableText text = Text.empty();
+        MutableText text = Text.literal("[");
         for (Iterator<Element> iterator = elements.iterator(); iterator.hasNext(); ) {
             Element element = iterator.next();
             Formatting color = switch (element.getLevel()) {
@@ -176,10 +182,10 @@ public enum Element implements StringIdentifiable {
                 default -> null;
             };
             if (color != null) {
-                text.append(iterator.hasNext() ? Text.translatable("element.elemworld." + element.getName()).append(" ").formatted(color) : Text.translatable("element.elemworld." + element.getName()).formatted(color));
+                text.append(iterator.hasNext() ? Text.translatable("element.elemworld." + element.getName()).append(" ").formatted(color) : Text.translatable("element.elemworld." + element.getName()).formatted(color).append(Text.literal("]").formatted(Formatting.WHITE)));
             }
         }
-        if (text.equals(Text.empty())) {
+        if (text.equals(Text.literal("["))) {
             return null;
         }
         return text;
@@ -212,5 +218,37 @@ public enum Element implements StringIdentifiable {
     @Override
     public String asString() {
         return this.name;
+    }
+
+    public static StatusEffect getEffect(Element element) {
+        return Effect.get(element);
+    }
+
+    public static void register() {
+        for (Element element : Element.values()) {
+            if (element == Element.INVALID) {
+                continue;
+            }
+            Registry.register(Registries.STATUS_EFFECT, id(element.getName()), new Effect(element));
+        }
+    }
+
+    private static class Effect extends StatusEffect {
+
+        private final Element element;
+
+        private Effect(Element element) {
+            super(StatusEffectCategory.NEUTRAL, element.getColor().getRGB());
+            this.element = element;
+        }
+
+        public static StatusEffect get(Element element) {
+            return Registries.STATUS_EFFECT.get(id(element.getName()));
+        }
+
+        @Override
+        public Text getName() {
+            return this.element.getTranslationName();
+        }
     }
 }

@@ -1,6 +1,6 @@
 package com.imoonday.elemworld;
 
-import com.imoonday.elemworld.effect.ElementEffect;
+import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWCommands;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
@@ -15,7 +15,7 @@ public class ElementalWorld implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ElementEffect.register();
+        Element.register();
         EWCommands.register();
     }
 

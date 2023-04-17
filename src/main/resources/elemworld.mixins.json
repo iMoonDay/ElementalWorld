@@ -8,6 +8,7 @@
     "EnderPearlEntityMixin",
     "ItemStackMixin",
     "LivingEntityMixin",
+    "NameTagItemMixin",
     "PlayerInventoryMixin"
   ],
   "client": [

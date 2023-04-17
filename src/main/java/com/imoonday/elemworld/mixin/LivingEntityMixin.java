@@ -2,7 +2,6 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWLivingEntity;
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.effect.ElementEffect;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -14,7 +13,6 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -80,17 +78,48 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (entity.world.isClient) {
             return;
         }
+        checkElements();
+        checkEffects(StatusEffects.JUMP_BOOST, WIND);
+        checkEffects(StatusEffects.SPEED, WIND, LIGHT, DARKNESS);
+        checkEffects(StatusEffects.NIGHT_VISION, LIGHT);
+        setNameWithElements();
+        elementsTick();
+    }
+
+    private void elementsTick() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (entity.hasElement(SOUND)) {
+            List<Entity> otherEntities = entity.world.getOtherEntities(entity, entity.getBoundingBox().expand(15), entity1 -> entity1 instanceof LivingEntity);
+            for (Entity otherEntity : otherEntities) {
+                LivingEntity livingEntity = (LivingEntity) otherEntity;
+                double dx = livingEntity.getX() - livingEntity.lastRenderX;
+                double dy = livingEntity.getY() - livingEntity.lastRenderY;
+                double dz = livingEntity.getZ() - livingEntity.lastRenderZ;
+                double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                double speed = dist * 20;
+                if (speed == 0) {
+                    continue;
+                }
+                livingEntity.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 21, 0, false, false, false));
+            }
+        }
+    }
+
+    private void checkElements() {
         if (this.elements.isEmpty()) {
             addRandomElements();
         }
         if (this.elements.size() > 1) {
             this.elements.remove(INVALID);
         }
-        checkEffects(StatusEffects.JUMP_BOOST, WIND);
-        checkEffects(StatusEffects.SPEED, WIND, LIGHT, DARKNESS);
-        checkEffects(StatusEffects.NIGHT_VISION, LIGHT);
+    }
+
+    private void setNameWithElements() {
+        LivingEntity entity = (LivingEntity) (Object) this;
         MutableText text = getElementsText(this.elements);
-        entity.setCustomName(text);
+        if (entity.getCustomName() == null || entity.getCustomName().getString().matches("^/[.*/]$")) {
+            entity.setCustomName(text);
+        }
     }
 
     private void checkEffects(StatusEffect type, Element... keys) {
@@ -112,6 +141,17 @@ public class LivingEntityMixin implements EWLivingEntity {
         } else if (effect != null && effect.isInfinite()) {
             entity.removeStatusEffect(type);
         }
+    }
+
+    @Inject(method = "getMaxHealth", at = @At("RETURN"), cancellable = true)
+    public void getMaxHealth(CallbackInfoReturnable<Float> cir) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+//        if (entity.world.isClient) {
+//            return;
+//        }
+//        if (entity.hasElement(ROCK)) {
+//            cir.setReturnValue(cir.getReturnValueF() + 6.0f);
+//        }
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
@@ -138,11 +178,16 @@ public class LivingEntityMixin implements EWLivingEntity {
         for (Element element : entity.getAllElements()) {
             checkSpaceElement(source, cir, entity, element);
         }
+        for (Element element : entity.getAllElements()) {
+            if (Arrays.stream(element.getIgnoreDamageTypes()).anyMatch(source::isOf)) {
+                cir.setReturnValue(false);
+            }
+        }
         if (source.getAttacker() instanceof PlayerEntity player && player.getMainHandStack().getElements().contains(FIRE)) {
             if (entity.isInElement(WATER)) {
-                StatusEffectInstance effect = entity.getStatusEffect(ElementEffect.get(WATER));
+                StatusEffectInstance effect = entity.getStatusEffect(Element.getEffect(WATER));
                 if (effect != null) {
-                    entity.setStatusEffect(new StatusEffectInstance(ElementEffect.get(WATER), Math.max(effect.getDuration() - 3 * 20, 0), effect.getAmplifier(), false, effect.shouldShowParticles(), effect.shouldShowIcon()), source.getAttacker());
+                    entity.setStatusEffect(new StatusEffectInstance(Element.getEffect(WATER), Math.max(effect.getDuration() - 3 * 20, 0), effect.getAmplifier(), false, effect.shouldShowParticles(), effect.shouldShowIcon()), source.getAttacker());
                 }
                 cir.setReturnValue(false);
             }
@@ -157,7 +202,7 @@ public class LivingEntityMixin implements EWLivingEntity {
             for (Element element : player.getMainHandStack().getElements()) {
                 if (element == WATER && (entity.isInElement(FIRE) || entity.isOnFire())) {
                     if (entity.hasElementEffect(FIRE)) {
-                        entity.removeStatusEffect(ElementEffect.get(FIRE));
+                        entity.removeStatusEffect(Element.getEffect(FIRE));
                     }
                     if (entity.isOnFire()) {
                         entity.setOnFire(false);
@@ -174,15 +219,14 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (element == SPACE) {
             if (Arrays.stream(element.getIgnoreDamageTypes()).anyMatch(source::isOf)) {
                 if (source.isOf(DamageTypes.DROWN)) {
-                    List<BlockPos> posList = BlockPos.stream(entity.getBoundingBox(entity.getPose())).toList();
-                    for (BlockPos pos : posList) {
-                        FluidState fluidState = entity.world.getBlockState(pos).getFluidState();
-                        if (fluidState.isOf(Fluids.WATER) || fluidState.isOf(Fluids.FLOWING_WATER)) {
-                            entity.world.setBlockState(pos, Blocks.AIR.getDefaultState());
-                        }
+                    BlockPos pos = BlockPos.ofFloored(entity.getEyePos());
+                    FluidState fluidState = entity.world.getBlockState(pos).getFluidState();
+                    if (!fluidState.isEmpty()) {
+                        entity.world.setBlockState(pos, Blocks.AIR.getDefaultState());
                     }
                 } else {
                     randomTeleport(entity);
+                    entity.setVelocity(Vec3d.ZERO);
                 }
                 cir.setReturnValue(false);
             } else if (!source.isIndirect()) {
@@ -284,7 +328,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Override
     public boolean hasElementEffect(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        return entity.hasStatusEffect(ElementEffect.get(element));
+        return entity.hasStatusEffect(Element.getEffect(element));
     }
 
     @Override

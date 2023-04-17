@@ -2,7 +2,6 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWItemStack;
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.effect.ElementEffect;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -102,7 +101,7 @@ public class ItemStackMixin implements EWItemStack {
     public void postHit(LivingEntity target, PlayerEntity attacker, CallbackInfo ci) {
         ItemStack stack = (ItemStack) (Object) this;
         for (Element element : stack.getElements()) {
-            target.addStatusEffect(new StatusEffectInstance(ElementEffect.get(element), 5 * 20, 0), attacker);
+            target.addStatusEffect(new StatusEffectInstance(Element.getEffect(element), 5 * 20, 0), attacker);
         }
     }
 
