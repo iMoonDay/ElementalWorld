@@ -11,7 +11,23 @@ public interface EWItemStack {
 
     }
 
+    default boolean hasElement(Element element) {
+        return false;
+    }
+
     default boolean addElement(Element element) {
         return false;
+    }
+
+    default void removeElement(Element element) {
+
+    }
+
+    default void addRandomElements() {
+
+    }
+
+    default void addNewRandomElements(int count) {
+
     }
 }

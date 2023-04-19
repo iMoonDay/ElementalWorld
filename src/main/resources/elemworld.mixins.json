@@ -9,9 +9,12 @@
     "ItemStackMixin",
     "LivingEntityMixin",
     "NameTagItemMixin",
-    "PlayerInventoryMixin"
+    "PlayerEntityMixin",
+    "PlayerInventoryMixin",
+    "ServerPlayerInteractionManagerMixin"
   ],
   "client": [
+    "ClientPlayerInteractionManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

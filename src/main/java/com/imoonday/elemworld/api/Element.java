@@ -15,14 +15,16 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.function.ValueLists;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Objects;
+import java.util.List;
 import java.util.function.IntFunction;
 
 import static com.imoonday.elemworld.ElementalWorld.id;
@@ -49,6 +51,7 @@ public enum Element implements StringIdentifiable {
 
     private static final IntFunction<Element> BY_ID;
     public static final StringIdentifiable.Codec<Element> CODEC;
+    public static final int MAX_SIZE = Element.values().length - 1;
     private final int id;
     private final String name;
     private final int level;
@@ -155,9 +158,10 @@ public enum Element implements StringIdentifiable {
 
     public static Element createRandom() {
         Element element;
+        Random random = Random.create();
         do {
-            element = Element.byId(Random.create().nextBetween(0, Element.values().length));
-        } while (Random.create().nextFloat() > (float) 1 / element.level);
+            element = Element.byId(random.nextBetween(0, Element.values().length - 1));
+        } while (element == null || random.nextFloat() > (float) 1 / element.level);
         return element;
     }
 
@@ -170,23 +174,49 @@ public enum Element implements StringIdentifiable {
         return element;
     }
 
+    public static Element createRandomWithout(int level, Element... exclude) {
+        return createRandomWithout(level, new ArrayList<>(Arrays.asList(exclude)));
+    }
+
+    public static Element createRandomWithout(int level, ArrayList<Element> exclude) {
+        level = MathHelper.clamp(level, 0, 3);
+        Element element = createRandom();
+        int maxSize = level == 0 ? 1 : 5;
+        List<Element> elements = new ArrayList<>();
+        for (Element element1 : exclude) {
+            if (element1.level == level) {
+                elements.add(element1);
+            }
+        }
+        if (elements.size() >= maxSize) {
+            return INVALID;
+        }
+        while (element.level != level || element.isOneOf(exclude)) {
+            element = createRandom();
+        }
+        return element;
+    }
+
     @Nullable
     public static MutableText getElementsText(ArrayList<Element> elements) {
-        MutableText text = Text.literal("[");
+        if (elements.size() == 0) {
+            return null;
+        }
+        if (elements.size() == 1 && elements.get(0) == INVALID) {
+            return null;
+        }
+        MutableText text = Text.literal("[").formatted(Formatting.WHITE);
         for (Iterator<Element> iterator = elements.iterator(); iterator.hasNext(); ) {
             Element element = iterator.next();
             Formatting color = switch (element.getLevel()) {
                 case 1 -> Formatting.WHITE;
-                case 2 -> Formatting.BLUE;
+                case 2 -> Formatting.AQUA;
                 case 3 -> Formatting.GOLD;
                 default -> null;
             };
             if (color != null) {
                 text.append(iterator.hasNext() ? Text.translatable("element.elemworld." + element.getName()).append(" ").formatted(color) : Text.translatable("element.elemworld." + element.getName()).formatted(color).append(Text.literal("]").formatted(Formatting.WHITE)));
             }
-        }
-        if (text.equals(Text.literal("["))) {
-            return null;
         }
         return text;
     }
@@ -224,6 +254,14 @@ public enum Element implements StringIdentifiable {
         return Effect.get(element);
     }
 
+    public boolean isOneOf(Element... elements) {
+        return Arrays.stream(elements).anyMatch(element -> this == element);
+    }
+
+    public boolean isOneOf(ArrayList<Element> elements) {
+        return elements.contains(this);
+    }
+
     public static void register() {
         for (Element element : Element.values()) {
             if (element == Element.INVALID) {
@@ -240,6 +278,22 @@ public enum Element implements StringIdentifiable {
         private Effect(Element element) {
             super(StatusEffectCategory.NEUTRAL, element.getColor().getRGB());
             this.element = element;
+        }
+
+        @Override
+        public boolean canApplyUpdateEffect(int duration, int amplifier) {
+            return true;
+        }
+
+        @Override
+        public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+            if (this.element == Element.ICE) {
+                if (entity.isInElement(WATER) || entity.isTouchingWater()) {
+                    entity.setVelocity(Vec3d.ZERO);
+                } else {
+                    entity.setVelocity(entity.getVelocity().multiply(0.5));
+                }
+            }
         }
 
         public static StatusEffect get(Element element) {

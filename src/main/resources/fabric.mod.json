@@ -15,7 +15,7 @@
   "environment": "*",
   "entrypoints": {
     "client": [
-      "com.imoonday.elemworld.client.ElementalWorldClient"
+      "com.imoonday.elemworld.ElementalWorldClient"
     ],
     "main": [
       "com.imoonday.elemworld.ElementalWorld"
@@ -29,6 +29,7 @@
     "fabric": "*",
     "minecraft": "1.19.4"
   },
+  "accessWidener": "elemworld.accesswidener",
   "custom": {
     "loom:injected_interfaces": {
       "net/minecraft/class_1799": [

@@ -19,6 +19,14 @@ public interface EWLivingEntity {
 
     }
 
+    default boolean hasSpace() {
+        return false;
+    }
+
+    default double getSpeed() {
+        return 0;
+    }
+
     default ArrayList<Element> getAllElements() {
         return null;
     }
@@ -27,8 +35,16 @@ public interface EWLivingEntity {
         return false;
     }
 
+    default boolean hasOneOfElements(Element... elements) {
+        return false;
+    }
+
     default boolean hasElementEffect(Element element) {
         return false;
+    }
+
+    default void removeElementEffect(Element element) {
+
     }
 
     default boolean isInElement(Element element) {

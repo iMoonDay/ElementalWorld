@@ -1,7 +1,9 @@
 package com.imoonday.elemworld;
 
 import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.init.EWBlocks;
 import com.imoonday.elemworld.init.EWCommands;
+import com.imoonday.elemworld.init.EWItemGroups;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
@@ -17,6 +19,8 @@ public class ElementalWorld implements ModInitializer {
     public void onInitialize() {
         Element.register();
         EWCommands.register();
+        EWItemGroups.register();
+        EWBlocks.register();
     }
 
     public static Identifier id(String id) {

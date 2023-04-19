@@ -13,5 +13,7 @@
   "element.elemworld.darkness": "Darkness",
   "element.elemworld.time": "Time",
   "element.elemworld.space": "Space",
-  "element.elemworld.sound": "Sound"
+  "element.elemworld.sound": "Sound",
+  "block.elemworld.element_modifier": "Element Modifier",
+  "group.elemworld.name": "Elemental World"
 }

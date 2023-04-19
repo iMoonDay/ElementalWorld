@@ -2,6 +2,7 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWLivingEntity;
 import com.imoonday.elemworld.api.Element;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -12,11 +13,14 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -44,8 +48,20 @@ import static com.imoonday.elemworld.api.Element.*;
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin implements EWLivingEntity {
 
+    /**@see #resetHealTick
+     * 受伤后方法
+     * @see #tryImmune
+     * 死亡时方法
+     * @see #afterDamaged(DamageSource, float, CallbackInfo)
+     * 扣除血量后方法
+     * **/
+
     private static final String ELEMENTS_KEY = "Elements";
+    private static final String HEAL_TICK_KEY = "HealTick";
+    private static final String IMMUNE_COOLDOWN_TICK_KEY = "ImmuneCooldownTick";
     private ArrayList<Element> elements = new ArrayList<>();
+    private int healTick = 0;
+    private int immuneCooldownTick = 0;
 
     @Override
     public ArrayList<Element> getElements() {
@@ -79,9 +95,10 @@ public class LivingEntityMixin implements EWLivingEntity {
             return;
         }
         checkElements();
-        checkEffects(StatusEffects.JUMP_BOOST, WIND);
-        checkEffects(StatusEffects.SPEED, WIND, LIGHT, DARKNESS);
-        checkEffects(StatusEffects.NIGHT_VISION, LIGHT);
+        checkEffects(StatusEffects.JUMP_BOOST, 0, WIND);
+        checkEffects(StatusEffects.SPEED, 0, WIND, LIGHT, DARKNESS);
+        checkEffects(StatusEffects.NIGHT_VISION, 0, LIGHT);
+        checkEffects(StatusEffects.HEALTH_BOOST, 1, ROCK);
         setNameWithElements();
         elementsTick();
     }
@@ -92,17 +109,35 @@ public class LivingEntityMixin implements EWLivingEntity {
             List<Entity> otherEntities = entity.world.getOtherEntities(entity, entity.getBoundingBox().expand(15), entity1 -> entity1 instanceof LivingEntity);
             for (Entity otherEntity : otherEntities) {
                 LivingEntity livingEntity = (LivingEntity) otherEntity;
-                double dx = livingEntity.getX() - livingEntity.lastRenderX;
-                double dy = livingEntity.getY() - livingEntity.lastRenderY;
-                double dz = livingEntity.getZ() - livingEntity.lastRenderZ;
-                double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                double speed = dist * 20;
+                double speed = livingEntity.getSpeed();
                 if (speed == 0) {
                     continue;
                 }
-                livingEntity.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 21, 0, false, false, false));
+                livingEntity.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 2, 0, true, false, false));
+            }
+        } else if (entity.hasElement(GRASS) && entity.getHealth() < entity.getMaxHealth()) {
+            this.healTick++;
+            if (entity.getSteppingBlockState().isOf(Blocks.GRASS_BLOCK) && this.healTick >= 5 * 20 || this.healTick >= 10 * 20) {
+                entity.heal(1);
+                this.healTick = 0;
             }
         }
+        if (this.immuneCooldownTick > 0) {
+            this.immuneCooldownTick--;
+        }
+        if (this.immuneCooldownTick < 0) {
+            this.immuneCooldownTick = 0;
+        }
+    }
+
+    @Override
+    public double getSpeed() {
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+        double dx = livingEntity.getX() - livingEntity.lastRenderX;
+        double dy = livingEntity.getY() - livingEntity.lastRenderY;
+        double dz = livingEntity.getZ() - livingEntity.lastRenderZ;
+        double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        return dist * 20;
     }
 
     private void checkElements() {
@@ -117,12 +152,12 @@ public class LivingEntityMixin implements EWLivingEntity {
     private void setNameWithElements() {
         LivingEntity entity = (LivingEntity) (Object) this;
         MutableText text = getElementsText(this.elements);
-        if (entity.getCustomName() == null || entity.getCustomName().getString().matches("^/[.*/]$")) {
+        if (entity.getCustomName() == null || entity.getCustomName().getString().startsWith("[") && entity.getCustomName().getString().endsWith("]")) {
             entity.setCustomName(text);
         }
     }
 
-    private void checkEffects(StatusEffect type, Element... keys) {
+    private void checkEffects(StatusEffect type, int amplifier, Element... keys) {
         LivingEntity entity = (LivingEntity) (Object) this;
         boolean hasElement = false;
         for (Element element : entity.getAllElements()) {
@@ -136,33 +171,32 @@ public class LivingEntityMixin implements EWLivingEntity {
         StatusEffectInstance effect = entity.getStatusEffect(type);
         if (hasElement) {
             if (effect == null) {
-                entity.addStatusEffect(new StatusEffectInstance(type, -1, 0, false, false, false));
+                entity.addStatusEffect(new StatusEffectInstance(type, -1, amplifier, true, false, false));
+            } else if (effect.getAmplifier() < amplifier) {
+                entity.setStatusEffect(new StatusEffectInstance(type, -1, amplifier, true, false, false), null);
             }
-        } else if (effect != null && effect.isInfinite()) {
+        } else if (effect != null && effect.isInfinite() && effect.isAmbient()) {
             entity.removeStatusEffect(type);
         }
-    }
-
-    @Inject(method = "getMaxHealth", at = @At("RETURN"), cancellable = true)
-    public void getMaxHealth(CallbackInfoReturnable<Float> cir) {
-        LivingEntity entity = (LivingEntity) (Object) this;
-//        if (entity.world.isClient) {
-//            return;
-//        }
-//        if (entity.hasElement(ROCK)) {
-//            cir.setReturnValue(cir.getReturnValueF() + 6.0f);
-//        }
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
     public void writeCustomDataToNbt(NbtCompound nbt, CallbackInfo ci) {
         nbt.putIntArray(ELEMENTS_KEY, this.elements.stream().mapToInt(Element::getId).toArray());
+        nbt.putInt(HEAL_TICK_KEY, this.healTick);
+        nbt.putInt(IMMUNE_COOLDOWN_TICK_KEY, this.immuneCooldownTick);
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
     public void readCustomDataFromNbt(NbtCompound nbt, CallbackInfo ci) {
         if (nbt.contains(ELEMENTS_KEY, NbtElement.INT_ARRAY_TYPE)) {
             this.elements = Arrays.stream(nbt.getIntArray(ELEMENTS_KEY)).mapToObj(Element::byId).collect(Collectors.toCollection(ArrayList::new));
+        }
+        if (nbt.contains(HEAL_TICK_KEY)) {
+            this.healTick = nbt.getInt(HEAL_TICK_KEY);
+        }
+        if (nbt.contains(IMMUNE_COOLDOWN_TICK_KEY)) {
+            this.immuneCooldownTick = nbt.getInt(IMMUNE_COOLDOWN_TICK_KEY);
         }
     }
 
@@ -180,10 +214,17 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
         for (Element element : entity.getAllElements()) {
             if (Arrays.stream(element.getIgnoreDamageTypes()).anyMatch(source::isOf)) {
+                if (element == DARKNESS && source.getAttacker() instanceof LivingEntity living && living.getMainHandStack().hasElement(LIGHT)) {
+                    continue;
+                }
+                cir.setReturnValue(false);
+            }
+            BlockState state = entity.getSteppingBlockState();
+            if (element == GRASS && source.isOf(DamageTypes.FALL) && (state.isOf(Blocks.GRASS_BLOCK) || state.isIn(BlockTags.LEAVES))) {
                 cir.setReturnValue(false);
             }
         }
-        if (source.getAttacker() instanceof PlayerEntity player && player.getMainHandStack().getElements().contains(FIRE)) {
+        if (source.getAttacker() instanceof PlayerEntity player && player.getMainHandStack().hasElement(FIRE)) {
             if (entity.isInElement(WATER)) {
                 StatusEffectInstance effect = entity.getStatusEffect(Element.getEffect(WATER));
                 if (effect != null) {
@@ -194,23 +235,58 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
     }
 
-    @Inject(method = "applyDamage", at = @At("TAIL"))
-    public void applyDamage(DamageSource source, float amount, CallbackInfo ci) {
+    //受伤后执行
+    @Inject(method = "damage", at = @At("RETURN"))
+    public void resetHealTick(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        Entity attacker = source.getAttacker();
-        if (attacker instanceof PlayerEntity player) {
-            for (Element element : player.getMainHandStack().getElements()) {
-                if (element == WATER && (entity.isInElement(FIRE) || entity.isOnFire())) {
-                    if (entity.hasElementEffect(FIRE)) {
-                        entity.removeStatusEffect(Element.getEffect(FIRE));
+        if (cir.getReturnValueZ()) {
+            boolean resettable = !entity.getSteppingBlockState().isOf(Blocks.GRASS_BLOCK);
+            if (this.healTick > 0 && resettable) {
+                this.healTick = 0;
+            }
+        }
+    }
+
+    //死亡时执行
+    @Inject(method = "applyDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getHealth()F"), cancellable = true)
+    public void tryImmune(DamageSource source, float amount, CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (entity.getHealth() - amount > 0) {
+            return;
+        }
+        if (entity.hasElement(TIME) && this.immuneCooldownTick <= 0) {
+            this.immuneCooldownTick = 5 * 60 * 20;
+            entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
+            ci.cancel();
+        }
+        if (entity.hasElement(SPACE)) {
+            if (Random.create().nextFloat() < 0.25f) {
+                randomTeleport(entity);
+                entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
+                ci.cancel();
+            }
+        }
+    }
+
+    //受伤后执行
+    @Inject(method = "applyDamage", at = @At("TAIL"))
+    public void afterDamaged(DamageSource source, float amount, CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (entity.hasElement(TIME)) {
+            if (this.immuneCooldownTick == 0) {
+                Random random = Random.create();
+                if (random.nextFloat() < 0.0625f) {
+                    entity.setHealth(entity.getMaxHealth());
+                } else if (entity.getHealth() / entity.getMaxHealth() <= 0.2f) {
+                    if (random.nextFloat() < 0.25f) {
+                        entity.setHealth(entity.getMaxHealth() / 2f);
                     }
-                    if (entity.isOnFire()) {
-                        entity.setOnFire(false);
-                    }
-                    entity.damage(player.getDamageSources().playerAttack(player), amount * 1.5f);
-                    entity.world.addParticle(ParticleTypes.LARGE_SMOKE, entity.getX(), entity.getY() + entity.getHeight(), entity.getZ(), 0, 0, 0);
-                    entity.world.playSound(null, entity.getBlockPos(), SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.VOICE);
                 }
+            }
+        }
+        if (source.getAttacker() instanceof LivingEntity living && (source.isOf(DamageTypes.PLAYER_ATTACK) || source.isOf(DamageTypes.MOB_ATTACK)) && living.getMainHandStack().hasElement(SOUND)) {
+            if (entity.getSpeed() > 0) {
+                entity.damage(living.getDamageSources().sonicBoom(living), amount);
             }
         }
     }
@@ -240,19 +316,36 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     @Inject(method = "modifyAppliedDamage", at = @At("RETURN"), cancellable = true)
     public void modifyAppliedDamage(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
-        if (source.getAttacker() instanceof LivingEntity entity) {
-            float multiplier = getDamageMultiplier(entity);
-            float value = cir.getReturnValueF() * multiplier;
+        if (source.getAttacker() instanceof LivingEntity attacker) {
+            float value = cir.getReturnValueF() * getDamageMultiplier(attacker, source.getSource());
             cir.setReturnValue(value);
         }
     }
 
-    private float getDamageMultiplier(LivingEntity attacker) {
+    private float getDamageMultiplier(LivingEntity attacker, Entity sourceEntity) {
+        ItemStack stack;
+        if (sourceEntity instanceof TridentEntity trident) {
+            stack = trident.asItemStack();
+        } else {
+            ItemStack mainHandStack = attacker.getMainHandStack();
+            ItemStack offHandStack = attacker.getOffHandStack();
+            if (sourceEntity instanceof ArrowEntity) {
+                if (mainHandStack.isOf(Items.BOW) || mainHandStack.isOf(Items.CROSSBOW)) {
+                    stack = mainHandStack;
+                } else if (offHandStack.isOf(Items.BOW) || offHandStack.isOf(Items.CROSSBOW)) {
+                    stack = offHandStack;
+                } else {
+                    stack = ItemStack.EMPTY;
+                }
+            } else {
+                stack = mainHandStack;
+            }
+        }
         float multiplier = 1.0f;
         for (Element element : attacker.getAllElements()) {
-            multiplier *= element.getDamageMultiplier(attacker.world, attacker);
+            multiplier = element.getDamageMultiplier(attacker.world, attacker);
         }
-        for (Element element : attacker.getMainHandStack().getElements()) {
+        for (Element element : stack.getElements()) {
             multiplier *= element.getDamageMultiplier(attacker.world, attacker);
         }
         return multiplier;
@@ -326,9 +419,28 @@ public class LivingEntityMixin implements EWLivingEntity {
     }
 
     @Override
+    public boolean hasOneOfElements(Element... elements) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        for (Element elem : entity.getAllElements()) {
+            if (elem.isOneOf(elements)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean hasElementEffect(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
         return entity.hasStatusEffect(Element.getEffect(element));
+    }
+
+    @Override
+    public void removeElementEffect(Element element) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (entity.hasElementEffect(element)) {
+            entity.removeStatusEffect(Element.getEffect(element));
+        }
     }
 
     @Override

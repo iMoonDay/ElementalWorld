@@ -13,5 +13,7 @@
   "element.elemworld.darkness": "黑暗",
   "element.elemworld.time": "时间",
   "element.elemworld.space": "空间",
-  "element.elemworld.sound": "声音"
+  "element.elemworld.sound": "声音",
+  "block.elemworld.element_modifier": "元素修改机",
+  "group.elemworld.name": "元素世界"
 }
