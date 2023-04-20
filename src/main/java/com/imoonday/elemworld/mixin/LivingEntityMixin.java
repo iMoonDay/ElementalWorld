@@ -48,20 +48,22 @@ import static com.imoonday.elemworld.api.Element.*;
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin implements EWLivingEntity {
 
-    /**@see #resetHealTick
+    /**
+     * @see #resetHealTick
      * 受伤后方法
      * @see #tryImmune
      * 死亡时方法
      * @see #afterDamaged(DamageSource, float, CallbackInfo)
      * 扣除血量后方法
-     * **/
+     **/
 
     private static final String ELEMENTS_KEY = "Elements";
     private static final String HEAL_TICK_KEY = "HealTick";
-    private static final String IMMUNE_COOLDOWN_TICK_KEY = "ImmuneCooldownTick";
+    private static final String IMMUNE_COOLDOWN_KEY = "ImmuneCooldown";
     private ArrayList<Element> elements = new ArrayList<>();
     private int healTick = 0;
-    private int immuneCooldownTick = 0;
+    private int immuneCooldown = 0;
+
 
     @Override
     public ArrayList<Element> getElements() {
@@ -115,18 +117,19 @@ public class LivingEntityMixin implements EWLivingEntity {
                 }
                 livingEntity.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 2, 0, true, false, false));
             }
-        } else if (entity.hasElement(GRASS) && entity.getHealth() < entity.getMaxHealth()) {
+        }
+        if (entity.hasElement(GRASS) && entity.getHealth() < entity.getMaxHealth()) {
             this.healTick++;
             if (entity.getSteppingBlockState().isOf(Blocks.GRASS_BLOCK) && this.healTick >= 5 * 20 || this.healTick >= 10 * 20) {
                 entity.heal(1);
                 this.healTick = 0;
             }
         }
-        if (this.immuneCooldownTick > 0) {
-            this.immuneCooldownTick--;
+        if (this.immuneCooldown > 0) {
+            this.immuneCooldown--;
         }
-        if (this.immuneCooldownTick < 0) {
-            this.immuneCooldownTick = 0;
+        if (this.immuneCooldown < 0) {
+            this.immuneCooldown = 0;
         }
     }
 
@@ -151,8 +154,8 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private void setNameWithElements() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        MutableText text = getElementsText(this.elements);
-        if (entity.getCustomName() == null || entity.getCustomName().getString().startsWith("[") && entity.getCustomName().getString().endsWith("]")) {
+        MutableText text = getElementsText(this.elements, true);
+        if (entity.getCustomName() == null || entity.getCustomName().getString().startsWith("[元素]")) {
             entity.setCustomName(text);
         }
     }
@@ -184,7 +187,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     public void writeCustomDataToNbt(NbtCompound nbt, CallbackInfo ci) {
         nbt.putIntArray(ELEMENTS_KEY, this.elements.stream().mapToInt(Element::getId).toArray());
         nbt.putInt(HEAL_TICK_KEY, this.healTick);
-        nbt.putInt(IMMUNE_COOLDOWN_TICK_KEY, this.immuneCooldownTick);
+        nbt.putInt(IMMUNE_COOLDOWN_KEY, this.immuneCooldown);
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
@@ -195,8 +198,8 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (nbt.contains(HEAL_TICK_KEY)) {
             this.healTick = nbt.getInt(HEAL_TICK_KEY);
         }
-        if (nbt.contains(IMMUNE_COOLDOWN_TICK_KEY)) {
-            this.immuneCooldownTick = nbt.getInt(IMMUNE_COOLDOWN_TICK_KEY);
+        if (nbt.contains(IMMUNE_COOLDOWN_KEY)) {
+            this.immuneCooldown = nbt.getInt(IMMUNE_COOLDOWN_KEY);
         }
     }
 
@@ -209,9 +212,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (entity.world.isClient) {
             cir.setReturnValue(false);
         }
-        for (Element element : entity.getAllElements()) {
-            checkSpaceElement(source, cir, entity, element);
-        }
+        checkSpaceElement(source, cir, entity);
         for (Element element : entity.getAllElements()) {
             if (Arrays.stream(element.getIgnoreDamageTypes()).anyMatch(source::isOf)) {
                 if (element == DARKNESS && source.getAttacker() instanceof LivingEntity living && living.getMainHandStack().hasElement(LIGHT)) {
@@ -221,15 +222,6 @@ public class LivingEntityMixin implements EWLivingEntity {
             }
             BlockState state = entity.getSteppingBlockState();
             if (element == GRASS && source.isOf(DamageTypes.FALL) && (state.isOf(Blocks.GRASS_BLOCK) || state.isIn(BlockTags.LEAVES))) {
-                cir.setReturnValue(false);
-            }
-        }
-        if (source.getAttacker() instanceof PlayerEntity player && player.getMainHandStack().hasElement(FIRE)) {
-            if (entity.isInElement(WATER)) {
-                StatusEffectInstance effect = entity.getStatusEffect(Element.getEffect(WATER));
-                if (effect != null) {
-                    entity.setStatusEffect(new StatusEffectInstance(Element.getEffect(WATER), Math.max(effect.getDuration() - 3 * 20, 0), effect.getAmplifier(), false, effect.shouldShowParticles(), effect.shouldShowIcon()), source.getAttacker());
-                }
                 cir.setReturnValue(false);
             }
         }
@@ -254,8 +246,8 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (entity.getHealth() - amount > 0) {
             return;
         }
-        if (entity.hasElement(TIME) && this.immuneCooldownTick <= 0) {
-            this.immuneCooldownTick = 5 * 60 * 20;
+        if (entity.hasElement(TIME) && this.immuneCooldown <= 0) {
+            this.immuneCooldown = 5 * 60 * 20;
             entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
             ci.cancel();
         }
@@ -273,7 +265,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     public void afterDamaged(DamageSource source, float amount, CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
         if (entity.hasElement(TIME)) {
-            if (this.immuneCooldownTick == 0) {
+            if (this.immuneCooldown == 0) {
                 Random random = Random.create();
                 if (random.nextFloat() < 0.0625f) {
                     entity.setHealth(entity.getMaxHealth());
@@ -289,11 +281,19 @@ public class LivingEntityMixin implements EWLivingEntity {
                 entity.damage(living.getDamageSources().sonicBoom(living), amount);
             }
         }
+        if (source.getAttacker() instanceof PlayerEntity player && player.getMainHandStack().hasElement(FIRE)) {
+            if (entity.isInElement(WATER)) {
+                StatusEffectInstance effect = entity.getStatusEffect(Element.getEffect(WATER));
+                if (effect != null) {
+                    entity.setStatusEffect(new StatusEffectInstance(Element.getEffect(WATER), Math.max(effect.getDuration() - 3 * 20, 0), effect.getAmplifier(), false, effect.shouldShowParticles(), effect.shouldShowIcon()), source.getAttacker());
+                }
+            }
+        }
     }
 
-    private static void checkSpaceElement(DamageSource source, CallbackInfoReturnable<Boolean> cir, LivingEntity entity, Element element) {
-        if (element == SPACE) {
-            if (Arrays.stream(element.getIgnoreDamageTypes()).anyMatch(source::isOf)) {
+    private static void checkSpaceElement(DamageSource source, CallbackInfoReturnable<Boolean> cir, LivingEntity entity) {
+        if (entity.isInElement(SPACE)) {
+            if (Arrays.stream(SPACE.getIgnoreDamageTypes()).anyMatch(source::isOf)) {
                 if (source.isOf(DamageTypes.DROWN)) {
                     BlockPos pos = BlockPos.ofFloored(entity.getEyePos());
                     FluidState fluidState = entity.world.getBlockState(pos).getFluidState();
@@ -316,13 +316,18 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     @Inject(method = "modifyAppliedDamage", at = @At("RETURN"), cancellable = true)
     public void modifyAppliedDamage(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
+        LivingEntity entity = (LivingEntity) (Object) this;
         if (source.getAttacker() instanceof LivingEntity attacker) {
-            float value = cir.getReturnValueF() * getDamageMultiplier(attacker, source.getSource());
+            float returnValue = cir.getReturnValueF();
+            float value = returnValue * getDamageMultiplier(attacker, source.getSource(), entity);
+            if (returnValue - value > 20) {
+                value = returnValue - 20;
+            }
             cir.setReturnValue(value);
         }
     }
 
-    private float getDamageMultiplier(LivingEntity attacker, Entity sourceEntity) {
+    private float getDamageMultiplier(LivingEntity attacker, Entity sourceEntity, LivingEntity target) {
         ItemStack stack;
         if (sourceEntity instanceof TridentEntity trident) {
             stack = trident.asItemStack();
@@ -343,10 +348,10 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
         float multiplier = 1.0f;
         for (Element element : attacker.getAllElements()) {
-            multiplier = element.getDamageMultiplier(attacker.world, attacker);
+            multiplier = element.getDamageMultiplier(attacker.world, attacker, target);
         }
         for (Element element : stack.getElements()) {
-            multiplier *= element.getDamageMultiplier(attacker.world, attacker);
+            multiplier *= element.getDamageMultiplier(attacker.world, attacker, target);
         }
         return multiplier;
     }

@@ -65,7 +65,7 @@ public class EWCommands {
                             ServerPlayerEntity player = context.getSource().getPlayer();
                             Entity entity = EntityArgumentType.getEntity(context, "entity");
                             if (entity instanceof LivingEntity livingEntity && player != null) {
-                                player.sendMessage(Element.getElementsText(livingEntity.getElements()));
+                                player.sendMessage(Element.getElementsText(livingEntity.getElements(), false));
                             }
                             return 0;
                         })))

@@ -119,7 +119,7 @@ public class ItemStackMixin implements EWItemStack {
         if (stack.getElements().size() == 0) {
             return;
         }
-        MutableText text = getElementsText(stack.getElements());
+        MutableText text = getElementsText(stack.getElements(),false);
         if (text != null) {
             List<Text> list = cir.getReturnValue();
             list.add(1, text);
@@ -146,15 +146,15 @@ public class ItemStackMixin implements EWItemStack {
                     }
                 }
                 case WIND -> {
-                    if (target.hasElementEffect(FIRE)) {
-                        List<LivingEntity> entities = target.world.getEntitiesByClass(LivingEntity.class, target.getBoundingBox().expand(5), Entity::isLiving);
-                        for (LivingEntity entity : entities) {
+                    List<LivingEntity> entities = target.world.getEntitiesByClass(LivingEntity.class, target.getBoundingBox().expand(3), Entity::isLiving);
+                    for (LivingEntity entity : entities) {
+                        if (target.hasElementEffect(FIRE)) {
                             addElementEffect(entity, attacker, FIRE);
                         }
+                        Vec3d subtract = entity.getPos().subtract(entity.getPos()).normalize();
+                        Vec3d vec3d = new Vec3d(subtract.x, 1, subtract.z);
+                        entity.setVelocity(vec3d);
                     }
-                    Vec3d subtract = target.getPos().subtract(attacker.getPos()).normalize();
-                    Vec3d vec3d = new Vec3d(subtract.x, 1, subtract.z);
-                    target.setVelocity(vec3d);
                 }
                 case THUNDER -> {
                     if (target.isInElement(WATER) || target.isWet()) {
@@ -195,7 +195,7 @@ public class ItemStackMixin implements EWItemStack {
 
     private static void addElementEffect(LivingEntity target, PlayerEntity attacker, Element element) {
         int sec = target.hasElement(EARTH) && element.isOneOf(WATER, FIRE) ? 3 : 5;
-        target.addStatusEffect(new StatusEffectInstance(getEffect(element), sec * 20, 0), attacker);
+        target.addStatusEffect(new StatusEffectInstance(element.asEffect(), sec * 20, 0), attacker);
     }
 
     @Inject(method = "getMaxDamage", at = @At("RETURN"), cancellable = true)
@@ -266,6 +266,6 @@ public class ItemStackMixin implements EWItemStack {
     }
 
     private static void addNewRandomElement(ItemStack stack, int level) {
-        stack.addElement(createRandomWithout(level, stack.getElements()));
+        stack.addElement(Element.createRandom(level, stack.getElements()));
     }
 }

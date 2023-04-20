@@ -3,6 +3,7 @@ package com.imoonday.elemworld.api;
 import java.util.ArrayList;
 
 public interface EWLivingEntity {
+
     default ArrayList<Element> getElements() {
         return null;
     }

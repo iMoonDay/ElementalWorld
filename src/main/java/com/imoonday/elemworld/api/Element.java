@@ -21,10 +21,8 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
+import java.util.*;
 import java.util.function.IntFunction;
 
 import static com.imoonday.elemworld.ElementalWorld.id;
@@ -34,24 +32,136 @@ public enum Element implements StringIdentifiable {
 
     INVALID(0, "invalid", 0),
     GOLD(1, "gold", 1, 1.25f, 1.25f, 1.0f, 0.75f),
-    WOOD(2, "wood", 1, 0.75f, 0.75f, 1.0f, 1.25f),
+    WOOD(2, "wood", 1, 0.75f, 0.75f, 1.0f, 1.25f) {
+        @Override
+        public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
+            if (state.isIn(BlockTags.LOGS)) {
+                return 1.5f;
+            }
+            return super.getMiningSpeedMultiplier(world, entity, state);
+        }
+    },
     WATER(3, "water", 1, 1.0f, 0.5f, 1.0f, 1.0f),
-    FIRE(4, "fire", 1, 1.0f, 1.5f, 1.0f, 1.0f),
+    FIRE(4, "fire", 1, 1.0f, 1.5f, 1.0f, 1.0f){
+        @Override
+        public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
+            if (target.isInElement(WATER)) {
+                return 0.75f;
+            }
+            return super.getDamageMultiplier(world, entity, target);
+        }
+    },
     EARTH(5, "earth", 1, 1.0f, 1.0f, 1.0f, 1.5f),
     WIND(6, "wind", 2, FALL),
     THUNDER(7, "thunder", 2, 1.0f, 1.75f, 1.0f, 1.0f, LIGHTNING_BOLT),
-    ROCK(8, "rock", 2, 1.0f, 1.0f, 1.5f, 2.0f, IN_WALL),
+    ROCK(8, "rock", 2, 1.0f, 1.0f, 1.5f, 2.0f, IN_WALL) {
+        @Override
+        public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
+            if (state.isIn(BlockTags.NEEDS_STONE_TOOL)) {
+                return 2.0f;
+            }
+            return super.getMiningSpeedMultiplier(world, entity, state);
+        }
+    },
     GRASS(9, "grass", 2),
     ICE(10, "ice", 2, 1.0f, 1.0f, 1.0f, 0.75f),
-    LIGHT(11, "light", 3, 1.5f, 1.5f, 1.5f, 1.0f, IN_FIRE, ON_FIRE, EXPLOSION, PLAYER_EXPLOSION),
-    DARKNESS(12, "darkness", 3, 2.0f, 2.0f, 2.0f, 1.0f, MOB_ATTACK, PLAYER_ATTACK),
+    LIGHT(11, "light", 3, IN_FIRE, ON_FIRE, EXPLOSION, PLAYER_EXPLOSION) {
+        @Override
+        public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
+            long time = world.getTimeOfDay();
+            if (time >= 1000 && time < 13000) {
+                return 1.5f;
+            }
+            return super.getMiningSpeedMultiplier(world, entity, state);
+        }
+
+        @Override
+        public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
+            long time = world.getTimeOfDay();
+            if (time >= 1000 && time < 13000) {
+                return 1.5f;
+            }
+            return super.getDamageMultiplier(world, entity, target);
+        }
+
+        @Override
+        public float getProtectionMultiplier(World world, LivingEntity entity) {
+            long time = world.getTimeOfDay();
+            if (time >= 1000 && time < 13000) {
+                return 1.5f;
+            }
+            return super.getProtectionMultiplier(world, entity);
+        }
+    },
+    DARKNESS(12, "darkness", 3, MOB_ATTACK, PLAYER_ATTACK) {
+        @Override
+        public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
+            long time = world.getTimeOfDay();
+            if (time < 1000 || time >= 13000) {
+                if (world.getLightLevel(entity.getBlockPos()) == 0) {
+                    return 3.0f;
+                }
+                return 2.0f;
+            }
+            return super.getMiningSpeedMultiplier(world, entity, state);
+        }
+
+        @Override
+        public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
+            long time = world.getTimeOfDay();
+            if (time < 1000 || time >= 13000) {
+                if (world.getLightLevel(entity.getBlockPos()) == 0) {
+                    return 3.0f;
+                }
+                return 2.0f;
+            }
+            return super.getDamageMultiplier(world, entity, target);
+        }
+
+        @Override
+        public float getProtectionMultiplier(World world, LivingEntity entity) {
+            long time = world.getTimeOfDay();
+            if (time < 1000 || time >= 13000) {
+                if (world.getLightLevel(entity.getBlockPos()) == 0) {
+                    return 3.0f;
+                }
+                return 2.0f;
+            }
+            return super.getProtectionMultiplier(world, entity);
+        }
+    },
     TIME(13, "time", 3, 1.75f, 1.75f, 1.75f, 1.0f),
     SPACE(14, "space", 3, 1.5f, 1.5f, 1.5f, 1.0f, MOB_PROJECTILE, ARROW, TRIDENT, THROWN, DROWN, EXPLOSION, PLAYER_EXPLOSION),
-    SOUND(15, "sound", 3, 1.75f, 1.75f, 1.75f, 1.0f, SONIC_BOOM);
+    SOUND(15, "sound", 3, 1.75f, 1.75f, 1.75f, 1.0f, SONIC_BOOM) {
+        @Override
+        public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
+            if (entity.isSubmergedInWater()) {
+                return 1.5f;
+            }
+            return super.getMiningSpeedMultiplier(world, entity, state);
+        }
+
+        @Override
+        public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
+            if (entity.isSubmergedInWater()) {
+                return 1.5f;
+            }
+            return super.getDamageMultiplier(world, entity, target);
+        }
+
+        @Override
+        public float getProtectionMultiplier(World world, LivingEntity entity) {
+            if (entity.isSubmergedInWater()) {
+                return 1.5f;
+            }
+            return super.getProtectionMultiplier(world, entity);
+        }
+    };
 
     private static final IntFunction<Element> BY_ID;
     public static final StringIdentifiable.Codec<Element> CODEC;
     public static final int MAX_SIZE = Element.values().length - 1;
+    public static final HashMap<Integer, Integer> LEVEL_SIZE = new HashMap<>();
     private final int id;
     private final String name;
     private final int level;
@@ -91,56 +201,14 @@ public enum Element implements StringIdentifiable {
     }
 
     public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
-        long time = world.getTimeOfDay();
-        switch (this) {
-            case WOOD -> {
-                return state.isIn(BlockTags.LOGS) ? 1.5f : miningSpeedMultiplier;
-            }
-            case ROCK -> {
-                return state.isIn(BlockTags.NEEDS_STONE_TOOL) ? 2.0f : miningSpeedMultiplier;
-            }
-            case LIGHT -> {
-                return time >= 1000 && time < 13000 ? miningSpeedMultiplier : 1.0f;
-            }
-            case DARKNESS -> {
-                return time < 1000 || time >= 13000 ? (world.getLightLevel(entity.getBlockPos()) == 0 ? 3.0f : miningSpeedMultiplier) : 1.0f;
-            }
-            case SOUND -> {
-                return entity.isSubmergedInWater() ? 1.5f : miningSpeedMultiplier;
-            }
-        }
         return miningSpeedMultiplier;
     }
 
-    public float getDamageMultiplier(World world, LivingEntity entity) {
-        long time = world.getTimeOfDay();
-        switch (this) {
-            case LIGHT -> {
-                return time >= 1000 && time < 13000 ? damageMultiplier : 1.0f;
-            }
-            case DARKNESS -> {
-                return time < 1000 || time >= 13000 ? (world.getLightLevel(entity.getBlockPos()) == 0 ? 3.0f : damageMultiplier) : 1.0f;
-            }
-            case SOUND -> {
-                return entity.isSubmergedInWater() ? 1.5f : damageMultiplier;
-            }
-        }
+    public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
         return damageMultiplier;
     }
 
     public float getProtectionMultiplier(World world, LivingEntity entity) {
-        long time = world.getTimeOfDay();
-        switch (this) {
-            case LIGHT -> {
-                return time >= 1000 && time < 13000 ? protectionMultiplier : 1.0f;
-            }
-            case DARKNESS -> {
-                return time < 1000 || time >= 13000 ? (world.getLightLevel(entity.getBlockPos()) == 0 ? 3.0f : protectionMultiplier) : 1.0f;
-            }
-            case SOUND -> {
-                return entity.isSubmergedInWater() ? 1.5f : protectionMultiplier;
-            }
-        }
         return protectionMultiplier;
     }
 
@@ -174,14 +242,10 @@ public enum Element implements StringIdentifiable {
         return element;
     }
 
-    public static Element createRandomWithout(int level, Element... exclude) {
-        return createRandomWithout(level, new ArrayList<>(Arrays.asList(exclude)));
-    }
-
-    public static Element createRandomWithout(int level, ArrayList<Element> exclude) {
+    public static Element createRandom(int level, ArrayList<Element> exclude) {
         level = MathHelper.clamp(level, 0, 3);
         Element element = createRandom();
-        int maxSize = level == 0 ? 1 : 5;
+        int maxSize = LEVEL_SIZE.get(level);
         List<Element> elements = new ArrayList<>();
         for (Element element1 : exclude) {
             if (element1.level == level) {
@@ -198,16 +262,16 @@ public enum Element implements StringIdentifiable {
     }
 
     @Nullable
-    public static MutableText getElementsText(ArrayList<Element> elements) {
+    public static MutableText getElementsText(ArrayList<Element> elements, boolean prefix) {
         if (elements.size() == 0) {
             return null;
         }
         if (elements.size() == 1 && elements.get(0) == INVALID) {
             return null;
         }
-        MutableText text = Text.literal("[").formatted(Formatting.WHITE);
-        for (Iterator<Element> iterator = elements.iterator(); iterator.hasNext(); ) {
-            Element element = iterator.next();
+        MutableText text = prefix ? Text.literal("[元素]").formatted(Formatting.WHITE) : Text.empty();
+        elements.sort(Comparator.comparingInt(o -> o.id));
+        for (Element element : elements) {
             Formatting color = switch (element.getLevel()) {
                 case 1 -> Formatting.WHITE;
                 case 2 -> Formatting.AQUA;
@@ -215,7 +279,10 @@ public enum Element implements StringIdentifiable {
                 default -> null;
             };
             if (color != null) {
-                text.append(iterator.hasNext() ? Text.translatable("element.elemworld." + element.getName()).append(" ").formatted(color) : Text.translatable("element.elemworld." + element.getName()).formatted(color).append(Text.literal("]").formatted(Formatting.WHITE)));
+                if (!text.equals(Text.empty())) {
+                    text.append(" ");
+                }
+                text.append(Text.translatable("element.elemworld." + element.getName()).formatted(color));
             }
         }
         return text;
@@ -228,7 +295,11 @@ public enum Element implements StringIdentifiable {
             case 3 -> Formatting.GOLD;
             default -> Formatting.GRAY;
         };
-        return Text.translatable("element.elemworld." + this.getName()).formatted(color);
+        return Text.translatable(this.getTranslationKey()).formatted(color);
+    }
+
+    public String getTranslationKey() {
+        return "element.elemworld." + this.getName();
     }
 
     public Color getColor() {
@@ -243,11 +314,19 @@ public enum Element implements StringIdentifiable {
     static {
         CODEC = StringIdentifiable.createCodec(Element::values);
         BY_ID = ValueLists.createIdToValueFunction(Element::getId, Element.values(), ValueLists.OutOfBoundsHandling.ZERO);
+        for (Element element : Element.values()) {
+            int level = element.level;
+            LEVEL_SIZE.put(level, Optional.ofNullable(LEVEL_SIZE.get(level)).orElse(0) + 1);
+        }
     }
 
     @Override
     public String asString() {
         return this.name;
+    }
+
+    public StatusEffect asEffect() {
+        return getEffect(this);
     }
 
     public static StatusEffect getEffect(Element element) {

@@ -53,19 +53,19 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         checkSize(input, 2);
         int y;
         int x;
-        this.addSlot(new Slot(this.input, 0, 26, 34) {
+        this.addSlot(new Slot(this.input, 0, 27, 34) {
             @Override
             public boolean canInsert(ItemStack stack) {
                 return stack.isDamageable();
             }
         });
-        this.addSlot(new Slot(this.input, 1, 62, 34) {
+        this.addSlot(new Slot(this.input, 1, 76, 34) {
             @Override
             public boolean canInsert(ItemStack stack) {
                 return stack.isOf(Items.DIAMOND) || !stack.getElements().isEmpty();
             }
         });
-        this.addSlot(new Slot(this.result, 2, 129, 34) {
+        this.addSlot(new Slot(this.result, 2, 134, 34) {
             @Override
             public boolean canInsert(ItemStack stack) {
                 return false;
@@ -172,7 +172,7 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
             }
             ArrayList<Element> list = new ArrayList<>(newStack.getElements());
             list.removeAll(stack.getElements());
-            if (list.isEmpty()) {
+            if (list.isEmpty() || !material.isOf(stack.getItem()) && !material.isOf(Items.DIAMOND) && !material.isEmpty()) {
                 this.result.setStack(0, ItemStack.EMPTY);
             } else {
                 this.result.setStack(0, newStack);
