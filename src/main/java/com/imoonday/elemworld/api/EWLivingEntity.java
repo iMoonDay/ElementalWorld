@@ -24,6 +24,26 @@ public interface EWLivingEntity {
         return false;
     }
 
+    default void setElements(ArrayList<Element> elements) {
+
+    }
+
+    default int getHealTick() {
+        return 0;
+    }
+
+    default void setHealTick(int healTick) {
+
+    }
+
+    default int getImmuneCooldown() {
+        return 0;
+    }
+
+    default void setImmuneCooldown(int immuneCooldown) {
+
+    }
+
     default double getSpeed() {
         return 0;
     }

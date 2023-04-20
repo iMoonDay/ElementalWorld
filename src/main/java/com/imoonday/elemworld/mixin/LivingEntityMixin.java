@@ -2,7 +2,6 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWLivingEntity;
 import com.imoonday.elemworld.api.Element;
-import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -11,27 +10,14 @@ import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.passive.FoxEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.TridentEntity;
-import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
-import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -49,11 +35,9 @@ import static com.imoonday.elemworld.api.Element.*;
 public class LivingEntityMixin implements EWLivingEntity {
 
     /**
-     * @see #resetHealTick
-     * 受伤后方法
      * @see #tryImmune
      * 死亡时方法
-     * @see #afterDamaged(DamageSource, float, CallbackInfo)
+     * @see #afterInjury(DamageSource, float, CallbackInfo)
      * 扣除血量后方法
      **/
 
@@ -88,6 +72,31 @@ public class LivingEntityMixin implements EWLivingEntity {
     public void clearElements() {
         this.elements = new ArrayList<>();
         this.elements.add(INVALID);
+    }
+
+    @Override
+    public void setElements(ArrayList<Element> elements) {
+        this.elements = elements;
+    }
+
+    @Override
+    public int getHealTick() {
+        return healTick;
+    }
+
+    @Override
+    public void setHealTick(int healTick) {
+        this.healTick = healTick;
+    }
+
+    @Override
+    public int getImmuneCooldown() {
+        return immuneCooldown;
+    }
+
+    @Override
+    public void setImmuneCooldown(int immuneCooldown) {
+        this.immuneCooldown = immuneCooldown;
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -212,105 +221,51 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (entity.world.isClient) {
             cir.setReturnValue(false);
         }
-        checkSpaceElement(source, cir, entity);
         for (Element element : entity.getAllElements()) {
-            if (Arrays.stream(element.getIgnoreDamageTypes()).anyMatch(source::isOf)) {
-                if (element == DARKNESS && source.getAttacker() instanceof LivingEntity living && living.getMainHandStack().hasElement(LIGHT)) {
-                    continue;
-                }
-                cir.setReturnValue(false);
-            }
-            BlockState state = entity.getSteppingBlockState();
-            if (element == GRASS && source.isOf(DamageTypes.FALL) && (state.isOf(Blocks.GRASS_BLOCK) || state.isIn(BlockTags.LEAVES))) {
+            if (element.ignoreDamage(source, entity)) {
                 cir.setReturnValue(false);
             }
         }
     }
 
-    //受伤后执行
-    @Inject(method = "damage", at = @At("RETURN"))
-    public void resetHealTick(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        LivingEntity entity = (LivingEntity) (Object) this;
-        if (cir.getReturnValueZ()) {
-            boolean resettable = !entity.getSteppingBlockState().isOf(Blocks.GRASS_BLOCK);
-            if (this.healTick > 0 && resettable) {
-                this.healTick = 0;
-            }
-        }
-    }
-
-    //死亡时执行
     @Inject(method = "applyDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getHealth()F"), cancellable = true)
     public void tryImmune(DamageSource source, float amount, CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
         if (entity.getHealth() - amount > 0) {
             return;
         }
-        if (entity.hasElement(TIME) && this.immuneCooldown <= 0) {
-            this.immuneCooldown = 5 * 60 * 20;
-            entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
+        if (shouldImmuneOnDeath()) {
             ci.cancel();
         }
-        if (entity.hasElement(SPACE)) {
-            if (Random.create().nextFloat() < 0.25f) {
-                randomTeleport(entity);
-                entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
-                ci.cancel();
+    }
+
+    private boolean shouldImmuneOnDeath() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        for (Element element : entity.getAllElements()) {
+            if (element.shouldImmuneOnDeath(entity)) {
+                return true;
             }
         }
+        return false;
     }
 
     //受伤后执行
     @Inject(method = "applyDamage", at = @At("TAIL"))
-    public void afterDamaged(DamageSource source, float amount, CallbackInfo ci) {
+    public void afterInjury(DamageSource source, float amount, CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity.hasElement(TIME)) {
-            if (this.immuneCooldown == 0) {
-                Random random = Random.create();
-                if (random.nextFloat() < 0.0625f) {
-                    entity.setHealth(entity.getMaxHealth());
-                } else if (entity.getHealth() / entity.getMaxHealth() <= 0.2f) {
-                    if (random.nextFloat() < 0.25f) {
-                        entity.setHealth(entity.getMaxHealth() / 2f);
-                    }
-                }
+        if (amount <= 0) {
+            return;
+        }
+        for (Element element : entity.getAllElements()) {
+            element.afterInjury(entity, amount);
+        }
+        if (source.getAttacker() instanceof LivingEntity living && (source.isOf(DamageTypes.PLAYER_ATTACK) || source.isOf(DamageTypes.MOB_ATTACK))) {
+            for (Element element : living.getMainHandStack().getElements()) {
+                element.postHitWithAmount(entity, living, amount);
             }
         }
-        if (source.getAttacker() instanceof LivingEntity living && (source.isOf(DamageTypes.PLAYER_ATTACK) || source.isOf(DamageTypes.MOB_ATTACK)) && living.getMainHandStack().hasElement(SOUND)) {
-            if (entity.getSpeed() > 0) {
-                entity.damage(living.getDamageSources().sonicBoom(living), amount);
-            }
-        }
-        if (source.getAttacker() instanceof PlayerEntity player && player.getMainHandStack().hasElement(FIRE)) {
-            if (entity.isInElement(WATER)) {
-                StatusEffectInstance effect = entity.getStatusEffect(Element.getEffect(WATER));
-                if (effect != null) {
-                    entity.setStatusEffect(new StatusEffectInstance(Element.getEffect(WATER), Math.max(effect.getDuration() - 3 * 20, 0), effect.getAmplifier(), false, effect.shouldShowParticles(), effect.shouldShowIcon()), source.getAttacker());
-                }
-            }
-        }
-    }
-
-    private static void checkSpaceElement(DamageSource source, CallbackInfoReturnable<Boolean> cir, LivingEntity entity) {
-        if (entity.isInElement(SPACE)) {
-            if (Arrays.stream(SPACE.getIgnoreDamageTypes()).anyMatch(source::isOf)) {
-                if (source.isOf(DamageTypes.DROWN)) {
-                    BlockPos pos = BlockPos.ofFloored(entity.getEyePos());
-                    FluidState fluidState = entity.world.getBlockState(pos).getFluidState();
-                    if (!fluidState.isEmpty()) {
-                        entity.world.setBlockState(pos, Blocks.AIR.getDefaultState());
-                    }
-                } else {
-                    randomTeleport(entity);
-                    entity.setVelocity(Vec3d.ZERO);
-                }
-                cir.setReturnValue(false);
-            } else if (!source.isIndirect()) {
-                float random = Random.create().nextFloat();
-                if (random < 0.25f) {
-                    cir.setReturnValue(false);
-                }
-            }
+        if (this.healTick > 0 && !entity.getSteppingBlockState().isOf(Blocks.GRASS_BLOCK)) {
+            this.healTick = 0;
         }
     }
 
@@ -437,14 +392,14 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Override
     public boolean hasElementEffect(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        return entity.hasStatusEffect(Element.getEffect(element));
+        return entity.hasStatusEffect(element.getEffect());
     }
 
     @Override
     public void removeElementEffect(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
         if (entity.hasElementEffect(element)) {
-            entity.removeStatusEffect(Element.getEffect(element));
+            entity.removeStatusEffect(element.getEffect());
         }
     }
 
@@ -454,27 +409,4 @@ public class LivingEntityMixin implements EWLivingEntity {
         return entity.hasElementEffect(element) || entity.hasElement(element);
     }
 
-    private static void randomTeleport(LivingEntity entity) {
-        World world = entity.world;
-        if (!world.isClient) {
-            double d = entity.getX();
-            double e = entity.getY();
-            double f = entity.getZ();
-            for (int i = 0; i < 16; ++i) {
-                double g = entity.getX() + (entity.getRandom().nextDouble() - 0.5) * 16.0;
-                double h = MathHelper.clamp(entity.getY() + (double) (entity.getRandom().nextInt(16) - 8), world.getBottomY(), world.getBottomY() + ((ServerWorld) world).getLogicalHeight() - 1);
-                double j = entity.getZ() + (entity.getRandom().nextDouble() - 0.5) * 16.0;
-                if (entity.hasVehicle()) {
-                    entity.stopRiding();
-                }
-                Vec3d vec3d = entity.getPos();
-                if (!entity.teleport(g, h, j, false)) continue;
-                world.emitGameEvent(GameEvent.TELEPORT, vec3d, GameEvent.Emitter.of(entity));
-                SoundEvent soundEvent = entity instanceof FoxEntity ? SoundEvents.ENTITY_FOX_TELEPORT : SoundEvents.ENTITY_ENDERMAN_TELEPORT;
-                world.playSound(null, d, e, f, soundEvent, SoundCategory.PLAYERS, 1.0f, 1.0f);
-                entity.playSound(soundEvent, 1.0f, 1.0f);
-                break;
-            }
-        }
-    }
 }

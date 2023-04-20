@@ -20,8 +20,8 @@ public class PlayerInventoryMixin {
     public void getBlockBreakingSpeed(BlockState block, CallbackInfoReturnable<Float> cir) {
         PlayerInventory inventory = (PlayerInventory) (Object) this;
         PlayerEntity player = inventory.player;
-        List<Float> list = new ArrayList<>();
         ArrayList<Element> elements = inventory.main.get(inventory.selectedSlot).getElements();
+        List<Float> list = new ArrayList<>();
         for (Element element : elements) {
             float miningSpeedMultiplier = element.getMiningSpeedMultiplier(player.world, player, block);
             list.add(miningSpeedMultiplier);
