@@ -16,12 +16,12 @@ public class ClientPlayerInteractionManagerMixin {
 
     @Final
     @Shadow
-    public MinecraftClient client;
+    private MinecraftClient client;
 
     @Inject(method = "getReachDistance", at = @At("RETURN"), cancellable = true)
     public void getReachDistance(CallbackInfoReturnable<Float> cir) {
         ClientPlayerEntity player = this.client.player;
-        if (player != null && (player.hasSpace() || player.getMainHandStack().hasElement(Element.SPACE))) {
+        if (player != null && (player.hasSpace() || player.isHolding(Element.SPACE))) {
             cir.setReturnValue(cir.getReturnValueF() + 3);
         }
     }

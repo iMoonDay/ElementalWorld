@@ -73,7 +73,7 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
 
             @Override
             public boolean canTakeItems(PlayerEntity playerEntity) {
-                return playerEntity.experienceLevel >= getRequiredLevel() || playerEntity.getAbilities().creativeMode;
+                return playerEntity.experienceLevel >= getRequiredLevel() || playerEntity.isCreative();
             }
 
             @Override
@@ -83,7 +83,7 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
                     ModifyElementsScreenHandler.this.input.setStack(1, ItemStack.EMPTY);
                 }
                 stack.getOrCreateNbt().remove(LAST_RANDOM_ELEMENT_KEY);
-                if (!player.getAbilities().creativeMode) {
+                if (!player.isCreative()) {
                     player.experienceLevel -= ModifyElementsScreenHandler.this.getRequiredLevel();
                 }
                 ModifyElementsScreenHandler.this.input.markDirty();
@@ -100,13 +100,13 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
     }
 
     public boolean cannotUseButton() {
-        if (getMaterial().isEmpty() && !this.player.getAbilities().creativeMode) {
+        if (getMaterial().isEmpty() && !this.player.isCreative()) {
             return true;
         }
         if (!getMaterial().isEmpty() && !getMaterial().isOf(Items.DIAMOND)) {
             return true;
         }
-        if (this.player.experienceLevel < 1 && !this.player.getAbilities().creativeMode) {
+        if (this.player.experienceLevel < 1 && !this.player.isCreative()) {
             return true;
         }
         if (getStack().isEmpty()) {
@@ -133,15 +133,16 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         if (id != 0) {
             return false;
         }
-        if (!getMaterial().isOf(Items.DIAMOND) && !player.getAbilities().creativeMode) {
+        if (!getMaterial().isOf(Items.DIAMOND) && !player.isCreative()) {
             return false;
         }
         getStack().getOrCreateNbt().remove(LAST_RANDOM_ELEMENT_KEY);
         getMaterial().decrement(1);
-        if (!this.player.getAbilities().creativeMode) {
+        if (!this.player.isCreative()) {
             this.player.experienceLevel--;
         }
         this.updateResult();
+        this.updateToClient();
         return true;
     }
 

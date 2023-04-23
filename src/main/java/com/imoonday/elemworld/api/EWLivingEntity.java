@@ -56,19 +56,27 @@ public interface EWLivingEntity {
         return false;
     }
 
-    default boolean hasOneOfElements(Element... elements) {
+   default boolean hasOneOf(Element... elements) {
         return false;
     }
 
-    default boolean hasElementEffect(Element element) {
+    default boolean hasEffectOf(Element element) {
         return false;
     }
 
-    default void removeElementEffect(Element element) {
+    default void removeEffectOf(Element element) {
 
     }
 
-    default boolean isInElement(Element element) {
+    default boolean isIn(Element element) {
+        return false;
+    }
+
+    default void decelerate(double multiplier) {
+
+    }
+
+    default boolean isHolding(Element element) {
         return false;
     }
 }

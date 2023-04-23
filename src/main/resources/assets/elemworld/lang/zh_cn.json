@@ -14,6 +14,18 @@
   "element.elemworld.time": "时间",
   "element.elemworld.space": "空间",
   "element.elemworld.sound": "声音",
+  "item.minecraft.potion.effect.freeze": "冰冻药水",
+  "item.minecraft.splash_potion.effect.freeze": "喷溅型冰冻药水",
+  "item.minecraft.lingering_potion.effect.freeze": "滞留型冰冻药水",
+  "item.minecraft.tipped_arrow.effect.freeze": "冰冻之箭",
+  "item.minecraft.potion.effect.freezing_resistance": "冰冻耐性药水",
+  "item.minecraft.splash_potion.effect.freezing_resistance": "喷溅型冰冻耐性药水",
+  "item.minecraft.lingering_potion.effect.freezing_resistance": "滞留型冰冻耐性药水",
+  "item.minecraft.tipped_arrow.effect.freezing_resistance": "冰冻耐性之箭",
+  "item.minecraft.potion.effect.dizzy": "晕眩药水",
+  "item.minecraft.splash_potion.effect.dizzy": "喷溅型晕眩药水",
+  "item.minecraft.lingering_potion.effect.dizzy": "滞留型晕眩药水",
+  "item.minecraft.tipped_arrow.effect.dizzy": "晕眩之箭",
   "block.elemworld.element_modifier": "元素修改机",
   "group.elemworld.name": "元素世界"
 }

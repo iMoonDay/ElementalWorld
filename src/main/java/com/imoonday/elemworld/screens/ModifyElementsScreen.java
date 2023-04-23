@@ -100,7 +100,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
             textRenderer.drawWithShadow(matrices, text, startX, y + 21, Color.WHITE.getRGB());
         }
         if (!this.handler.getResult().isEmpty()) {
-            Color color = player.experienceLevel >= this.handler.getRequiredLevel() || player.getAbilities().creativeMode ? Color.GREEN : Color.RED;
+            Color color = player.experienceLevel >= this.handler.getRequiredLevel() || player.isCreative() ? Color.GREEN : Color.RED;
             Text cost = Text.literal("修改花费 : " + this.handler.getRequiredLevel());
             int x1 = x + backgroundWidth - textRenderer.getWidth(cost) - 8;
             AnvilScreen.fill(matrices, x1 - 4, y + BUTTON_Y + 2, x + this.backgroundWidth - 8, y + BUTTON_Y + 2 + 12, 0x4F000000);
@@ -116,7 +116,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
         Text tooltip = null;
         if (stack.getElements().size() >= Element.MAX_SIZE) {
             tooltip = Text.literal("物品已包含所有元素");
-        } else if (player.experienceLevel < 1 && !stack.isEmpty() && material.isOf(Items.DIAMOND) && !player.getAbilities().creativeMode) {
+        } else if (player.experienceLevel < 1 && !stack.isEmpty() && material.isOf(Items.DIAMOND) && !player.isCreative()) {
             tooltip = Text.literal("刷新元素至少要有1级经验");
         } else if (!stack.isOf(material.getItem()) && !stack.isEmpty() && !material.isOf(Items.DIAMOND) && !material.isEmpty()) {
             tooltip = Text.literal("材料必须为相同物品");

@@ -6,14 +6,19 @@
   "mixins": [
     "ArgumentTypesMixin",
     "EnderPearlEntityMixin",
+    "EntityMixin",
     "ItemStackMixin",
     "LivingEntityMixin",
+    "MobEntityMixin",
     "NameTagItemMixin",
     "PlayerEntityMixin",
     "PlayerInventoryMixin",
-    "ServerPlayerInteractionManagerMixin"
+    "PlayerScreenHandlerMixin",
+    "ServerPlayerInteractionManagerMixin",
+    "StatusEffectInstanceMixin"
   ],
   "client": [
+    "ClientPlayerEntityMixin",
     "ClientPlayerInteractionManagerMixin"
   ],
   "injectors": {

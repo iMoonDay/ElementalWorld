@@ -14,6 +14,18 @@
   "element.elemworld.time": "Time",
   "element.elemworld.space": "Space",
   "element.elemworld.sound": "Sound",
+  "item.minecraft.potion.effect.freeze": "Potion of Frozen",
+  "item.minecraft.splash_potion.effect.freeze": "Splash Potion of Frozen",
+  "item.minecraft.lingering_potion.effect.freeze": "Lingering Potion of Frozen",
+  "item.minecraft.tipped_arrow.effect.freeze": "Arrow of Frozen",
+  "item.minecraft.potion.effect.freezing_resistance": "Potion of Frozen Resistance",
+  "item.minecraft.splash_potion.effect.freezing_resistance": "Splash Potion of Frozen Resistance",
+  "item.minecraft.lingering_potion.effect.freezing_resistance": "Lingering Potion of Frozen Resistance",
+  "item.minecraft.tipped_arrow.effect.freezing_resistance": "Arrow of Frozen Resistance",
+  "item.minecraft.potion.effect.dizzy": "Potion of Dizziness",
+  "item.minecraft.splash_potion.effect.dizzy": "Splash Potion of Dizziness",
+  "item.minecraft.lingering_potion.effect.dizzy": "Lingering Potion of Dizziness",
+  "item.minecraft.tipped_arrow.effect.dizzy": "Arrow of Dizziness",
   "block.elemworld.element_modifier": "Element Modifier",
   "group.elemworld.name": "Elemental World"
 }

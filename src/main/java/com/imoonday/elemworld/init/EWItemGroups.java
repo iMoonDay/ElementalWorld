@@ -5,6 +5,7 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 
+import static com.imoonday.elemworld.ElementalWorld.LOGGER;
 import static com.imoonday.elemworld.ElementalWorld.id;
 
 public class EWItemGroups {
@@ -13,5 +14,7 @@ public class EWItemGroups {
             .displayName(Text.translatable("group.elemworld.name"))
             .icon(() -> new ItemStack(EWBlocks.ELEMENT_MODIFIER_BLOCK)).build();
 
-    public static void register(){}
+    public static void register(){
+        LOGGER.info("Loading ItemGroups");
+    }
 }

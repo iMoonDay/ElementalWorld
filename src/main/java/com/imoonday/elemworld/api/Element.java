@@ -1,9 +1,12 @@
 package com.imoonday.elemworld.api;
 
+import com.imoonday.elemworld.init.EWEffects;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.effect.StatusEffect;
@@ -12,10 +15,14 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.network.packet.s2c.play.EntityStatusEffectS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.RemoveEntityStatusEffectS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -38,17 +45,46 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.function.IntFunction;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.imoonday.elemworld.ElementalWorld.id;
 import static net.minecraft.entity.damage.DamageTypes.*;
+import static net.minecraft.entity.effect.StatusEffects.*;
 import static net.minecraft.registry.tag.DamageTypeTags.*;
 
+@SuppressWarnings("unused")
 public enum Element implements StringIdentifiable {
 
-    INVALID(0, "invalid", 0),
-    GOLD(1, "gold", 1, 1.25f, 1.25f, 1.0f, 0.75f),
-    WOOD(2, "wood", 1, 0.75f, 0.75f, 1.0f, 1.25f) {
+    INVALID(0, "invalid", 0), GOLD(1, "gold", 1, 1.25f, 1.25f, 1.0f, 0.75f) {
+        @Override
+        public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+            entity.decelerate(0.9);
+        }
+
+        @Override
+        public void afterInjury(LivingEntity entity, DamageSource source, float amount) {
+            Random random = entity.getRandom();
+            Entity attacker = source.getAttacker();
+            if (attacker instanceof LivingEntity living) {
+                if (random.nextFloat() < 0.25f) {
+                    Vec3d vec3d = living.getPos().subtract(entity.getPos()).normalize();
+                    living.setVelocity(vec3d.x, 0.5, vec3d.z);
+                    if (living instanceof ServerPlayerEntity player) {
+                        player.networkHandler.sendPacket(new EntityVelocityUpdateS2CPacket(player));
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void postHit(LivingEntity target, PlayerEntity attacker) {
+            Random random = attacker.getRandom();
+            if (random.nextFloat() < 0.25f) {
+                target.addStatusEffect(new StatusEffectInstance(EWEffects.DIZZY, 10 * 20, 0));
+            }
+        }
+    }, WOOD(2, "wood", 1, 0.75f, 0.75f, 1.0f, 1.25f) {
         @Override
         public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
             if (state.isIn(BlockTags.LOGS)) {
@@ -56,19 +92,28 @@ public enum Element implements StringIdentifiable {
             }
             return super.getMiningSpeedMultiplier(world, entity, state);
         }
-    },
-    WATER(3, "water", 1, 1.0f, 0.5f, 1.0f, 1.0f) {
+    }, WATER(3, "water", 1, 1.0f, 0.5f, 1.0f, 1.0f) {
         @Override
         public void postHit(LivingEntity target, PlayerEntity attacker) {
-            if (target.isInElement(FIRE) || target.isOnFire()) {
-                target.removeElementEffect(FIRE);
+            if (target.isIn(FIRE)) {
+                target.removeEffectOf(FIRE);
                 if (target.isOnFire()) {
                     target.setOnFire(false);
                 }
-                target.damage(attacker.getDamageSources().magic(), 2.0f);
-                target.world.addParticle(ParticleTypes.LARGE_SMOKE, target.getX(), target.getY() + target.getHeight(), target.getZ(), 0, 0, 0);
-                target.world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.VOICE);
+                World world = target.world;
+                if (world instanceof ServerWorld serverWorld) {
+                    serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE, target.getX(), target.getY() + target.getHeight(), target.getZ(), 8, 0.5, 0.25, 0.5, 0.0);
+                    serverWorld.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.5f, 2.6f + (world.random.nextFloat() - world.random.nextFloat()) * 0.8f);
+                }
             }
+        }
+
+        @Override
+        public float getExtraDamage(LivingEntity target, float amount) {
+            if (target.isIn(FIRE)) {
+                return 2.0f;
+            }
+            return super.getExtraDamage(target, amount);
         }
 
         @Override
@@ -78,24 +123,28 @@ public enum Element implements StringIdentifiable {
             }
             return super.getEffectTime(target);
         }
-    },
-    FIRE(4, "fire", 1, 1.0f, 1.5f, 1.0f, 1.0f) {
+
         @Override
-        public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
-            if (target.isInElement(WATER)) {
-                return 0.75f;
+        public boolean shouldAddEffect(LivingEntity entity) {
+            return entity.isWet();
+        }
+    }, FIRE(4, "fire", 1, 1.0f, 1.5f, 1.0f, 1.0f) {
+        @Override
+        public float getExtraDamage(LivingEntity target, float amount) {
+            if (target.isIn(WATER)) {
+                return Math.max(-amount * 0.25f, -20);
             }
-            return super.getDamageMultiplier(world, entity, target);
+            return super.getExtraDamage(target, amount);
         }
 
         @Override
         public void postHit(LivingEntity target, PlayerEntity attacker) {
-            if (target.isInElement(WATER)) {
+            if (target.isIn(WATER)) {
                 StatusEffectInstance effect = target.getStatusEffect(WATER.getEffect());
                 if (effect != null) {
                     int duration = effect.getDuration() - 3 * 20;
                     if (duration <= 0) {
-                        target.removeElementEffect(WATER);
+                        target.removeEffectOf(WATER);
                     } else {
                         target.setStatusEffect(new StatusEffectInstance(WATER.getEffect(), duration, effect.getAmplifier(), effect.isAmbient(), effect.shouldShowParticles(), effect.shouldShowIcon()), attacker);
                     }
@@ -110,9 +159,39 @@ public enum Element implements StringIdentifiable {
             }
             return super.getEffectTime(target);
         }
-    },
-    EARTH(5, "earth", 1, 1.0f, 1.0f, 1.0f, 1.5f),
-    WIND(6, "wind", 2) {
+
+        @Override
+        public boolean shouldAddEffect(LivingEntity entity) {
+            return entity.isOnFire() || entity.isInLava();
+        }
+
+        @Override
+        public void tick(LivingEntity entity) {
+            if (!entity.hasStatusEffect(EWEffects.FREEZE)) {
+                return;
+            }
+            entity.removeStatusEffect(EWEffects.FREEZE);
+            entity.world.playSound(null, entity.getBlockPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.VOICE, 1, 1);
+        }
+
+        @Override
+        public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+            if (!entity.hasStatusEffect(EWEffects.FREEZE)) {
+                return;
+            }
+            entity.removeStatusEffect(EWEffects.FREEZE);
+            entity.world.playSound(null, entity.getBlockPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.VOICE, 1, 1);
+            if (!entity.world.isClient) {
+                ArrayList<ServerPlayerEntity> entities = new ArrayList<>(PlayerLookup.tracking(entity));
+                if (entity instanceof ServerPlayerEntity player) {
+                    entities.add(player);
+                }
+                for (ServerPlayerEntity player : entities) {
+                    player.networkHandler.sendPacket(new RemoveEntityStatusEffectS2CPacket(player.getId(), EWEffects.FREEZE));
+                }
+            }
+        }
+    }, EARTH(5, "earth", 1, 1.0f, 1.0f, 1.0f, 1.5f), WIND(6, "wind", 2) {
         @Override
         public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
             return source.isIn(IS_FALL);
@@ -122,16 +201,23 @@ public enum Element implements StringIdentifiable {
         public void postHit(LivingEntity target, PlayerEntity attacker) {
             List<LivingEntity> entities = target.world.getEntitiesByClass(LivingEntity.class, target.getBoundingBox().expand(3), Entity::isLiving);
             for (LivingEntity entity : entities) {
-                if (target.hasElementEffect(FIRE)) {
+                if (target.hasEffectOf(FIRE)) {
                     FIRE.addEffect(entity, attacker);
                 }
-                Vec3d subtract = entity.getPos().subtract(entity.getPos()).normalize();
+                Vec3d subtract = entity.getPos().subtract(attacker.getPos()).normalize();
                 Vec3d vec3d = new Vec3d(subtract.x, 1, subtract.z);
                 entity.setVelocity(vec3d);
             }
         }
-    },
-    THUNDER(7, "thunder", 2, 1.0f, 1.75f, 1.0f, 1.0f) {
+
+        @Override
+        public HashMap<StatusEffect, Integer> getPersistentEffects() {
+            HashMap<StatusEffect, Integer> effects = new HashMap<>();
+            effects.put(JUMP_BOOST, 0);
+            effects.put(SPEED, 0);
+            return effects;
+        }
+    }, THUNDER(7, "thunder", 2, 1.0f, 1.75f, 1.0f, 1.0f) {
         @Override
         public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
             return source.isIn(IS_LIGHTNING);
@@ -139,31 +225,36 @@ public enum Element implements StringIdentifiable {
 
         @Override
         public void postHit(LivingEntity target, PlayerEntity attacker) {
-            if (target.isInElement(WATER) || target.isWet()) {
+            if (target.isIn(WATER)) {
                 HashSet<Entity> entities = new HashSet<>(getEntitiesNearby(target));
                 HashSet<Entity> otherEntities = entities.stream().flatMap(entity1 -> new HashSet<>(getEntitiesNearby(entity1)).stream()).collect(Collectors.toCollection(HashSet::new));
                 entities.addAll(otherEntities);
                 for (Entity entity : entities) {
                     LivingEntity livingEntity = (LivingEntity) entity;
-                    livingEntity.damage(attacker.getDamageSources().magic(), 2);
-                    livingEntity.removeElementEffect(WATER);
-                    livingEntity.world.playSound(null, livingEntity.getBlockPos(), SoundEvents.BLOCK_REDSTONE_TORCH_BURNOUT, SoundCategory.VOICE);
+                    if (livingEntity.damage(attacker.getDamageSources().magic(), 2)) {
+                        livingEntity.removeEffectOf(WATER);
+                        livingEntity.world.playSound(null, livingEntity.getBlockPos(), SoundEvents.BLOCK_REDSTONE_TORCH_BURNOUT, SoundCategory.VOICE);
+                    }
                 }
-            } else if (target.isInElement(FIRE) || target.isOnFire()) {
+            } else if (target.isIn(FIRE)) {
                 target.world.createExplosion(target, attacker.getDamageSources().explosion(attacker, attacker), new ExplosionBehavior(), target.getX(), target.getY(), target.getZ(), 2, false, World.ExplosionSourceType.NONE);
-                target.removeElementEffect(FIRE);
+                target.removeEffectOf(FIRE);
                 target.setOnFire(false);
             }
         }
 
         private static List<Entity> getEntitiesNearby(Entity entity) {
-            return entity.world.getOtherEntities(entity, entity.getBoundingBox().expand(5), entity1 -> entity1 instanceof LivingEntity livingEntity && !livingEntity.hasOneOfElements(EARTH, THUNDER) && (livingEntity.hasElement(WATER) || livingEntity.isWet()));
+            return entity.world.getOtherEntities(entity, entity.getBoundingBox().expand(5), entity1 -> entity1 instanceof LivingEntity livingEntity && !livingEntity.hasOneOf(EARTH, THUNDER) && livingEntity.hasElement(WATER));
         }
-    },
-    ROCK(8, "rock", 2, 1.0f, 1.0f, 1.5f, 2.0f) {
+
+        @Override
+        public boolean shouldAddEffectAfterInjury(LivingEntity entity, DamageSource source, float amount) {
+            return source.isIn(IS_LIGHTNING);
+        }
+    }, ROCK(8, "rock", 2, 1.0f, 1.0f, 1.5f, 2.0f) {
         @Override
         public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
-            if (state.isIn(BlockTags.NEEDS_STONE_TOOL)) {
+            if (state.isIn(BlockTags.PICKAXE_MINEABLE)) {
                 return 2.0f;
             }
             return super.getMiningSpeedMultiplier(world, entity, state);
@@ -173,8 +264,22 @@ public enum Element implements StringIdentifiable {
         public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
             return source.isOf(IN_WALL);
         }
-    },
-    GRASS(9, "grass", 2) {
+
+//        @Override
+//        public HashMap<StatusEffect, Integer> getPersistentEffects() {
+//            HashMap<StatusEffect, Integer> effects = new HashMap<>();
+//            effects.put(HEALTH_BOOST, 1);
+//            return effects;
+//        }
+
+        @Override
+        public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(int slot) {
+            Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
+            EntityAttributeModifier entityAttributeModifier = new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 4.0, EntityAttributeModifier.Operation.ADDITION);
+            map.put(EntityAttributes.GENERIC_MAX_HEALTH, entityAttributeModifier);
+            return map;
+        }
+    }, GRASS(9, "grass", 2) {
         @Override
         public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
             BlockState state = entity.getSteppingBlockState();
@@ -183,31 +288,71 @@ public enum Element implements StringIdentifiable {
             }
             return super.ignoreDamage(source, entity);
         }
-    },
-    ICE(10, "ice", 2, 1.0f, 1.0f, 1.0f, 0.75f) {
+
+        @Override
+        public void tick(LivingEntity entity) {
+            if (entity.getHealth() < entity.getMaxHealth()) {
+                entity.setHealTick(entity.getHealTick() + 1);
+                int healTick = entity.getHealTick();
+                boolean onGrass = entity.getSteppingBlockState().isOf(Blocks.GRASS_BLOCK);
+                if (onGrass && healTick >= 5 * 20 || healTick >= 10 * 20) {
+                    entity.heal(1);
+                    entity.setHealTick(0);
+                    if (onGrass) {
+                        entity.world.setBlockState(entity.getSteppingPos(), Blocks.DIRT.getDefaultState());
+                    }
+                }
+            }
+        }
+    }, ICE(10, "ice", 2, 1.0f, 1.0f, 1.0f, 0.75f) {
         @Override
         public void applyUpdateEffect(LivingEntity entity, int amplifier) {
-            if (entity.isInElement(WATER) || entity.isTouchingWater()) {
-                entity.setVelocity(Vec3d.ZERO);
+            if (entity.isIn(WATER)) {
+                if (entity.hasStatusEffect(EWEffects.FREEZE)) {
+                    return;
+                }
+                entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, 1, 0, false, false, false));
             } else {
-                entity.setVelocity(entity.getVelocity().multiply(0.5));
+                entity.decelerate(0.5);
             }
         }
 
         @Override
+        public int getEffectTime(LivingEntity target) {
+            if (target.hasStatusEffect(EWEffects.FREEZING_RESISTANCE)) {
+                return 0;
+            }
+            return super.getEffectTime(target);
+        }
+
+        @Override
         public void postHit(LivingEntity target, PlayerEntity attacker) {
-            if (target.isInElement(FIRE) || target.isOnFire()) {
-                target.removeElementEffect(FIRE);
+            if (target.isIn(FIRE)) {
+                target.removeEffectOf(FIRE);
                 if (target.isOnFire()) {
                     target.setOnFire(false);
                 }
-                target.damage(attacker.getDamageSources().magic(), 3.0f);
-                target.world.addParticle(ParticleTypes.LARGE_SMOKE, target.getX(), target.getY() + target.getHeight(), target.getZ(), 0, 0, 0);
-                target.world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.VOICE);
+                World world = target.world;
+                if (world instanceof ServerWorld serverWorld) {
+                    serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE, target.getX(), target.getY() + target.getHeight(), target.getZ(), 8, 0.5, 0.25, 0.5, 0.0);
+                    serverWorld.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.5f, 2.6f + (world.random.nextFloat() - world.random.nextFloat()) * 0.8f);
+                }
             }
         }
-    },
-    LIGHT(11, "light", 3) {
+
+        @Override
+        public void writeDamageMultiplier(HashMap<Predicate<LivingEntity>, Float> map) {
+            map.put(living -> living.hasStatusEffect(EWEffects.FREEZE), 1.5f);
+        }
+
+        @Override
+        public float getExtraDamage(LivingEntity target, float amount) {
+            if (target.isIn(FIRE)) {
+                return 3.0f;
+            }
+            return super.getExtraDamage(target, amount);
+        }
+    }, LIGHT(11, "light", 3) {
         @Override
         public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
             Float x = getMultiplier(world);
@@ -245,7 +390,7 @@ public enum Element implements StringIdentifiable {
 
         @Override
         public void postHit(LivingEntity target, PlayerEntity attacker) {
-            if (target.isInElement(DARKNESS)) {
+            if (target.isIn(DARKNESS)) {
                 float v = Random.create().nextFloat();
                 double chance = 0.2 * (1 - (target.getHealth() / target.getMaxHealth()));
                 if (v < chance) {
@@ -256,8 +401,15 @@ public enum Element implements StringIdentifiable {
                 }
             }
         }
-    },
-    DARKNESS(12, "darkness", 3) {
+
+        @Override
+        public HashMap<StatusEffect, Integer> getPersistentEffects() {
+            HashMap<StatusEffect, Integer> effects = new HashMap<>();
+            effects.put(SPEED, 0);
+            effects.put(NIGHT_VISION, 0);
+            return effects;
+        }
+    }, DARKNESS(12, "darkness", 3) {
         @Override
         public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
             Float x = getMultiplier(world, entity);
@@ -293,15 +445,25 @@ public enum Element implements StringIdentifiable {
 
         @Override
         public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
+            if (source.isIndirect()) {
+                return false;
+            }
             if (source.getAttacker() instanceof LivingEntity attacker) {
-                if (attacker.getMainHandStack().hasElement(LIGHT) || attacker.isInElement(LIGHT)) {
+                long time = entity.world.getTimeOfDay();
+                if (attacker.getMainHandStack().hasElement(LIGHT) || attacker.isIn(LIGHT) || time >= 1000 && time < 13000) {
                     return false;
                 }
             }
             return source.isOf(MOB_ATTACK) || source.isOf(MOB_ATTACK_NO_AGGRO) || source.isOf(PLAYER_ATTACK);
         }
-    },
-    TIME(13, "time", 3, 1.75f, 1.75f, 1.75f, 1.0f) {
+
+        @Override
+        public HashMap<StatusEffect, Integer> getPersistentEffects() {
+            HashMap<StatusEffect, Integer> effects = new HashMap<>();
+            effects.put(SPEED, 0);
+            return effects;
+        }
+    }, TIME(13, "time", 3, 1.75f, 1.75f, 1.75f, 1.0f) {
         @Override
         public boolean shouldImmuneOnDeath(LivingEntity entity) {
             if (entity.getImmuneCooldown() <= 0) {
@@ -313,7 +475,7 @@ public enum Element implements StringIdentifiable {
         }
 
         @Override
-        public void afterInjury(LivingEntity entity, float amount) {
+        public void afterInjury(LivingEntity entity, DamageSource source, float amount) {
             if (entity.getImmuneCooldown() != 0) {
                 return;
             }
@@ -326,8 +488,7 @@ public enum Element implements StringIdentifiable {
                 }
             }
         }
-    },
-    SPACE(14, "space", 3, 1.5f, 1.5f, 1.5f, 1.0f) {
+    }, SPACE(14, "space", 3, 1.5f, 1.5f, 1.5f, 1.0f) {
         @Override
         public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
             if (source.isIndirect() || source.isIn(IS_DROWNING) || source.isIn(IS_EXPLOSION)) {
@@ -380,8 +541,7 @@ public enum Element implements StringIdentifiable {
                 }
             }
         }
-    },
-    SOUND(15, "sound", 3, 1.75f, 1.75f, 1.75f, 1.0f) {
+    }, SOUND(15, "sound", 3, 1.75f, 1.75f, 1.75f, 1.0f) {
         @Override
         public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
             if (entity.isSubmergedInWater()) {
@@ -412,10 +572,24 @@ public enum Element implements StringIdentifiable {
         }
 
         @Override
-        public void postHitWithAmount(LivingEntity target, LivingEntity attacker, float amount) {
-            if (target.getSpeed() > 0) {
-                target.damage(attacker.getDamageSources().sonicBoom(attacker), amount);
+        public void tick(LivingEntity entity) {
+            List<Entity> otherEntities = entity.world.getOtherEntities(entity, entity.getBoundingBox().expand(15), entity1 -> entity1 instanceof LivingEntity);
+            for (Entity otherEntity : otherEntities) {
+                LivingEntity livingEntity = (LivingEntity) otherEntity;
+                double speed = livingEntity.getSpeed();
+                if (speed == 0) {
+                    continue;
+                }
+                livingEntity.addStatusEffect(new StatusEffectInstance(GLOWING, 2, 0, true, false, false));
             }
+        }
+
+        @Override
+        public float getExtraDamage(LivingEntity target, float amount) {
+            if (target.getSpeed() > 0) {
+                return amount;
+            }
+            return super.getExtraDamage(target, amount);
         }
     };
 
@@ -423,6 +597,7 @@ public enum Element implements StringIdentifiable {
     public static final StringIdentifiable.Codec<Element> CODEC;
     public static final int MAX_SIZE = Element.values().length - 1;
     public static final HashMap<Integer, Integer> LEVEL_SIZE = new HashMap<>();
+    public static final HashMap<Predicate<LivingEntity>, Float> DAMAGE_MULTIPLIER = new HashMap<>();
     private final int id;
     private final String name;
     private final int level;
@@ -477,8 +652,16 @@ public enum Element implements StringIdentifiable {
         return false;
     }
 
+    public HashMap<StatusEffect, Integer> getPersistentEffects() {
+        return new HashMap<>();
+    }
+
     public static Element byId(int id) {
         return BY_ID.apply(id);
+    }
+
+    public UUID getUuid(int slot) {
+        return UUID.nameUUIDFromBytes((this.getName() + " " + slot).getBytes());
     }
 
     public static Element createRandom() {
@@ -539,7 +722,7 @@ public enum Element implements StringIdentifiable {
                 if (!text.equals(Text.empty())) {
                     text.append(" ");
                 }
-                text.append(Text.translatable("element.elemworld." + element.getName()).formatted(color));
+                text.append(Text.translatable(element.getTranslationKey()).formatted(color));
             }
         }
         return text;
@@ -574,6 +757,7 @@ public enum Element implements StringIdentifiable {
         for (Element element : Element.values()) {
             int level = element.level;
             LEVEL_SIZE.put(level, Optional.ofNullable(LEVEL_SIZE.get(level)).orElse(0) + 1);
+            element.writeDamageMultiplier(DAMAGE_MULTIPLIER);
         }
     }
 
@@ -586,9 +770,32 @@ public enum Element implements StringIdentifiable {
         return Effect.get(this);
     }
 
-    public void addEffect(LivingEntity target, PlayerEntity attacker) {
+    public void addEffect(LivingEntity target, @Nullable PlayerEntity attacker) {
         int sec = this.getEffectTime(target);
-        target.addStatusEffect(new StatusEffectInstance(this.getEffect(), sec * 20, 0), attacker);
+        if (sec > 0) {
+            StatusEffectInstance effect = new StatusEffectInstance(this.getEffect(), sec * 20, 0);
+            target.addStatusEffect(effect, attacker);
+            if (!target.world.isClient) {
+                ArrayList<ServerPlayerEntity> entities = new ArrayList<>(PlayerLookup.tracking(target));
+                if (target instanceof ServerPlayerEntity player) {
+                    entities.add(player);
+                }
+                for (ServerPlayerEntity player : entities) {
+                    player.networkHandler.sendPacket(new EntityStatusEffectS2CPacket(player.getId(), effect));
+                }
+            }
+        }
+    }
+
+    public void addPersistentEffects(LivingEntity entity) {
+        for (Map.Entry<StatusEffect, Integer> entry : this.getPersistentEffects().entrySet()) {
+            StatusEffect effect = entry.getKey();
+            int amplifier = entry.getValue();
+            StatusEffectInstance instance = entity.getStatusEffect(effect);
+            if (instance == null || instance.isFromElement() && instance.getAmplifier() != amplifier) {
+                entity.addStatusEffect(new StatusEffectInstance(effect, -1, amplifier, false, false, false).setFromElement(true));
+            }
+        }
     }
 
     public int getEffectTime(LivingEntity target) {
@@ -620,16 +827,77 @@ public enum Element implements StringIdentifiable {
         //元素效果
     }
 
+    public void tick(LivingEntity entity) {
+
+    }
+
     public void postHit(LivingEntity target, PlayerEntity attacker) {
         //物品攻击后
     }
 
-    public void postHitWithAmount(LivingEntity target, LivingEntity attacker, float amount) {
+    public void postHit(LivingEntity target, LivingEntity attacker, float amount) {
         //物品攻击后，带伤害
     }
 
-    public void afterInjury(LivingEntity entity, float amount) {
+    public void afterInjury(LivingEntity entity, DamageSource source, float amount) {
         //受伤后，带伤害
+    }
+
+    public void writeDamageMultiplier(HashMap<Predicate<LivingEntity>, Float> map) {
+
+    }
+
+    public float getExtraDamage(LivingEntity target, float amount) {
+        return 0.0f;
+    }
+
+    public void onEffectApplied(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+
+    }
+
+    public void onEffectRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+
+    }
+
+    public boolean shouldAddEffect(LivingEntity entity) {
+        return false;
+    }
+
+    public boolean shouldAddEffectAfterInjury(LivingEntity entity, DamageSource source, float amount) {
+        return false;
+    }
+
+    public void onElementApplied(LivingEntity entity, int slot) {
+        if (entity.world.isClient) {
+            return;
+        }
+        AttributeContainer attributes = entity.getAttributes();
+        for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : this.getAttributeModifiers(slot).entrySet()) {
+            EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
+            if (entityAttributeInstance == null) continue;
+            EntityAttributeModifier entityAttributeModifier = entry.getValue();
+            entityAttributeInstance.removeModifier(entityAttributeModifier);
+            entityAttributeInstance.addPersistentModifier(new EntityAttributeModifier(entityAttributeModifier.getId(), this.getTranslationKey() + " " + slot, entityAttributeModifier.getValue(), entityAttributeModifier.getOperation()));
+        }
+    }
+
+    public void onElementRemoved(LivingEntity entity, int slot) {
+        if (entity.world.isClient) {
+            return;
+        }
+        AttributeContainer attributes = entity.getAttributes();
+        for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : this.getAttributeModifiers(slot).entrySet()) {
+            EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
+            if (entityAttributeInstance == null) continue;
+            entityAttributeInstance.removeModifier(entry.getValue());
+            if (entity.getHealth() > entity.getMaxHealth()) {
+                entity.setHealth(entity.getMaxHealth());
+            }
+        }
+    }
+
+    public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(int slot) {
+        return new HashMap<>();
     }
 
     private static class Effect extends StatusEffect {
@@ -637,7 +905,7 @@ public enum Element implements StringIdentifiable {
         private final Element element;
 
         private Effect(Element element) {
-            super(StatusEffectCategory.NEUTRAL, element.getColor().getRGB());
+            super(StatusEffectCategory.HARMFUL, element.getColor().getRGB());
             this.element = element;
         }
 
@@ -649,6 +917,18 @@ public enum Element implements StringIdentifiable {
         @Override
         public void applyUpdateEffect(LivingEntity entity, int amplifier) {
             this.element.applyUpdateEffect(entity, amplifier);
+        }
+
+        @Override
+        public void onApplied(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+            super.onApplied(entity, attributes, amplifier);
+            this.element.onEffectApplied(entity, attributes, amplifier);
+        }
+
+        @Override
+        public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+            super.onRemoved(entity, attributes, amplifier);
+            this.element.onEffectRemoved(entity, attributes, amplifier);
         }
 
         public static StatusEffect get(Element element) {
