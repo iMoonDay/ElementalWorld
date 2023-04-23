@@ -135,12 +135,12 @@ public class LivingEntityMixin implements EWLivingEntity {
             element.tick(entity);
             element.addPersistentEffects(entity);
         }
-        for (Element element : ELEMENTS.values()) {
-            if (element.shouldAddEffect(entity)) {
-                element.addEffect(entity, null);
-            }
-        }
         if (!entity.world.isClient) {
+            for (Element element : ELEMENTS.values()) {
+                if (element.shouldAddEffect(entity)) {
+                    element.addEffect(entity, null);
+                }
+            }
             for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
                 if (!equipmentSlot.isArmorSlot()) {
                     continue;

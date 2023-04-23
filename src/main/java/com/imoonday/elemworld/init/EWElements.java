@@ -1,15 +1,20 @@
 package com.imoonday.elemworld.init;
 
+import com.imoonday.elemworld.ElementalWorld;
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.elements.*;
+import net.minecraft.item.Items;
+import net.minecraft.util.Identifier;
 
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.imoonday.elemworld.ElementalWorld.id;
 
 public class EWElements {
 
     public static final ConcurrentHashMap<String, Element> ELEMENTS = new ConcurrentHashMap<>();
 
-    public static final Element EMPTY = register("empty", new EmptyElement(0));
+    public static final Element EMPTY = register("empty", new Element(0));
     public static final Element GOLD = register("gold", new GoldElement(1, 1.25f, 1.25f, 1.0f, 0.75f));
     public static final Element WOOD = register("wood", new WoodElement(1, 0.75f, 0.75f, 1.0f, 1.25f));
     public static final Element WATER = register("water", new WaterElement(1, 1.0f, 0.5f, 1.0f, 1.0f));
@@ -32,10 +37,8 @@ public class EWElements {
         while (ELEMENTS.containsKey(name)) {
             name = s + "_" + index++;
         }
-        return ELEMENTS.put(name, element.withName(name));
-    }
-
-    public static void main(String[] args) {
-        System.out.println(WIND);
+        Element value = element.withName(name);
+        ELEMENTS.put(name, value);
+        return value;
     }
 }

@@ -103,6 +103,30 @@ public class Element {
         return Optional.ofNullable(ELEMENTS.get(name)).orElse(EMPTY);
     }
 
+    @Override
+    public String toString() {
+        return "Element{" +
+                "name='" + name + '\'' +
+                ", level=" + level +
+                ", miningSpeedMultiplier=" + miningSpeedMultiplier +
+                ", damageMultiplier=" + damageMultiplier +
+                ", protectionMultiplier=" + protectionMultiplier +
+                ", durabilityMultiplier=" + durabilityMultiplier +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Element element)) return false;
+        return level == element.level && Float.compare(element.miningSpeedMultiplier, miningSpeedMultiplier) == 0 && Float.compare(element.damageMultiplier, damageMultiplier) == 0 && Float.compare(element.protectionMultiplier, protectionMultiplier) == 0 && Float.compare(element.durabilityMultiplier, durabilityMultiplier) == 0 && Objects.equals(name, element.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, level, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    }
+
     public static Element createRandom() {
         Element element;
         Random random = Random.create();

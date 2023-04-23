@@ -17,7 +17,7 @@ public class WaterElement extends Element {
     }
 
     @Override
-    public void postHit (LivingEntity target, PlayerEntity attacker){
+    public void postHit(LivingEntity target, PlayerEntity attacker) {
         if (target.isIn(FIRE)) {
             target.removeEffectOf(FIRE);
             if (target.isOnFire()) {
@@ -32,7 +32,7 @@ public class WaterElement extends Element {
     }
 
     @Override
-    public float getExtraDamage (LivingEntity target,float amount){
+    public float getExtraDamage(LivingEntity target, float amount) {
         if (target.isIn(FIRE)) {
             return 2.0f;
         }
@@ -40,7 +40,7 @@ public class WaterElement extends Element {
     }
 
     @Override
-    public int getEffectTime (LivingEntity target){
+    public int getEffectTime(LivingEntity target) {
         if (target.hasElement(EARTH)) {
             return 3;
         }
@@ -48,7 +48,7 @@ public class WaterElement extends Element {
     }
 
     @Override
-    public boolean shouldAddEffect (LivingEntity entity){
+    public boolean shouldAddEffect(LivingEntity entity) {
         return entity.isWet();
     }
 }
