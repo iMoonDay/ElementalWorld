@@ -1,4 +1,5 @@
 {
+  "element.elemworld.invalid": "Invalid element: %s",
   "element.elemworld.gold": "Gold",
   "element.elemworld.wood": "Wood",
   "element.elemworld.water": "Water",

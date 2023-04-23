@@ -10,10 +10,8 @@
     "ItemStackMixin",
     "LivingEntityMixin",
     "MobEntityMixin",
-    "NameTagItemMixin",
     "PlayerEntityMixin",
     "PlayerInventoryMixin",
-    "PlayerScreenHandlerMixin",
     "ServerPlayerInteractionManagerMixin",
     "StatusEffectInstanceMixin"
   ],

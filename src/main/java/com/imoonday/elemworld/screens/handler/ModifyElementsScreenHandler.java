@@ -2,6 +2,7 @@ package com.imoonday.elemworld.screens.handler;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWBlocks;
+import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWScreens;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -112,7 +113,7 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         if (getStack().isEmpty()) {
             return true;
         }
-        return getStack().getElements().size() >= Element.MAX_SIZE;
+        return getStack().getElements().size() >= Element.LAST_INDEX;
     }
 
     public int getRequiredLevel() {
@@ -163,7 +164,7 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
             ArrayList<Element> elements = material.getElements();
             if (material.isEmpty() || elements.isEmpty()) {
                 if (stack.getOrCreateNbt().contains(LAST_RANDOM_ELEMENT_KEY)) {
-                    newStack.addElement(Element.byId(stack.getOrCreateNbt().getInt(LAST_RANDOM_ELEMENT_KEY)));
+                    newStack.addElement(Element.byName(stack.getOrCreateNbt().getString(LAST_RANDOM_ELEMENT_KEY)));
                 } else {
                     newStack.addNewRandomElements(1);
                     recordNewElement(newStack.getElements());
@@ -186,8 +187,8 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
 
     public void recordNewElement(ArrayList<Element> elements) {
         elements.removeAll(getStack().getElements());
-        Element element = elements.isEmpty() ? Element.INVALID : elements.get(0);
-        getStack().getOrCreateNbt().putInt(LAST_RANDOM_ELEMENT_KEY, element.getId());
+        Element element = elements.isEmpty() ? EWElements.EMPTY : elements.get(0);
+        getStack().getOrCreateNbt().putString(LAST_RANDOM_ELEMENT_KEY, element.getName());
     }
 
     @Override

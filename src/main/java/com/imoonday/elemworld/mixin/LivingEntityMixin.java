@@ -23,6 +23,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
@@ -35,11 +37,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.imoonday.elemworld.api.Element.*;
+import static com.imoonday.elemworld.init.EWElements.ELEMENTS;
+import static com.imoonday.elemworld.init.EWElements.EMPTY;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin implements EWLivingEntity {
@@ -81,7 +88,7 @@ public class LivingEntityMixin implements EWLivingEntity {
             element.onElementRemoved(entity, -1);
         }
         this.elements.clear();
-        this.elements.add(INVALID);
+        this.elements.add(EMPTY);
     }
 
     @Override
@@ -128,7 +135,7 @@ public class LivingEntityMixin implements EWLivingEntity {
             element.tick(entity);
             element.addPersistentEffects(entity);
         }
-        for (Element element : values()) {
+        for (Element element : ELEMENTS.values()) {
             if (element.shouldAddEffect(entity)) {
                 element.addEffect(entity, null);
             }
@@ -138,7 +145,7 @@ public class LivingEntityMixin implements EWLivingEntity {
                 if (!equipmentSlot.isArmorSlot()) {
                     continue;
                 }
-                for (Element element : values()) {
+                for (Element element : ELEMENTS.values()) {
                     int id = equipmentSlot.getEntitySlotId();
                     Map<EntityAttribute, EntityAttributeModifier> map = element.getAttributeModifiers(id);
                     for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
@@ -212,7 +219,7 @@ public class LivingEntityMixin implements EWLivingEntity {
             addRandomElements();
         }
         if (this.elements.size() > 1) {
-            this.elements.remove(INVALID);
+            this.elements.remove(EMPTY);
         }
     }
 
@@ -225,7 +232,7 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private void checkEffects() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        for (Element element : values()) {
+        for (Element element : ELEMENTS.values()) {
             if (entity.isIn(element)) {
                 continue;
             }
@@ -242,20 +249,22 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
     public void writeCustomDataToNbt(NbtCompound nbt, CallbackInfo ci) {
-        nbt.putIntArray(ELEMENTS_KEY, this.elements.stream().mapToInt(Element::getId).toArray());
+        NbtList list = new NbtList();
+        list.addAll(this.elements.stream().map(element -> NbtString.of(element.getName())).toList());
+        nbt.put(ELEMENTS_KEY, list);
         nbt.putInt(HEAL_TICK_KEY, this.healTick);
         nbt.putInt(IMMUNE_COOLDOWN_KEY, this.immuneCooldown);
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
     public void readCustomDataFromNbt(NbtCompound nbt, CallbackInfo ci) {
-        if (nbt.contains(ELEMENTS_KEY, NbtElement.INT_ARRAY_TYPE)) {
-            this.elements = Arrays.stream(nbt.getIntArray(ELEMENTS_KEY)).mapToObj(Element::byId).collect(Collectors.toCollection(ArrayList::new));
+        if (nbt.contains(ELEMENTS_KEY, NbtElement.LIST_TYPE)) {
+            this.elements = nbt.getList(ELEMENTS_KEY, NbtElement.STRING_TYPE).stream().map(nbtElement -> Element.byName(nbtElement.asString())).collect(Collectors.toCollection(ArrayList::new));
         }
-        if (nbt.contains(HEAL_TICK_KEY)) {
+        if (nbt.contains(HEAL_TICK_KEY, NbtElement.INT_TYPE)) {
             this.healTick = nbt.getInt(HEAL_TICK_KEY);
         }
-        if (nbt.contains(IMMUNE_COOLDOWN_KEY)) {
+        if (nbt.contains(IMMUNE_COOLDOWN_KEY, NbtElement.INT_TYPE)) {
             this.immuneCooldown = nbt.getInt(IMMUNE_COOLDOWN_KEY);
         }
     }
@@ -450,7 +459,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         } else if (chance < 0.75f) {
             addRandomElement(1);
         } else {
-            addElement(INVALID);
+            addElement(EMPTY);
         }
     }
 

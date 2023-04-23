@@ -18,6 +18,7 @@ import net.minecraft.util.Formatting;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import static com.imoonday.elemworld.init.EWElements.*;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
@@ -43,7 +44,7 @@ public class EWCommands {
                             Entity entity = EntityArgumentType.getEntity(context, "entity");
                             if (entity instanceof LivingEntity livingEntity && player != null) {
                                 livingEntity.clearElements();
-                                for (Element element : Element.values()) {
+                                for (Element element : ELEMENTS.values()) {
                                     livingEntity.addElement(element);
                                 }
                                 player.sendMessage(Text.literal("添加成功"));
@@ -98,7 +99,7 @@ public class EWCommands {
                             ItemStack stackInSlot = getStackInSlot(entity, slot);
                             if (player != null && isValidStack(player, stackInSlot)) {
                                 stackInSlot.setElements(new ArrayList<>());
-                                for (Element element : Element.values()) {
+                                for (Element element : ELEMENTS.values()) {
                                     stackInSlot.addElement(element);
                                 }
                                 player.sendMessage(Text.literal("添加成功"));
@@ -124,7 +125,7 @@ public class EWCommands {
                             int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
                             ItemStack stackInSlot = getStackInSlot(entity, slot);
                             if (player != null && isValidStack(player, stackInSlot)) {
-                                stackInSlot.setElements(new ArrayList<>(Collections.singleton(Element.INVALID)));
+                                stackInSlot.setElements(new ArrayList<>(Collections.singleton(EMPTY)));
                                 player.sendMessage(Text.literal("清除成功"));
                             }
                             return 0;

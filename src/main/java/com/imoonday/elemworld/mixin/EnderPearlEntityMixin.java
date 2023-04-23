@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import static com.imoonday.elemworld.init.EWElements.*;
+
 @Mixin(EnderPearlEntity.class)
 public class EnderPearlEntityMixin {
 
@@ -21,7 +23,7 @@ public class EnderPearlEntityMixin {
         if (entity instanceof ServerPlayerEntity player) {
             for (ItemStack armorItem : player.getArmorItems()) {
                 for (Element element : armorItem.getElements()) {
-                    if (element == Element.SPACE) {
+                    if (element == SPACE) {
                         pearl.discard();
                         ci.cancel();
                     }

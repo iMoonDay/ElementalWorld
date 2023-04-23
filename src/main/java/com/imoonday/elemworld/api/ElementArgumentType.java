@@ -1,20 +1,43 @@
 package com.imoonday.elemworld.api;
 
+import com.imoonday.elemworld.init.EWElements;
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.command.argument.EnumArgumentType;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.Text;
 
-public class ElementArgumentType extends EnumArgumentType<Element> {
+import java.util.concurrent.CompletableFuture;
 
-    public ElementArgumentType() {
-        super(Element.CODEC, Element::values);
-    }
+public class ElementArgumentType implements ArgumentType<Element> {
 
-    public static EnumArgumentType<Element> element() {
+    public static final DynamicCommandExceptionType INVALID_ELEMENT_EXCEPTION = new DynamicCommandExceptionType(element -> Text.translatable("element.elemworld.invalid", element));
+
+    public static ElementArgumentType element() {
         return new ElementArgumentType();
     }
 
     public static Element getElement(CommandContext<ServerCommandSource> context, String id) {
         return context.getArgument(id, Element.class);
+    }
+
+    @Override
+    public Element parse(StringReader reader) throws CommandSyntaxException {
+        String string = reader.readUnquotedString();
+        Element element = Element.byName(string);
+        if (element == null) {
+            throw INVALID_ELEMENT_EXCEPTION.create(string);
+        }
+        return element;
+    }
+
+    @Override
+    public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
+        return CommandSource.suggestMatching(EWElements.ELEMENTS.keySet(), builder);
     }
 }

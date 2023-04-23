@@ -1,4 +1,5 @@
 {
+  "element.elemworld.invalid": "无效的元素: %s",
   "element.elemworld.gold": "金",
   "element.elemworld.wood": "木",
   "element.elemworld.water": "水",

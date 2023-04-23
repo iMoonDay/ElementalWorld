@@ -7,10 +7,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.MutableText;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,11 +22,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.imoonday.elemworld.api.Element.*;
+import static com.imoonday.elemworld.init.EWElements.EMPTY;
 
 @Mixin(ItemStack.class)
 public class ItemStackMixin implements EWItemStack {
@@ -35,19 +37,30 @@ public class ItemStackMixin implements EWItemStack {
 
     private static final String ELEMENTS_KEY = "Elements";
 
+    @NotNull
     @Override
     public ArrayList<Element> getElements() {
         ItemStack stack = (ItemStack) (Object) this;
         if (!stack.hasNbt()) {
             return new ArrayList<>();
         }
-        return Arrays.stream(stack.getOrCreateNbt().getIntArray(ELEMENTS_KEY)).mapToObj(Element::byId).collect(Collectors.toCollection(ArrayList::new));
+        return stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.STRING_TYPE).stream().map(nbtElement -> Element.byName(nbtElement.asString())).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
     public void setElements(ArrayList<Element> elements) {
         ItemStack stack = (ItemStack) (Object) this;
-        stack.getOrCreateNbt().putIntArray(ELEMENTS_KEY, elements.stream().mapToInt(Element::getId).toArray());
+        NbtList list = new NbtList();
+        List<NbtString> nbtStrings = new ArrayList<>();
+        for (Element element : elements) {
+            if (element == null) {
+                continue;
+            }
+            NbtString string = NbtString.of(element.getName());
+            nbtStrings.add(string);
+        }
+        list.addAll(nbtStrings);
+        stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
     }
 
     @Override
@@ -59,13 +72,13 @@ public class ItemStackMixin implements EWItemStack {
     @Override
     public boolean addElement(Element element) {
         ItemStack stack = (ItemStack) (Object) this;
-        if (element == INVALID && stack.getElements().size() >= 1) {
+        if (element == null || element == EMPTY && stack.getElements().size() >= 1) {
             return false;
         }
         if (!stack.hasElement(element)) {
-            List<Integer> elements = Arrays.stream(stack.getOrCreateNbt().getIntArray(ELEMENTS_KEY)).boxed().collect(Collectors.toList());
-            elements.add(element.getId());
-            stack.getOrCreateNbt().putIntArray(ELEMENTS_KEY, elements);
+            NbtList list = stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.STRING_TYPE);
+            list.add(NbtString.of(element.getName()));
+            stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
             return true;
         }
         return false;
@@ -99,9 +112,9 @@ public class ItemStackMixin implements EWItemStack {
         if (stack.isDamageable() && stack.getElements().size() == 0) {
             stack.addRandomElements();
         }
-        if (stack.getElements().size() > 1 && stack.hasElement(INVALID)) {
+        if (stack.getElements().size() > 1 && stack.hasElement(EMPTY)) {
             ArrayList<Element> elements = new ArrayList<>(stack.getElements());
-            elements.remove(INVALID);
+            elements.remove(EMPTY);
             stack.setElements(elements);
         }
     }
@@ -112,7 +125,7 @@ public class ItemStackMixin implements EWItemStack {
         if (stack.getElements().size() == 0) {
             return;
         }
-        MutableText text = getElementsText(stack.getElements(), false);
+        Text text = Element.getElementsText(stack.getElements(), false);
         if (text != null) {
             List<Text> list = cir.getReturnValue();
             list.add(1, text);
@@ -135,6 +148,9 @@ public class ItemStackMixin implements EWItemStack {
         ItemStack stack = (ItemStack) (Object) this;
         float multiplier = 1.0f;
         for (Element element : stack.getElements()) {
+            if (element == null) {
+                continue;
+            }
             multiplier *= element.getDurabilityMultiplier();
         }
         int value = (int) (cir.getReturnValueI() * multiplier);
@@ -167,7 +183,7 @@ public class ItemStackMixin implements EWItemStack {
         } else if (chance < 0.75f) {
             addRandomElement(stack, 1);
         } else {
-            stack.addElement(INVALID);
+            stack.addElement(EMPTY);
         }
     }
 
@@ -184,10 +200,13 @@ public class ItemStackMixin implements EWItemStack {
 
     private static void addRandomElement(ItemStack stack, int level) {
         while (true) {
-            boolean success = stack.addElement(createRandom(level));
+            boolean success = stack.addElement(Element.createRandom(level));
             int maxSize = level == 0 ? 1 : 5;
             List<Element> list = new ArrayList<>();
             for (Element element : stack.getElements()) {
+                if (element == null) {
+                    continue;
+                }
                 if (element.getLevel() == level) {
                     list.add(element);
                 }

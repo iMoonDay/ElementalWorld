@@ -12,7 +12,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -79,7 +78,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null) {
             ArrayList<Element> elements = new ArrayList<>(this.handler.getResult().getStack(0).getElements());
             elements.removeAll(this.handler.getInput().getStack(0).getElements());
-            MutableText text = Element.getElementsText(elements, false);
+            Text text = Element.getElementsText(elements, false);
             if (text == null) {
                 text = Text.literal("无新元素");
             }
@@ -114,7 +113,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
         ItemStack material = this.handler.getMaterial();
         ItemStack stack = this.handler.getStack();
         Text tooltip = null;
-        if (stack.getElements().size() >= Element.MAX_SIZE) {
+        if (stack.getElements().size() >= Element.LAST_INDEX) {
             tooltip = Text.literal("物品已包含所有元素");
         } else if (player.experienceLevel < 1 && !stack.isEmpty() && material.isOf(Items.DIAMOND) && !player.isCreative()) {
             tooltip = Text.literal("刷新元素至少要有1级经验");

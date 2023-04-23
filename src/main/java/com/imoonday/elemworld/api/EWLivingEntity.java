@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public interface EWLivingEntity {
 
     default ArrayList<Element> getElements() {
-        return null;
+        return new ArrayList<>();
     }
 
     default boolean addElement(Element elements) {
@@ -49,7 +49,7 @@ public interface EWLivingEntity {
     }
 
     default ArrayList<Element> getAllElements() {
-        return null;
+        return new ArrayList<>();
     }
 
     default boolean hasElement(Element element) {

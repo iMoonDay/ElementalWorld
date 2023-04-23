@@ -1,10 +1,13 @@
 package com.imoonday.elemworld.api;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 
 public interface EWItemStack {
+    @NotNull
     default ArrayList<Element> getElements() {
-        return null;
+        return new ArrayList<>();
     }
 
     default void setElements(ArrayList<Element> elements) {
