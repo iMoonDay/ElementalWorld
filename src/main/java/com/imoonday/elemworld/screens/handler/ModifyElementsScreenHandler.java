@@ -15,14 +15,15 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.util.math.random.Random;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
 public class ModifyElementsScreenHandler extends ScreenHandler {
 
     public static final String LAST_RANDOM_ELEMENT_KEY = "LastRandomElement";
-    public static final String NAME_KEY = "Name";
-    public static final String LEVEL_KEY = "Level";
+    public static final String RANDOM_COST_KEY = "RandomCost";
     private final Inventory result = new CraftingResultInventory();
     private final Inventory input = new SimpleInventory(2) {
         @Override
@@ -36,10 +37,6 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
 
     public ModifyElementsScreenHandler(int syncId, PlayerInventory inventory) {
         this(syncId, inventory, ScreenHandlerContext.EMPTY);
-    }
-
-    public Inventory getInput() {
-        return input;
     }
 
     public Inventory getResult() {
@@ -120,8 +117,25 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
     }
 
     public int getRequiredLevel() {
-        ArrayList<Element> elements = this.result.getStack(0).getElements();
-        return elements.stream().mapToInt(Element::getRareLevel).map(level -> level * elements.size()).sum();
+        ItemStack stack = this.result.getStack(0);
+        if (stack.isEmpty()) {
+            return 0;
+        }
+        ArrayList<Element> elements = stack.getElements();
+        float sum = 0;
+        for (Element element1 : elements) {
+            float i = element1.getRareLevel() * elements.size() * ((float) element1.getLevel() / element1.getMaxLevel());
+            sum += i;
+        }
+        int randomCost = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY).getInt(RANDOM_COST_KEY);
+        return Math.max((int) sum + randomCost, 1);
+    }
+
+    @NotNull
+    public ArrayList<Element> getNewElements() {
+        ArrayList<Element> elements = new ArrayList<>(this.result.getStack(0).getElements());
+        elements.removeAll(getStack().getElements());
+        return elements;
     }
 
     public ItemStack getStack() {
@@ -192,9 +206,8 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
     public void recordNewElement(ArrayList<Element> elements) {
         elements.removeAll(getStack().getElements());
         Element element = elements.isEmpty() ? EWElements.EMPTY : elements.get(0);
-        NbtCompound nbt = new NbtCompound();
-        nbt.putString(NAME_KEY, element.getName());
-        nbt.putInt(LEVEL_KEY, element.getLevel());
+        NbtCompound nbt = element.toNbt();
+        nbt.putInt(RANDOM_COST_KEY, Random.create().nextBetween(-3, 3));
         getStack().getOrCreateNbt().put(LAST_RANDOM_ELEMENT_KEY, nbt);
     }
 

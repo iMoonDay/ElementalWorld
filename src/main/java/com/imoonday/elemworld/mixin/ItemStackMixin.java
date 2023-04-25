@@ -20,7 +20,9 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -35,6 +37,9 @@ import static com.imoonday.elemworld.init.EWElements.EMPTY;
 @Mixin(ItemStack.class)
 public class ItemStackMixin implements EWItemStack {
 
+    @Shadow
+    @Final
+    public static String NAME_KEY;
     private static final String ELEMENTS_KEY = "Elements";
 
     @NotNull
@@ -85,10 +90,9 @@ public class ItemStackMixin implements EWItemStack {
         if (!element.isSuitableFor(stack)) {
             return false;
         }
+        NbtList list = stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE);
         if (!stack.hasElement(element)) {
-            NbtList list = stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE);
-            NbtCompound nbt = element.toNbt();
-            list.add(nbt);
+            list.add(element.toNbt());
             stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
             return true;
         }

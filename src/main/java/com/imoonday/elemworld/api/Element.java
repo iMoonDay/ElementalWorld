@@ -197,7 +197,10 @@ public class Element {
     public String toString() {
         return "Element{" +
                 "name='" + name + '\'' +
-                ", level=" + rareLevel +
+                ", level=" + level +
+                ", maxLevel=" + maxLevel +
+                ", rareLevel=" + rareLevel +
+                ", weight=" + weight +
                 ", miningSpeedMultiplier=" + miningSpeedMultiplier +
                 ", damageMultiplier=" + damageMultiplier +
                 ", protectionMultiplier=" + protectionMultiplier +
@@ -209,22 +212,12 @@ public class Element {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Element element)) return false;
-        return rareLevel == element.rareLevel
-                && Float.compare(element.miningSpeedMultiplier, miningSpeedMultiplier) == 0
-                && Float.compare(element.damageMultiplier, damageMultiplier) == 0
-                && Float.compare(element.protectionMultiplier, protectionMultiplier) == 0
-                && Float.compare(element.durabilityMultiplier, durabilityMultiplier) == 0
-                && Objects.equals(name, element.name);
+        return maxLevel == element.maxLevel && rareLevel == element.rareLevel && weight == element.weight && Float.compare(element.miningSpeedMultiplier, miningSpeedMultiplier) == 0 && Float.compare(element.damageMultiplier, damageMultiplier) == 0 && Float.compare(element.protectionMultiplier, protectionMultiplier) == 0 && Float.compare(element.durabilityMultiplier, durabilityMultiplier) == 0 && Objects.equals(name, element.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name,
-                rareLevel,
-                miningSpeedMultiplier,
-                damageMultiplier,
-                protectionMultiplier,
-                durabilityMultiplier);
+        return Objects.hash(name, maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
     }
 
     private Element withRandomLevel() {
@@ -241,14 +234,16 @@ public class Element {
         return this.withLevel(Optional.ofNullable(random.next()).orElse(0));
     }
 
+    private void setRandomLevel() {
+        this.level = this.withRandomLevel().level;
+    }
+
     public static Element createRandom(ItemStack stack) {
         return Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element -> element.isSuitableFor(stack), Element::getWeight)).orElse(EWElements.EMPTY).withRandomLevel();
     }
 
     public static Element createRandom(ItemStack stack, ArrayList<Element> exclude) {
-        return Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(),
-                element -> element.isNotIn(exclude) && element.isSuitableFor(stack),
-                Element::getWeight)).orElse(EWElements.EMPTY).withRandomLevel();
+        return Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element -> !element.isOneOf(exclude) && element.isSuitableFor(stack), Element::getWeight)).orElse(EWElements.EMPTY).withRandomLevel();
     }
 
     public static Element createRandom(LivingEntity entity) {
@@ -360,11 +355,11 @@ public class Element {
     }
 
     public boolean isOneOf(Element... elements) {
-        return Arrays.stream(elements).anyMatch(element -> this == element);
+        return Arrays.asList(elements).contains(this);
     }
 
-    public boolean isNotIn(ArrayList<Element> elements) {
-        return !elements.contains(this);
+    public boolean isOneOf(ArrayList<Element> elements) {
+        return elements.contains(this);
     }
 
     public boolean shouldImmuneOnDeath(LivingEntity entity) {

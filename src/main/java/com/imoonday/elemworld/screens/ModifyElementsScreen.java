@@ -14,6 +14,7 @@ import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -76,8 +77,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
             textRenderer.drawWithShadow(matrices, tooltip, x + 8 + 2, y + 21, Color.RED.getRGB());
         }
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null) {
-            ArrayList<Element> elements = new ArrayList<>(this.handler.getResult().getStack(0).getElements());
-            elements.removeAll(this.handler.getInput().getStack(0).getElements());
+            ArrayList<Element> elements = this.handler.getNewElements();
             Text text = Element.getElementsText(elements, false);
             if (text == null) {
                 text = Text.translatable("text.eleworld.modify_elements_screen.no_new");
