@@ -14,8 +14,8 @@ import static net.minecraft.entity.damage.DamageTypes.SONIC_BOOM;
 import static net.minecraft.entity.effect.StatusEffects.GLOWING;
 
 public class SoundElement extends Element {
-    public SoundElement(int level, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
-        super(level, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    public SoundElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
     }
 
     @Override

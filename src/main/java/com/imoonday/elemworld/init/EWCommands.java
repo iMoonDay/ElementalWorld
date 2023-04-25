@@ -2,6 +2,7 @@ package com.imoonday.elemworld.init;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.api.ElementArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -18,7 +19,6 @@ import net.minecraft.util.Formatting;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import static com.imoonday.elemworld.init.EWElements.*;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
@@ -29,25 +29,29 @@ public class EWCommands {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("element").requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(3))
                 .then(literal("entity")
-                        .then(literal("add").then(argument("entity", EntityArgumentType.entity()).then(argument("element", ElementArgumentType.element()).executes(context -> {
+                        .then(literal("add").then(argument("entity", EntityArgumentType.entity()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
                             ServerPlayerEntity player = context.getSource().getPlayer();
                             Entity entity = EntityArgumentType.getEntity(context, "entity");
                             Element element = ElementArgumentType.getElement(context, "element");
+                            int level = IntegerArgumentType.getInteger(context, "level");
                             if (entity instanceof LivingEntity livingEntity && element != null && player != null) {
-                                boolean success = livingEntity.addElement(element);
-                                player.sendMessage(Text.literal(success ? "添加成功" : "元素已存在"));
+                                boolean success = livingEntity.addElement(element.withLevel(level));
+                                player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
+                                if (element.equals(EWElements.EMPTY)) {
+                                    player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
+                                }
                             }
                             return 0;
-                        }))))
+                        })))))
                         .then(literal("addall").then(argument("entity", EntityArgumentType.entity()).executes(context -> {
                             ServerPlayerEntity player = context.getSource().getPlayer();
                             Entity entity = EntityArgumentType.getEntity(context, "entity");
                             if (entity instanceof LivingEntity livingEntity && player != null) {
                                 livingEntity.clearElements();
-                                for (Element element : ELEMENTS.values()) {
-                                    livingEntity.addElement(element);
+                                for (Element element : Element.getRegistrySet()) {
+                                    livingEntity.addElement(element.withLevel(element.getMaxLevel()));
                                 }
-                                player.sendMessage(Text.literal("添加成功"));
+                                player.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
                             }
                             return 0;
                         })))
@@ -58,7 +62,7 @@ public class EWCommands {
                             if (entity instanceof LivingEntity livingEntity && element != null && player != null) {
                                 boolean exist = livingEntity.hasElement(element);
                                 livingEntity.removeElement(element);
-                                player.sendMessage(Text.literal(exist ? "删除成功" : "元素不存在"));
+                                player.sendMessage(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"));
                             }
                             return 0;
                         }))))
@@ -68,7 +72,7 @@ public class EWCommands {
                             if (entity instanceof LivingEntity livingEntity && player != null) {
                                 Text text = Element.getElementsText(livingEntity.getElements(), false);
                                 if (text == null) {
-                                    text = Text.literal("空");
+                                    text = Text.translatable("text.eleworld.commands.get.empty");
                                 }
                                 player.sendMessage(text);
                             }
@@ -79,23 +83,27 @@ public class EWCommands {
                             Entity entity = EntityArgumentType.getEntity(context, "entity");
                             if (entity instanceof LivingEntity livingEntity && player != null) {
                                 livingEntity.clearElements();
-                                player.sendMessage(Text.literal("清除成功"));
+                                player.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
                             }
                             return 0;
                         }))))
                 .then(literal("item")
-                        .then(literal("add").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).executes(context -> {
+                        .then(literal("add").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
                             ServerPlayerEntity player = context.getSource().getPlayer();
                             Entity entity = EntityArgumentType.getEntity(context, "entity");
                             Element element = ElementArgumentType.getElement(context, "element");
                             int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
                             ItemStack stackInSlot = getStackInSlot(entity, slot);
+                            int level = IntegerArgumentType.getInteger(context, "level");
                             if (element != null && player != null && isValidStack(player, stackInSlot)) {
-                                boolean success = stackInSlot.addElement(element);
-                                player.sendMessage(Text.literal(success ? "添加成功" : "元素已存在"));
+                                boolean success = stackInSlot.addElement(element.withLevel(level));
+                                player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
+                                if (element.equals(EWElements.EMPTY)) {
+                                    player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
+                                }
                             }
                             return 0;
-                        })))))
+                        }))))))
                         .then(literal("addall").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).executes(context -> {
                             ServerPlayerEntity player = context.getSource().getPlayer();
                             Entity entity = EntityArgumentType.getEntity(context, "entity");
@@ -103,10 +111,10 @@ public class EWCommands {
                             ItemStack stackInSlot = getStackInSlot(entity, slot);
                             if (player != null && isValidStack(player, stackInSlot)) {
                                 stackInSlot.setElements(new ArrayList<>());
-                                for (Element element : ELEMENTS.values()) {
-                                    stackInSlot.addElement(element);
+                                for (Element element : Element.getRegistrySet()) {
+                                    stackInSlot.addElement(element.withLevel(element.getMaxLevel()));
                                 }
-                                player.sendMessage(Text.literal("添加成功"));
+                                player.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
                             }
                             return 0;
                         }))))
@@ -119,7 +127,7 @@ public class EWCommands {
                             if (element != null && player != null && isValidStack(player, stackInSlot)) {
                                 boolean exist = stackInSlot.hasElement(element);
                                 stackInSlot.removeElement(element);
-                                player.sendMessage(Text.literal(exist ? "删除成功" : "元素不存在"));
+                                player.sendMessage(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"));
                             }
                             return 0;
                         })))))
@@ -129,8 +137,8 @@ public class EWCommands {
                             int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
                             ItemStack stackInSlot = getStackInSlot(entity, slot);
                             if (player != null && isValidStack(player, stackInSlot)) {
-                                stackInSlot.setElements(new ArrayList<>(Collections.singleton(EMPTY)));
-                                player.sendMessage(Text.literal("清除成功"));
+                                stackInSlot.setElements(new ArrayList<>(Collections.singleton(EWElements.EMPTY)));
+                                player.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
                             }
                             return 0;
                         }))))))
@@ -139,11 +147,11 @@ public class EWCommands {
 
     private static boolean isValidStack(ServerPlayerEntity player, ItemStack stackInSlot) {
         if (stackInSlot.isEmpty()) {
-            player.sendMessage(Text.literal("物品不存在").formatted(Formatting.RED));
+            player.sendMessage(Text.translatable("text.eleworld.commands.item.invalid").formatted(Formatting.RED));
             return false;
         }
         if (!stackInSlot.isDamageable()) {
-            player.sendMessage(Text.literal("物品不支持").formatted(Formatting.RED));
+            player.sendMessage(Text.translatable("text.eleworld.commands.item.unsupport").formatted(Formatting.RED));
             return false;
         }
         return true;

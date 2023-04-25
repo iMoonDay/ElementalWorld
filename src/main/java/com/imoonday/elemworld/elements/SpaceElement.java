@@ -21,8 +21,8 @@ import static net.minecraft.registry.tag.DamageTypeTags.IS_DROWNING;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_EXPLOSION;
 
 public class SpaceElement extends Element {
-    public SpaceElement(int level, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
-        super(level, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    public SpaceElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
     }
 
     @Override

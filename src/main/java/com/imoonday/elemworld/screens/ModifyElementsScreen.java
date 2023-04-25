@@ -80,10 +80,10 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
             elements.removeAll(this.handler.getInput().getStack(0).getElements());
             Text text = Element.getElementsText(elements, false);
             if (text == null) {
-                text = Text.literal("无新元素");
+                text = Text.translatable("text.eleworld.modify_elements_screen.no_new");
             }
             if (elements.size() > 5) {
-                text = Text.literal("新增 " + elements.size() + " 个元素");
+                text = Text.translatable("text.eleworld.modify_elements_screen.new", elements.size());
             }
             int textWidth = textRenderer.getWidth(text);
             int half = textWidth / 2;
@@ -100,7 +100,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
         }
         if (!this.handler.getResult().isEmpty()) {
             Color color = player.experienceLevel >= this.handler.getRequiredLevel() || player.isCreative() ? Color.GREEN : Color.RED;
-            Text cost = Text.literal("修改花费 : " + this.handler.getRequiredLevel());
+            Text cost = Text.translatable("text.eleworld.modify_elements_screen.cost", this.handler.getRequiredLevel());
             int x1 = x + backgroundWidth - textRenderer.getWidth(cost) - 8;
             AnvilScreen.fill(matrices, x1 - 4, y + BUTTON_Y + 2, x + this.backgroundWidth - 8, y + BUTTON_Y + 2 + 12, 0x4F000000);
             textRenderer.drawWithShadow(matrices, cost, x1 - 2, y + BUTTON_Y + 4, color.getRGB());
@@ -113,12 +113,12 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
         ItemStack material = this.handler.getMaterial();
         ItemStack stack = this.handler.getStack();
         Text tooltip = null;
-        if (stack.getElements().size() >= Element.LAST_INDEX) {
-            tooltip = Text.literal("物品已包含所有元素");
+        if (stack.getElements().size() >= Element.getRegistryMap().size() - 1 && !stack.isEmpty()) {
+            tooltip = Text.translatable("text.eleworld.modify_elements_screen.full");
         } else if (player.experienceLevel < 1 && !stack.isEmpty() && material.isOf(Items.DIAMOND) && !player.isCreative()) {
-            tooltip = Text.literal("刷新元素至少要有1级经验");
+            tooltip = Text.translatable("text.eleworld.modify_elements_screen.not_enough_level");
         } else if (!stack.isOf(material.getItem()) && !stack.isEmpty() && !material.isOf(Items.DIAMOND) && !material.isEmpty()) {
-            tooltip = Text.literal("材料必须为相同物品");
+            tooltip = Text.translatable("text.eleworld.modify_elements_screen.different_item");
         }
         return tooltip;
     }

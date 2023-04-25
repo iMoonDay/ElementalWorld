@@ -10,8 +10,8 @@ import net.minecraft.registry.tag.BlockTags;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_FALL;
 
 public class GrassElement extends Element {
-    public GrassElement(int level) {
-        super(level);
+    public GrassElement(int maxLevel, int rareLevel, int weight) {
+        super(maxLevel, rareLevel, weight);
     }
 
     @Override

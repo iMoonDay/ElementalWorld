@@ -30,7 +30,7 @@ public class ElementArgumentType implements ArgumentType<Element> {
     public Element parse(StringReader reader) throws CommandSyntaxException {
         String string = reader.readUnquotedString();
         Element element = Element.byName(string);
-        if (element == null) {
+        if (element == null || !"empty".equals(string) && element.equals(EWElements.EMPTY)) {
             throw INVALID_ELEMENT_EXCEPTION.create(string);
         }
         return element;
@@ -38,6 +38,6 @@ public class ElementArgumentType implements ArgumentType<Element> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return CommandSource.suggestMatching(EWElements.ELEMENTS.keySet(), builder);
+        return CommandSource.suggestMatching(Element.getRegistryMap().keySet(), builder);
     }
 }

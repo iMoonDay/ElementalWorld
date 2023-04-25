@@ -18,17 +18,17 @@ import static net.minecraft.entity.effect.StatusEffects.SPEED;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_FALL;
 
 public class WindElement extends Element {
-    public WindElement(int level) {
-        super(level);
+    public WindElement(int maxLevel, int rareLevel, int weight) {
+        super(maxLevel, rareLevel, weight);
     }
 
     @Override
-    public boolean ignoreDamage (DamageSource source, LivingEntity entity){
+    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
         return source.isIn(IS_FALL);
     }
 
     @Override
-    public void postHit (LivingEntity target, PlayerEntity attacker){
+    public void postHit(LivingEntity target, PlayerEntity attacker) {
         List<LivingEntity> entities = target.world.getEntitiesByClass(LivingEntity.class, target.getBoundingBox().expand(3), Entity::isLiving);
         for (LivingEntity entity : entities) {
             if (target.hasEffectOf(FIRE)) {
@@ -41,7 +41,7 @@ public class WindElement extends Element {
     }
 
     @Override
-    public Map<StatusEffect, Integer> getPersistentEffects () {
+    public Map<StatusEffect, Integer> getPersistentEffects() {
         Map<StatusEffect, Integer> effects = new HashMap<>();
         effects.put(JUMP_BOOST, 0);
         effects.put(SPEED, 0);

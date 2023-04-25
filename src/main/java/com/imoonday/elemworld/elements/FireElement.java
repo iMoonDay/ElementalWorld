@@ -13,11 +13,12 @@ import net.minecraft.sound.SoundEvents;
 
 import java.util.ArrayList;
 
-import static com.imoonday.elemworld.init.EWElements.*;
+import static com.imoonday.elemworld.init.EWElements.EARTH;
+import static com.imoonday.elemworld.init.EWElements.WATER;
 
 public class FireElement extends Element {
-    public FireElement(int level, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
-        super(level, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    public FireElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
     }
 
     @Override

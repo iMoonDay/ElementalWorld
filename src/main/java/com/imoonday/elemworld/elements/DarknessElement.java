@@ -16,33 +16,33 @@ import static net.minecraft.entity.damage.DamageTypes.*;
 import static net.minecraft.entity.effect.StatusEffects.SPEED;
 
 public class DarknessElement extends Element {
-    public DarknessElement(int level) {
-        super(level);
+    public DarknessElement(int maxLevel, int rareLevel, int weight) {
+        super(maxLevel, rareLevel, weight);
     }
 
     @Override
-    public float getMiningSpeedMultiplier (World world, LivingEntity entity, BlockState state){
+    public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
         Float x = getMultiplier(world, entity);
         if (x != null) return x;
         return super.getMiningSpeedMultiplier(world, entity, state);
     }
 
     @Override
-    public float getDamageMultiplier (World world, LivingEntity entity, LivingEntity target){
+    public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
         Float x = getMultiplier(world, entity);
         if (x != null) return x;
         return super.getDamageMultiplier(world, entity, target);
     }
 
     @Override
-    public float getProtectionMultiplier (World world, LivingEntity entity){
+    public float getProtectionMultiplier(World world, LivingEntity entity) {
         Float x = getMultiplier(world, entity);
         if (x != null) return x;
         return super.getProtectionMultiplier(world, entity);
     }
 
     @Nullable
-    private Float getMultiplier (World world, LivingEntity entity){
+    private Float getMultiplier(World world, LivingEntity entity) {
         long time = world.getTimeOfDay();
         if (time < 1000 || time >= 13000) {
             if (world.getLightLevel(entity.getBlockPos()) == 0) {
@@ -54,7 +54,7 @@ public class DarknessElement extends Element {
     }
 
     @Override
-    public boolean ignoreDamage (DamageSource source, LivingEntity entity){
+    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
         if (source.isIndirect()) {
             return false;
         }
@@ -68,7 +68,7 @@ public class DarknessElement extends Element {
     }
 
     @Override
-    public Map<StatusEffect, Integer> getPersistentEffects () {
+    public Map<StatusEffect, Integer> getPersistentEffects() {
         Map<StatusEffect, Integer> effects = new HashMap<>();
         effects.put(SPEED, 0);
         return effects;

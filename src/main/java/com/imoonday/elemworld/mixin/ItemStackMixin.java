@@ -2,15 +2,20 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWItemStack;
 import com.imoonday.elemworld.api.Element;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsageContext;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
@@ -23,17 +28,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 import static com.imoonday.elemworld.init.EWElements.EMPTY;
 
 @Mixin(ItemStack.class)
 public class ItemStackMixin implements EWItemStack {
-
-    /**
-     * @see #postHit(LivingEntity, PlayerEntity, CallbackInfo)
-     * 击中后方法
-     **/
 
     private static final String ELEMENTS_KEY = "Elements";
 
@@ -44,22 +44,29 @@ public class ItemStackMixin implements EWItemStack {
         if (!stack.hasNbt()) {
             return new ArrayList<>();
         }
-        return stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.STRING_TYPE).stream().map(nbtElement -> Element.byName(nbtElement.asString())).collect(Collectors.toCollection(ArrayList::new));
+        ArrayList<Element> elements = new ArrayList<>();
+        for (NbtElement nbtElement : stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE)) {
+            NbtCompound nbt = (NbtCompound) nbtElement;
+            Element element = Element.fromNbt(nbt);
+            elements.add(element);
+        }
+        return elements;
     }
 
     @Override
     public void setElements(ArrayList<Element> elements) {
         ItemStack stack = (ItemStack) (Object) this;
         NbtList list = new NbtList();
-        List<NbtString> nbtStrings = new ArrayList<>();
         for (Element element : elements) {
             if (element == null) {
                 continue;
             }
-            NbtString string = NbtString.of(element.getName());
-            nbtStrings.add(string);
+            if (!element.isSuitableFor(stack)) {
+                continue;
+            }
+            NbtCompound nbt = element.toNbt();
+            list.add(nbt);
         }
-        list.addAll(nbtStrings);
         stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
     }
 
@@ -75,9 +82,13 @@ public class ItemStackMixin implements EWItemStack {
         if (element == null || element == EMPTY && stack.getElements().size() >= 1) {
             return false;
         }
+        if (!element.isSuitableFor(stack)) {
+            return false;
+        }
         if (!stack.hasElement(element)) {
-            NbtList list = stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.STRING_TYPE);
-            list.add(NbtString.of(element.getName()));
+            NbtList list = stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE);
+            NbtCompound nbt = element.toNbt();
+            list.add(nbt);
             stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
             return true;
         }
@@ -98,9 +109,16 @@ public class ItemStackMixin implements EWItemStack {
             return;
         }
         ItemStack stack = (ItemStack) (Object) this;
-        if (stack.isDamageable()) {
+        if (hasSuitableElement()) {
             stack.addRandomElements();
         }
+    }
+
+    @Override
+    public boolean hasSuitableElement() {
+        ItemStack stack = (ItemStack) (Object) this;
+        return Element.getRegistrySet()
+                .stream().anyMatch(element -> element.isSuitableFor(stack));
     }
 
     @Inject(method = "inventoryTick", at = @At("TAIL"))
@@ -109,7 +127,7 @@ public class ItemStackMixin implements EWItemStack {
             return;
         }
         ItemStack stack = (ItemStack) (Object) this;
-        if (stack.isDamageable() && stack.getElements().size() == 0) {
+        if (hasSuitableElement() && stack.getElements().size() == 0) {
             stack.addRandomElements();
         }
         if (stack.getElements().size() > 1 && stack.hasElement(EMPTY)) {
@@ -143,6 +161,38 @@ public class ItemStackMixin implements EWItemStack {
         }
     }
 
+    @Inject(method = "postMine", at = @At("TAIL"))
+    public void postMine(World world, BlockState state, BlockPos pos, PlayerEntity miner, CallbackInfo ci) {
+        ItemStack stack = (ItemStack) (Object) this;
+        for (Element element : stack.getElements()) {
+            element.postMine(world, state, pos, miner);
+        }
+    }
+
+    @Inject(method = "useOnBlock", at = @At("TAIL"))
+    public void useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
+        ItemStack stack = (ItemStack) (Object) this;
+        for (Element element : stack.getElements()) {
+            element.useOnBlock(context);
+        }
+    }
+
+    @Inject(method = "useOnEntity", at = @At("TAIL"))
+    public void useOnEntity(PlayerEntity user, LivingEntity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+        ItemStack stack = (ItemStack) (Object) this;
+        for (Element element : stack.getElements()) {
+            element.useOnEntity(user, entity, hand);
+        }
+    }
+
+    @Inject(method = "usageTick", at = @At("TAIL"))
+    public void usageTick(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
+        ItemStack stack = (ItemStack) (Object) this;
+        for (Element element : stack.getElements()) {
+            element.usageTick(world, user, remainingUseTicks);
+        }
+    }
+
     @Inject(method = "getMaxDamage", at = @At("RETURN"), cancellable = true)
     public void getMaxDamage(CallbackInfoReturnable<Integer> cir) {
         ItemStack stack = (ItemStack) (Object) this;
@@ -160,63 +210,37 @@ public class ItemStackMixin implements EWItemStack {
     @Override
     public void addRandomElements() {
         ItemStack stack = (ItemStack) (Object) this;
-        addRandomElement(stack);
-        if (Random.create().nextFloat() < 0.5f) {
-            addRandomElement(stack);
+        boolean success = addRandomElement(stack);
+        Random random = Random.create();
+        float chance = 0.5f;
+        while (random.nextFloat() < chance && success) {
+            success = addRandomElement(stack);
+            chance /= 2;
         }
     }
 
     @Override
-    public void addNewRandomElements(int count) {
+    public void addNewRandomElement() {
         ItemStack stack = (ItemStack) (Object) this;
-        for (int i = 0; i < count; i++) {
-            addNewRandomElement(stack);
-        }
+        stack.addElement(Element.createRandom(stack, stack.getElements()));
     }
 
-    private static void addRandomElement(ItemStack stack) {
-        float chance = Random.create().nextFloat();
-        if (chance < 0.05f) {
-            addRandomElement(stack, 3);
-        } else if (chance < 0.25f) {
-            addRandomElement(stack, 2);
-        } else if (chance < 0.75f) {
-            addRandomElement(stack, 1);
-        } else {
-            stack.addElement(EMPTY);
-        }
-    }
-
-    private static void addNewRandomElement(ItemStack stack) {
-        float chance = Random.create().nextFloat();
-        if (chance < 0.05f) {
-            addNewRandomElement(stack, 3);
-        } else if (chance < 0.25f) {
-            addNewRandomElement(stack, 2);
-        } else {
-            addNewRandomElement(stack, 1);
-        }
-    }
-
-    private static void addRandomElement(ItemStack stack, int level) {
-        while (true) {
-            boolean success = stack.addElement(Element.createRandom(level));
-            int maxSize = level == 0 ? 1 : 5;
-            List<Element> list = new ArrayList<>();
-            for (Element element : stack.getElements()) {
-                if (element == null) {
-                    continue;
-                }
-                if (element.getLevel() == level) {
-                    list.add(element);
-                }
+    private static boolean addRandomElement(ItemStack stack) {
+        for (int i = 0; i < Element.getRegistryMap().size(); i++) {
+            Element element = Element.createRandom(stack);
+            boolean success = stack.addElement(element);
+            int maxSize = Element.getRegistrySet()
+                    .stream().filter(element1 -> element1.getRareLevel() == element.getRareLevel())
+                    .toList().size();
+            boolean full = stack.getElements()
+                    .stream().filter(Objects::nonNull)
+                    .toList().size() >= maxSize;
+            if (success) {
+                return true;
+            } else if (full) {
+                return false;
             }
-            boolean isFull = list.size() >= maxSize;
-            if (success || isFull) break;
         }
-    }
-
-    private static void addNewRandomElement(ItemStack stack, int level) {
-        stack.addElement(Element.createRandom(level, stack.getElements()));
+        return false;
     }
 }

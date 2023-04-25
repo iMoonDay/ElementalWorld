@@ -22,8 +22,8 @@ import static net.minecraft.registry.tag.DamageTypeTags.IS_EXPLOSION;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_FIRE;
 
 public class LightElement extends Element {
-    public LightElement(int level) {
-        super(level);
+    public LightElement(int maxLevel, int rareLevel, int weight) {
+        super(maxLevel, rareLevel, weight);
     }
 
     @Override

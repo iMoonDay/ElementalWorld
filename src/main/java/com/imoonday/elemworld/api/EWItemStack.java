@@ -26,11 +26,15 @@ public interface EWItemStack {
 
     }
 
+    default boolean hasSuitableElement() {
+        return false;
+    }
+
     default void addRandomElements() {
 
     }
 
-    default void addNewRandomElements(int count) {
+    default void addNewRandomElement() {
 
     }
 }
