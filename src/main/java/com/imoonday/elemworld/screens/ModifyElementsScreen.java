@@ -14,11 +14,11 @@ import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.imoonday.elemworld.ElementalWorld.id;
 
@@ -78,9 +78,12 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
         }
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null) {
             ArrayList<Element> elements = this.handler.getNewElements();
-            Text text = Element.getElementsText(elements, false);
-            if (text == null) {
+            List<Text> texts = Element.getElementsText(elements, false, false);
+            Text text;
+            if (texts.isEmpty()) {
                 text = Text.translatable("text.eleworld.modify_elements_screen.no_new");
+            } else {
+                text = texts.get(0);
             }
             if (elements.size() > 5) {
                 text = Text.translatable("text.eleworld.modify_elements_screen.new", elements.size());

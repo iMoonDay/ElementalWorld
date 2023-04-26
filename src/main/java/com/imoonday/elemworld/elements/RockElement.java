@@ -21,7 +21,7 @@ public class RockElement extends Element {
     }
 
     @Override
-    public float getMiningSpeedMultiplier (World world, LivingEntity entity, BlockState state){
+    public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
         if (state.isIn(BlockTags.PICKAXE_MINEABLE)) {
             return 2.0f;
         }
@@ -29,15 +29,14 @@ public class RockElement extends Element {
     }
 
     @Override
-    public boolean ignoreDamage (DamageSource source, LivingEntity entity){
+    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
         return source.isOf(IN_WALL);
     }
 
     @Override
-    public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers (int slot){
+    public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(int slot) {
         Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
-        EntityAttributeModifier entityAttributeModifier = new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 4.0, EntityAttributeModifier.Operation.ADDITION);
-        map.put(EntityAttributes.GENERIC_MAX_HEALTH, entityAttributeModifier);
+        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 4.0, EntityAttributeModifier.Operation.ADDITION));
         return map;
     }
 }

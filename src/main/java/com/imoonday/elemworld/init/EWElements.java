@@ -8,7 +8,7 @@ public class EWElements {
     public static final Element EMPTY = Element.register("empty", new Element(0, 0, 50));
     public static final Element GOLD = Element.register("gold", new GoldElement(3, 1, 40, 1.25f, 1.25f, 1.0f, 0.75f));
     public static final Element WOOD = Element.register("wood", new WoodElement(3, 1, 40, 0.75f, 0.75f, 1.0f, 1.25f));
-    public static final Element WATER = Element.register("water", new WaterElement(3, 1, 40, 1.0f, 0.5f, 1.0f, 1.0f));
+    public static final Element WATER = Element.register("water", new WaterElement(3, 1, 40, 1.0f, 1.25f, 1.0f, 1.0f));
     public static final Element FIRE = Element.register("fire", new FireElement(3, 1, 40, 1.0f, 1.5f, 1.0f, 1.0f));
     public static final Element EARTH = Element.register("earth", new EarthElement(3, 1, 40, 1.0f, 1.0f, 1.0f, 1.5f));
     public static final Element WIND = Element.register("wind", new WindElement(2, 2, 20));

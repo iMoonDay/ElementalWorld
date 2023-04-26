@@ -213,23 +213,21 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (entity.world.isClient) {
             return;
         }
+        List<Text> texts = getElementsText(this.elements, true, false);
         if (entity.getCustomName() == null || entity.getCustomName().getString().startsWith("[元素]")) {
-            entity.setCustomName(getElementsText(this.elements, true));
+            entity.setCustomName(!texts.isEmpty() ? texts.get(0) : null);
         }
     }
 
     private void checkEffects() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        Element.getRegistrySet()
-                .stream().filter(element -> !entity.isIn(element))
-                .map(element -> element.getPersistentEffects().keySet())
-                .flatMap(Collection::stream).forEach(effect -> {
-                    StatusEffectInstance instance = entity.getStatusEffect(effect);
-                    if (instance == null || !instance.isFromElement()) {
-                        return;
-                    }
-                    entity.removeStatusEffect(effect);
-                });
+        Element.getRegistrySet().stream().filter(element -> !entity.isIn(element)).map(element -> element.getPersistentEffects().keySet()).flatMap(Collection::stream).forEach(effect -> {
+            StatusEffectInstance instance = entity.getStatusEffect(effect);
+            if (instance == null || !instance.isFromElement()) {
+                return;
+            }
+            entity.removeStatusEffect(effect);
+        });
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
@@ -298,11 +296,8 @@ public class LivingEntityMixin implements EWLivingEntity {
             return;
         }
         Entity attacker = source.getAttacker();
-        entity.getAllElements()
-                .forEach(element -> element.afterInjury(entity, source, amount));
-        Element.getRegistrySet()
-                .stream().filter(element -> element.shouldAddEffectAfterInjury(entity, source, amount))
-                .forEach(element -> element.addEffect(entity, source.getAttacker()));
+        entity.getAllElements().forEach(element -> element.afterInjury(entity, source, amount));
+        Element.getRegistrySet().stream().filter(element -> element.shouldAddEffectAfterInjury(entity, source, amount)).forEach(element -> element.addEffect(entity, source.getAttacker()));
         if (attacker instanceof LivingEntity living && !source.isIndirect()) {
             ArrayList<Element> list = living.getMainHandStack().getElements();
             for (Element element : list) {
@@ -323,7 +318,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (source.getAttacker() instanceof LivingEntity attacker) {
             float baseDamage = cir.getReturnValueF() + getExtraDamage(attacker, source.getSource(), entity, amount);
             float finalDamage = baseDamage * getDamageMultiplier(attacker, source.getSource(), entity);
-            cir.setReturnValue(finalDamage);
+            cir.setReturnValue(Float.valueOf(String.format("%.2f", finalDamage)));
         }
     }
 
@@ -331,14 +326,22 @@ public class LivingEntityMixin implements EWLivingEntity {
         ItemStack stack = getAttackStack(attacker, sourceEntity);
         float multiplier = 1.0f;
         for (Element element : attacker.getAllElements()) {
-            multiplier *= element.getDamageMultiplier(attacker.world, attacker, target);
+            if (element.getMaxLevel() == 0.0f) {
+                continue;
+            }
+            float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
+            multiplier += f * element.getLevelMultiplier(f);
         }
         for (Element element : stack.getElements()) {
-            multiplier *= element.getDamageMultiplier(attacker.world, attacker, target);
+            if (element.getMaxLevel() == 0.0f) {
+                continue;
+            }
+            float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
+            multiplier += f * element.getLevelMultiplier(f);
         }
         for (Map.Entry<Predicate<LivingEntity>, Float> entry : Element.getDamageMultiplierMap().entrySet()) {
             if (entry.getKey().test(target)) {
-                multiplier *= entry.getValue();
+                multiplier += entry.getValue() - 1;
             }
         }
         return multiplier;
@@ -392,7 +395,11 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         float multiplier = 1.0f;
         for (Element element : entity.getAllElements()) {
-            multiplier *= element.getProtectionMultiplier(entity.world, entity);
+            if (element.getMaxLevel() == 0.0f) {
+                continue;
+            }
+            float f = element.getProtectionMultiplier(entity.world, entity) - 1;
+            multiplier += f * element.getLevelMultiplier(f);
         }
         return multiplier;
     }
@@ -407,7 +414,10 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (FabricLoader.getInstance().isModLoaded("trinkets")) {
             try {
                 Optional<TrinketComponent> trinketComponent = TrinketsApi.getTrinketComponent(entity);
-                trinketComponent.ifPresent(component -> component.getAllEquipped().forEach(stackPair -> stackPair.getRight().getElements().stream().filter(element -> !list.contains(element)).forEach(list::add)));
+                trinketComponent.ifPresent(component -> component.getAllEquipped()
+                        .forEach(stackPair -> stackPair.getRight().getElements()
+                                .stream().filter(element -> !list.contains(element))
+                                .forEach(list::add)));
             } catch (Exception ignore) {
 
             }

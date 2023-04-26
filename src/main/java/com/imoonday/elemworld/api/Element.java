@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -43,18 +44,18 @@ import static com.imoonday.elemworld.ElementalWorld.id;
 public class Element {
 
     private static final ConcurrentHashMap<String, Element> ELEMENTS = new ConcurrentHashMap<>();
-    private static final String NAME_KEY = "Name";
-    private static final String LEVEL_KEY = "Level";
-    public static volatile boolean frozen = false;
+    public static final String NAME_KEY = "Name";
+    public static final String LEVEL_KEY = "Level";
+    private static volatile boolean frozen = false;
     private String name = "null";
     private int level = 0;
-    private final int maxLevel;
-    private final int rareLevel;
-    private final int weight;
-    private final float miningSpeedMultiplier;
-    private final float damageMultiplier;
-    private final float protectionMultiplier;
-    private final float durabilityMultiplier;
+    protected final int maxLevel;
+    protected final int rareLevel;
+    protected final int weight;
+    protected final float miningSpeedMultiplier;
+    protected final float damageMultiplier;
+    protected final float protectionMultiplier;
+    protected final float durabilityMultiplier;
 
     public Element(int maxLevel, int rareLevel, int weight) {
         this(maxLevel, rareLevel, weight, 1.0f, 1.0f, 1.0f, 1.0f);
@@ -140,6 +141,13 @@ public class Element {
             }
         }
         return level;
+    }
+
+    public float getLevelMultiplier(float multiplier) {
+        float f1 = (float) this.getLevel() / this.getMaxLevel();
+        float f2 = (this.getMaxLevel() > 1) ? ((float) (this.getMaxLevel() - this.getLevel()) / (this.getMaxLevel() - 1)) : 1.0f;
+        multiplier *= multiplier >= 0 ? f1 : f2;
+        return multiplier;
     }
 
     public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
@@ -251,34 +259,63 @@ public class Element {
                 .orElse(EWElements.EMPTY).withRandomLevel();
     }
 
-    @Nullable
-    public static Text getElementsText(ArrayList<Element> elements, boolean prefix) {
+    public static List<Text> getElementsText(ArrayList<Element> elements, boolean prefix, boolean lineBreak) {
         if (elements.size() == 0) {
-            return null;
+            return new ArrayList<>();
         }
         if (elements.size() == 1 && elements.get(0) == EWElements.EMPTY) {
-            return null;
+            return new ArrayList<>();
         }
-        MutableText text = prefix ? Text.translatable("element.elemworld.name.prefix").formatted(Formatting.WHITE) : Text.empty();
         Comparator<Element> rareLevel = Comparator.comparingInt(o -> o.rareLevel);
         Comparator<Element> level = Comparator.comparingInt(o -> o.level);
         Comparator<Element> name = Comparator.comparing(o -> o.name);
         elements.sort(rareLevel.thenComparing(level).thenComparing(name));
-        String[] levels = {"", " I", " II", " III", " IV", " V", " VI", " VII", " VIII", " IX", " X"};
-        for (Element element : elements) {
-            Text translationName = element.getTranslationName();
-            if (translationName != null) {
-                if (!text.equals(Text.empty())) {
-                    text.append(" ");
+        String[] levels = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
+        MutableText text;
+        List<Text> list = new ArrayList<>();
+        if (prefix || !lineBreak) {
+            text = prefix ? Text.translatable("element.elemworld.name.prefix").formatted(Formatting.WHITE) : Text.empty();
+            for (Element element : elements) {
+                Text translationName = element.getTranslationName();
+                if (translationName != null) {
+                    if (!text.equals(Text.empty())) {
+                        text.append(" ");
+                    }
+                    int levelInt = Math.max(element.level, 0);
+                    String levelStr = levelInt > levels.length - 1 ? String.valueOf(element.level) : levels[levelInt];
+                    Formatting formatting = element.getFormatting();
+                    Text levelText = formatting == null ? Text.empty() : Text.literal(levelStr).formatted(formatting);
+                    text.append(translationName).append(levelText);
                 }
-                int levelInt = Math.max(element.level, 0);
-                String levelStr = levelInt > levels.length - 1 ? String.valueOf(element.level) : levels[levelInt];
-                Formatting formatting = element.getFormatting();
-                Text levelText = formatting == null ? Text.empty() : Text.literal(levelStr).formatted(formatting);
-                text.append(translationName).append(levelText);
+            }
+            list.add(text);
+        } else {
+            text = Text.empty();
+            int lastLevel = 0;
+            for (Iterator<Element> iterator = elements.iterator(); iterator.hasNext(); ) {
+                Element element = iterator.next();
+                Text translationName = element.getTranslationName();
+                if (translationName != null) {
+                    if (element.rareLevel != lastLevel) {
+                        list.add(text);
+                        text = Text.empty();
+                    }
+                    if (!text.equals(Text.empty())) {
+                        text.append(" ");
+                    }
+                    lastLevel = element.rareLevel;
+                    int levelInt = Math.max(element.level, 0);
+                    String levelStr = levelInt > levels.length - 1 ? String.valueOf(element.level) : levels[levelInt];
+                    Formatting formatting = element.getFormatting();
+                    Text levelText = formatting == null ? Text.empty() : Text.literal(levelStr).formatted(formatting);
+                    text.append(translationName).append(levelText);
+                    if (!iterator.hasNext()) {
+                        list.add(text);
+                    }
+                }
             }
         }
-        return text;
+        return list;
     }
 
     @Nullable
@@ -327,15 +364,6 @@ public class Element {
         if (sec > 0) {
             StatusEffectInstance effect = new StatusEffectInstance(this.getEffect(), sec * 20, 0);
             target.addStatusEffect(effect, attacker);
-//            if (!target.world.isClient) {
-//                ArrayList<ServerPlayerEntity> entities = new ArrayList<>(PlayerLookup.tracking(target));
-//                if (target instanceof ServerPlayerEntity player) {
-//                    entities.add(player);
-//                }
-//                for (ServerPlayerEntity player : entities) {
-//                    player.networkHandler.sendPacket(new EntityStatusEffectS2CPacket(player.getId(), effect));
-//                }
-//            }
         }
     }
 
@@ -485,8 +513,8 @@ public class Element {
             }
             Registry.register(Registries.STATUS_EFFECT, id(element.getName()), new Effect(element));
         }
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> Element.frozen = true);
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> Element.frozen = false);
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> frozen = true);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
     }
 
     private static class Effect extends StatusEffect {

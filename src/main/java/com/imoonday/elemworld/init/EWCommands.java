@@ -18,6 +18,7 @@ import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -70,11 +71,12 @@ public class EWCommands {
                             ServerPlayerEntity player = context.getSource().getPlayer();
                             Entity entity = EntityArgumentType.getEntity(context, "entity");
                             if (entity instanceof LivingEntity livingEntity && player != null) {
-                                Text text = Element.getElementsText(livingEntity.getElements(), false);
-                                if (text == null) {
-                                    text = Text.translatable("text.eleworld.commands.get.empty");
+                                List<Text> texts = Element.getElementsText(livingEntity.getElements(), false, true);
+                                if (texts.isEmpty()) {
+                                    player.sendMessage(Text.translatable("text.eleworld.commands.get.empty"));
+                                } else {
+                                    texts.forEach(player::sendMessage);
                                 }
-                                player.sendMessage(text);
                             }
                             return 0;
                         })))

@@ -10,8 +10,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @Mixin(PlayerInventory.class)
 public class PlayerInventoryMixin {
@@ -21,14 +19,15 @@ public class PlayerInventoryMixin {
         PlayerInventory inventory = (PlayerInventory) (Object) this;
         PlayerEntity player = inventory.player;
         ArrayList<Element> elements = inventory.main.get(inventory.selectedSlot).getElements();
-        List<Float> list = new ArrayList<>();
+        float multiplier = 1.0f;
         for (Element element : elements) {
-            float miningSpeedMultiplier = element.getMiningSpeedMultiplier(player.world, player, block);
-            list.add(miningSpeedMultiplier);
+            if (element.getMaxLevel() == 0.0f) {
+                continue;
+            }
+            float f = element.getMiningSpeedMultiplier(player.world, player, block) - 1;
+            multiplier += f * element.getLevelMultiplier(f);
         }
-        if (!list.isEmpty()) {
-            float speed = cir.getReturnValueF() * Collections.max(list);
-            cir.setReturnValue(speed);
-        }
+        float finalSpeed = cir.getReturnValueF() * multiplier;
+        cir.setReturnValue(Float.valueOf(String.format("%.2f", finalSpeed)));
     }
 }

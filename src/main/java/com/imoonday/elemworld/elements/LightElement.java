@@ -27,28 +27,28 @@ public class LightElement extends Element {
     }
 
     @Override
-    public float getMiningSpeedMultiplier (World world, LivingEntity entity, BlockState state){
+    public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
         Float x = getMultiplier(world);
         if (x != null) return x;
         return super.getMiningSpeedMultiplier(world, entity, state);
     }
 
     @Override
-    public float getDamageMultiplier (World world, LivingEntity entity, LivingEntity target){
+    public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
         Float x = getMultiplier(world);
         if (x != null) return x;
         return super.getDamageMultiplier(world, entity, target);
     }
 
     @Override
-    public float getProtectionMultiplier (World world, LivingEntity entity){
+    public float getProtectionMultiplier(World world, LivingEntity entity) {
         Float x = getMultiplier(world);
         if (x != null) return x;
         return super.getProtectionMultiplier(world, entity);
     }
 
     @Nullable
-    private Float getMultiplier (World world){
+    private Float getMultiplier(World world) {
         long time = world.getTimeOfDay();
         if (time >= 1000 && time < 13000) {
             return 1.5f;
@@ -57,12 +57,12 @@ public class LightElement extends Element {
     }
 
     @Override
-    public boolean ignoreDamage (DamageSource source, LivingEntity entity){
+    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
         return source.isIn(IS_FIRE) || source.isIn(IS_EXPLOSION);
     }
 
     @Override
-    public void postHit (LivingEntity target, PlayerEntity attacker){
+    public void postHit(LivingEntity target, PlayerEntity attacker) {
         if (target.isIn(EWElements.DARKNESS)) {
             float v = Random.create().nextFloat();
             double chance = 0.2 * (1 - (target.getHealth() / target.getMaxHealth()));
@@ -76,7 +76,7 @@ public class LightElement extends Element {
     }
 
     @Override
-    public Map<StatusEffect, Integer> getPersistentEffects () {
+    public Map<StatusEffect, Integer> getPersistentEffects() {
         Map<StatusEffect, Integer> effects = new HashMap<>();
         effects.put(SPEED, 0);
         effects.put(NIGHT_VISION, 0);
