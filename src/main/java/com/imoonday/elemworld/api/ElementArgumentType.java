@@ -11,6 +11,8 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -18,19 +20,20 @@ public class ElementArgumentType implements ArgumentType<Element> {
 
     public static final DynamicCommandExceptionType INVALID_ELEMENT_EXCEPTION = new DynamicCommandExceptionType(element -> Text.translatable("element.elemworld.invalid", element));
 
-    public static ElementArgumentType element() {
+    @Contract(value = " -> new", pure = true)
+    public static @NotNull ElementArgumentType element() {
         return new ElementArgumentType();
     }
 
-    public static Element getElement(CommandContext<ServerCommandSource> context, String id) {
+    public static Element getElement(@NotNull CommandContext<ServerCommandSource> context, String id) {
         return context.getArgument(id, Element.class);
     }
 
     @Override
-    public Element parse(StringReader reader) throws CommandSyntaxException {
+    public Element parse(@NotNull StringReader reader) throws CommandSyntaxException {
         String string = reader.readUnquotedString();
         Element element = Element.byName(string);
-        if (element == null || !"empty".equals(string) && element.equals(EWElements.EMPTY)) {
+        if (element == null || !"empty".equals(string) && element.isOf(EWElements.EMPTY)) {
             throw INVALID_ELEMENT_EXCEPTION.create(string);
         }
         return element;

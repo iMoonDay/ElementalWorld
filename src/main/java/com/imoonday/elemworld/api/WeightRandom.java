@@ -1,5 +1,7 @@
 package com.imoonday.elemworld.api;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -18,7 +20,8 @@ public class WeightRandom<T> {
      * @param <T> 权重随机获取的对象类型
      * @return {@link WeightRandom}
      */
-    public static <T> WeightRandom<T> create() {
+    @Contract(value = " -> new", pure = true)
+    public static <T> @NotNull WeightRandom<T> create() {
         return new WeightRandom<>();
     }
 
@@ -46,7 +49,7 @@ public class WeightRandom<T> {
      * @param objs       对象集合
      * @param weightFunc 权重函数
      */
-    public void addAll(Collection<T> objs, Function<T, Integer> weightFunc) {
+    public void addAll(@NotNull Collection<T> objs, Function<T, Integer> weightFunc) {
         for (T obj : objs) {
             Integer weight = weightFunc.apply(obj);
             add(obj, weight);
@@ -58,7 +61,7 @@ public class WeightRandom<T> {
      * @param predicate  过滤条件
      * @param weightFunc 权重函数
      */
-    public void addAll(Collection<T> objs, Predicate<T> predicate, Function<T, Integer> weightFunc) {
+    public void addAll(@NotNull Collection<T> objs, Predicate<T> predicate, Function<T, Integer> weightFunc) {
         for (T obj : objs) {
             if (!predicate.test(obj)) {
                 continue;

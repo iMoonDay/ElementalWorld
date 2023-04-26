@@ -38,7 +38,7 @@ public class EWCommands {
                             if (entity instanceof LivingEntity livingEntity && element != null && player != null) {
                                 boolean success = livingEntity.addElement(element.withLevel(level));
                                 player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
-                                if (element.equals(EWElements.EMPTY)) {
+                                if (element.isOf(EWElements.EMPTY)) {
                                     player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
                                 }
                             }
@@ -100,7 +100,7 @@ public class EWCommands {
                             if (element != null && player != null && isValidStack(player, stackInSlot)) {
                                 boolean success = stackInSlot.addElement(element.withLevel(level));
                                 player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
-                                if (element.equals(EWElements.EMPTY)) {
+                                if (element.isOf(EWElements.EMPTY)) {
                                     player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
                                 }
                             }

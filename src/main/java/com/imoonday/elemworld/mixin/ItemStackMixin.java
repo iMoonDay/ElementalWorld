@@ -2,6 +2,7 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWItemStack;
 import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.init.EWElements;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
@@ -158,11 +159,11 @@ public class ItemStackMixin implements EWItemStack {
                     continue;
                 }
                 float f = element.getDamageMultiplier(player.world, player, null) - 1;
-                damage += f * element.getLevelMultiplier(f);
+                damage += element.getLevelMultiplier(f);
                 f = element.getProtectionMultiplier(player.world, player) - 1;
-                protect += f * element.getLevelMultiplier(f);
+                protect += element.getLevelMultiplier(f);
                 f = element.getMiningSpeedMultiplier(player.world, player, player.getSteppingBlockState()) - 1;
-                mine += f * element.getLevelMultiplier(f);
+                mine += element.getLevelMultiplier(f);
             }
             if (damage != 1.0f || protect != 1.0f || mine != 1.0f) {
                 list.add(index++, Text.literal("元素增幅：").formatted(Formatting.GRAY));
@@ -184,6 +185,12 @@ public class ItemStackMixin implements EWItemStack {
     public void postHit(LivingEntity target, PlayerEntity attacker, CallbackInfo ci) {
         ItemStack stack = (ItemStack) (Object) this;
         for (Element element : stack.getElements()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isOf(EMPTY)) {
+                continue;
+            }
             element.addEffect(target, attacker);
             element.postHit(target, attacker);
         }

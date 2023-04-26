@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.imoonday.elemworld.init.EWElements;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.registry.RegistryEntryAddedCallback;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -43,6 +46,7 @@ import static com.imoonday.elemworld.ElementalWorld.id;
 @SuppressWarnings("unused")
 public class Element {
 
+    public static final String[] LEVELS = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
     private static final ConcurrentHashMap<String, Element> ELEMENTS = new ConcurrentHashMap<>();
     public static final String NAME_KEY = "Name";
     public static final String LEVEL_KEY = "Level";
@@ -74,26 +78,22 @@ public class Element {
     /**
      * String -> Element name
      */
-    public static ImmutableMap<String, Element> getRegistryMap() {
+    public static @NotNull ImmutableMap<String, Element> getRegistryMap() {
         return ImmutableMap.copyOf(ELEMENTS);
     }
 
-    public static ImmutableSet<Element> getRegistrySet() {
+    public static @NotNull ImmutableSet<Element> getRegistrySet() {
         return ImmutableSet.copyOf(ELEMENTS.values());
     }
 
     /**
-     * @param name    Element name (If duplicated, a sequential number is added after the first name)
+     * @param name    Element name
      * @param element Element
      */
     public static Element register(String name, Element element) {
         if (frozen) throw new IllegalStateException("Registry is already frozen");
-        int index = 1;
-        String s = name;
-        while (ELEMENTS.containsKey(name)) {
-            name = s + "_" + index++;
-        }
-        Element value = element.withName(name);
+        if (ELEMENTS.containsKey(name)) throw new IllegalStateException("The name is already registered");
+        Element value = element.withName(name).withLevel(0);
         ELEMENTS.put(name, value);
         return value;
     }
@@ -106,7 +106,7 @@ public class Element {
         return nbt;
     }
 
-    public Element withName(String name) {
+    private Element withName(String name) {
         this.name = name;
         return this;
     }
@@ -186,7 +186,7 @@ public class Element {
         return Optional.ofNullable(getRegistryMap().get(name)).orElse(EWElements.EMPTY);
     }
 
-    public static Element fromNbt(NbtCompound nbt) {
+    public static Element fromNbt(@NotNull NbtCompound nbt) {
         if (nbt.contains(NAME_KEY, NbtElement.STRING_TYPE)) {
             String name = nbt.getString(NAME_KEY);
             Element element = getRegistryMap().get(name);
@@ -251,7 +251,7 @@ public class Element {
     }
 
     public static Element createRandom(ItemStack stack, ArrayList<Element> exclude) {
-        return Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element -> !element.isOneOf(exclude) && element.isSuitableFor(stack), Element::getWeight)).orElse(EWElements.EMPTY).withRandomLevel();
+        return Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element -> !element.isIn(exclude) && element.isSuitableFor(stack), Element::getWeight)).orElse(EWElements.EMPTY).withRandomLevel();
     }
 
     public static Element createRandom(LivingEntity entity) {
@@ -259,7 +259,7 @@ public class Element {
                 .orElse(EWElements.EMPTY).withRandomLevel();
     }
 
-    public static List<Text> getElementsText(ArrayList<Element> elements, boolean prefix, boolean lineBreak) {
+    public static @NotNull List<Text> getElementsText(@NotNull ArrayList<Element> elements, boolean prefix, boolean lineBreak) {
         if (elements.size() == 0) {
             return new ArrayList<>();
         }
@@ -270,7 +270,6 @@ public class Element {
         Comparator<Element> level = Comparator.comparingInt(o -> o.level);
         Comparator<Element> name = Comparator.comparing(o -> o.name);
         elements.sort(rareLevel.thenComparing(level).thenComparing(name));
-        String[] levels = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
         MutableText text;
         List<Text> list = new ArrayList<>();
         if (prefix || !lineBreak) {
@@ -278,37 +277,24 @@ public class Element {
             for (Element element : elements) {
                 Text translationName = element.getTranslationName();
                 if (translationName != null) {
-                    if (!text.equals(Text.empty())) {
-                        text.append(" ");
-                    }
-                    int levelInt = Math.max(element.level, 0);
-                    String levelStr = levelInt > levels.length - 1 ? String.valueOf(element.level) : levels[levelInt];
-                    Formatting formatting = element.getFormatting();
-                    Text levelText = formatting == null ? Text.empty() : Text.literal(levelStr).formatted(formatting);
-                    text.append(translationName).append(levelText);
+                    appendText(text, element, translationName);
                 }
             }
             list.add(text);
         } else {
             text = Text.empty();
-            int lastLevel = 0;
-            for (Iterator<Element> iterator = elements.iterator(); iterator.hasNext(); ) {
+            int lastLevel = -1;
+            Iterator<Element> iterator = elements.iterator();
+            while (iterator.hasNext()) {
                 Element element = iterator.next();
                 Text translationName = element.getTranslationName();
                 if (translationName != null) {
-                    if (element.rareLevel != lastLevel) {
+                    if (element.rareLevel != lastLevel && lastLevel != -1) {
                         list.add(text);
                         text = Text.empty();
                     }
-                    if (!text.equals(Text.empty())) {
-                        text.append(" ");
-                    }
                     lastLevel = element.rareLevel;
-                    int levelInt = Math.max(element.level, 0);
-                    String levelStr = levelInt > levels.length - 1 ? String.valueOf(element.level) : levels[levelInt];
-                    Formatting formatting = element.getFormatting();
-                    Text levelText = formatting == null ? Text.empty() : Text.literal(levelStr).formatted(formatting);
-                    text.append(translationName).append(levelText);
+                    appendText(text, element, translationName);
                     if (!iterator.hasNext()) {
                         list.add(text);
                     }
@@ -316,6 +302,17 @@ public class Element {
             }
         }
         return list;
+    }
+
+    private static void appendText(MutableText text, Element element, Text translationName) {
+        if (!text.equals(Text.empty())) {
+            text.append(" ");
+        }
+        int levelInt = Math.max(element.level, 0);
+        String levelStr = levelInt > LEVELS.length - 1 ? String.valueOf(element.level) : LEVELS[levelInt];
+        Formatting formatting = element.getFormatting();
+        Text levelText = formatting == null ? Text.empty() : Text.literal(levelStr).formatted(formatting);
+        text.append(translationName).append(levelText);
     }
 
     @Nullable
@@ -349,7 +346,7 @@ public class Element {
         };
     }
 
-    public static Map<Predicate<LivingEntity>, Float> getDamageMultiplierMap() {
+    public static @NotNull Map<Predicate<LivingEntity>, Float> getDamageMultiplierMap() {
         Map<Predicate<LivingEntity>, Float> map = new HashMap<>();
         getRegistrySet().forEach(element -> element.writeDamageMultiplier(map));
         return map;
@@ -382,11 +379,15 @@ public class Element {
         return 5;
     }
 
-    public boolean isOneOf(Element... elements) {
+    public boolean isOf(Element element) {
+        return this.equals(element);
+    }
+
+    public boolean isIn(Element... elements) {
         return Arrays.asList(elements).contains(this);
     }
 
-    public boolean isOneOf(ArrayList<Element> elements) {
+    public boolean isIn(@NotNull ArrayList<Element> elements) {
         return elements.contains(this);
     }
 
@@ -458,7 +459,7 @@ public class Element {
         return false;
     }
 
-    public void onElementApplied(LivingEntity entity, int slot) {
+    public void onElementApplied(@NotNull LivingEntity entity, int slot) {
         if (entity.world.isClient) {
             return;
         }
@@ -472,7 +473,7 @@ public class Element {
         }
     }
 
-    public void onElementRemoved(LivingEntity entity, int slot) {
+    public void onElementRemoved(@NotNull LivingEntity entity, int slot) {
         if (entity.world.isClient) {
             return;
         }
@@ -487,11 +488,11 @@ public class Element {
         }
     }
 
-    public boolean isSuitableFor(ItemStack stack) {
+    public boolean isSuitableFor(@NotNull ItemStack stack) {
         return stack.isDamageable();
     }
 
-    public boolean isSuitableFor(LivingEntity entity) {
+    public boolean isSuitableFor(@NotNull LivingEntity entity) {
         return entity.isAlive();
     }
 
@@ -521,7 +522,7 @@ public class Element {
 
         private final Element element;
 
-        private Effect(Element element) {
+        private Effect(@NotNull Element element) {
             super(StatusEffectCategory.HARMFUL, element.getColor().getRGB());
             this.element = element;
         }
@@ -548,7 +549,7 @@ public class Element {
             this.element.onEffectRemoved(entity, attributes, amplifier);
         }
 
-        public static StatusEffect get(Element element) {
+        public static StatusEffect get(@NotNull Element element) {
             return Registries.STATUS_EFFECT.get(id(element.name));
         }
 

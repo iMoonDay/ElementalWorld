@@ -29,14 +29,17 @@ public class WindElement extends Element {
 
     @Override
     public void postHit(LivingEntity target, PlayerEntity attacker) {
-        List<LivingEntity> entities = target.world.getEntitiesByClass(LivingEntity.class, target.getBoundingBox().expand(3), Entity::isLiving);
-        for (LivingEntity entity : entities) {
-            if (target.hasEffectOf(FIRE)) {
-                FIRE.addEffect(entity, attacker);
+        List<Entity> entities = target.world.getOtherEntities(attacker, target.getBoundingBox().expand(3), Entity::isLiving);
+        for (Entity entity : entities) {
+            if (!(entity instanceof LivingEntity living)) {
+                continue;
             }
-            Vec3d subtract = entity.getPos().subtract(attacker.getPos()).normalize();
+            if (target.hasEffectOf(FIRE)) {
+                FIRE.addEffect(living, attacker);
+            }
+            Vec3d subtract = living.getPos().subtract(attacker.getPos()).normalize();
             Vec3d vec3d = new Vec3d(subtract.x, 1, subtract.z);
-            entity.setVelocity(vec3d);
+            living.setVelocity(vec3d);
         }
     }
 

@@ -330,14 +330,14 @@ public class LivingEntityMixin implements EWLivingEntity {
                 continue;
             }
             float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
-            multiplier += f * element.getLevelMultiplier(f);
+            multiplier += element.getLevelMultiplier(f);
         }
         for (Element element : stack.getElements()) {
             if (element.getMaxLevel() == 0.0f) {
                 continue;
             }
             float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
-            multiplier += f * element.getLevelMultiplier(f);
+            multiplier += element.getLevelMultiplier(f);
         }
         for (Map.Entry<Predicate<LivingEntity>, Float> entry : Element.getDamageMultiplierMap().entrySet()) {
             if (entry.getKey().test(target)) {
@@ -399,7 +399,7 @@ public class LivingEntityMixin implements EWLivingEntity {
                 continue;
             }
             float f = element.getProtectionMultiplier(entity.world, entity) - 1;
-            multiplier += f * element.getLevelMultiplier(f);
+            multiplier += element.getLevelMultiplier(f);
         }
         return multiplier;
     }
@@ -451,7 +451,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Override
     public boolean hasOneOf(Element... elements) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        return entity.getAllElements().stream().anyMatch(elem -> elem.isOneOf(elements));
+        return entity.getAllElements().stream().anyMatch(elem -> elem.isIn(elements));
     }
 
     @Override

@@ -25,7 +25,7 @@ public class PlayerInventoryMixin {
                 continue;
             }
             float f = element.getMiningSpeedMultiplier(player.world, player, block) - 1;
-            multiplier += f * element.getLevelMultiplier(f);
+            multiplier += element.getLevelMultiplier(f);
         }
         float finalSpeed = cir.getReturnValueF() * multiplier;
         cir.setReturnValue(Float.valueOf(String.format("%.2f", finalSpeed)));
