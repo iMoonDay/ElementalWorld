@@ -11,6 +11,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.TridentEntity;
@@ -55,12 +56,18 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Override
     public boolean addElement(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        if (!this.elements.contains(element)) {
-            this.elements.add(element);
-            element.onElementApplied(entity, -1);
-            return true;
+        if (element == null) {
+            return false;
         }
-        return false;
+        if (!element.isSuitableFor(entity)) {
+            return false;
+        }
+        if (this.elements.contains(element)) {
+            return false;
+        }
+        this.elements.add(element);
+        element.onElementApplied(entity, -1);
+        return true;
     }
 
     @Override
@@ -121,10 +128,22 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         ArrayList<Element> list = entity.getAllElements();
         for (Element element : list) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
             element.tick(entity);
             element.addPersistentEffects(entity);
         }
         for (Element element : Element.getRegistrySet()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
             if (element.shouldAddEffect(entity)) {
                 element.addEffect(entity, null);
             }
@@ -147,6 +166,12 @@ public class LivingEntityMixin implements EWLivingEntity {
                 }
                 if (!oldStack.isEmpty()) {
                     for (Element element : oldStack.getElements()) {
+                        if (element == null) {
+                            continue;
+                        }
+                        if (element.isInvalid()) {
+                            continue;
+                        }
                         if (newStack.getElements().contains(element)) {
                             continue;
                         }
@@ -155,6 +180,12 @@ public class LivingEntityMixin implements EWLivingEntity {
                 }
                 if (!newStack.isEmpty()) {
                     for (Element element : newStack.getElements()) {
+                        if (element == null) {
+                            continue;
+                        }
+                        if (element.isInvalid()) {
+                            continue;
+                        }
                         if (oldStack.getElements().contains(element)) {
                             continue;
                         }
@@ -221,13 +252,19 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private void checkEffects() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        Element.getRegistrySet().stream().filter(element -> !entity.isIn(element)).map(element -> element.getPersistentEffects().keySet()).flatMap(Collection::stream).forEach(effect -> {
-            StatusEffectInstance instance = entity.getStatusEffect(effect);
-            if (instance == null || !instance.isFromElement()) {
-                return;
+        for (Element element : Element.getRegistrySet()) {
+            if (entity.isIn(element)) {
+                continue;
             }
-            entity.removeStatusEffect(effect);
-        });
+            Set<StatusEffect> effects = element.getPersistentEffects().keySet();
+            for (StatusEffect effect : effects) {
+                StatusEffectInstance instance = entity.getStatusEffect(effect);
+                if (instance == null || !instance.isFromElement()) {
+                    continue;
+                }
+                entity.removeStatusEffect(effect);
+            }
+        }
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
@@ -270,7 +307,17 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (entity.world.isClient) {
             cir.setReturnValue(false);
         }
-        entity.getAllElements().stream().filter(element -> element.ignoreDamage(source, entity)).map(element -> false).forEach(cir::setReturnValue);
+        for (Element element : entity.getAllElements()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
+            if (element.ignoreDamage(source, entity)) {
+                cir.setReturnValue(false);
+            }
+        }
     }
 
     @Inject(method = "applyDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getHealth()F"), cancellable = true)
@@ -286,7 +333,18 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private boolean shouldImmuneOnDeath() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        return entity.getAllElements().stream().anyMatch(element -> element.shouldImmuneOnDeath(entity));
+        for (Element element : entity.getAllElements()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
+            if (element.shouldImmuneOnDeath(entity)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Inject(method = "applyDamage", at = @At("TAIL"), locals = LocalCapture.CAPTURE_FAILHARD)
@@ -296,11 +354,35 @@ public class LivingEntityMixin implements EWLivingEntity {
             return;
         }
         Entity attacker = source.getAttacker();
-        entity.getAllElements().forEach(element -> element.afterInjury(entity, source, amount));
-        Element.getRegistrySet().stream().filter(element -> element.shouldAddEffectAfterInjury(entity, source, amount)).forEach(element -> element.addEffect(entity, source.getAttacker()));
+        for (Element element : entity.getAllElements()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
+            element.afterInjury(entity, source, amount);
+        }
+        for (Element element : Element.getRegistrySet()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
+            if (element.shouldAddEffectAfterInjury(entity, source, amount)) {
+                element.addEffect(entity, source.getAttacker());
+            }
+        }
         if (attacker instanceof LivingEntity living && !source.isIndirect()) {
             ArrayList<Element> list = living.getMainHandStack().getElements();
             for (Element element : list) {
+                if (element == null) {
+                    continue;
+                }
+                if (element.isInvalid()) {
+                    continue;
+                }
                 element.postHit(entity, living, amount);
             }
         }
@@ -326,14 +408,20 @@ public class LivingEntityMixin implements EWLivingEntity {
         ItemStack stack = getAttackStack(attacker, sourceEntity);
         float multiplier = 1.0f;
         for (Element element : attacker.getAllElements()) {
-            if (element.getMaxLevel() == 0.0f) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
                 continue;
             }
             float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
             multiplier += element.getLevelMultiplier(f);
         }
         for (Element element : stack.getElements()) {
-            if (element.getMaxLevel() == 0.0f) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
                 continue;
             }
             float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
@@ -395,7 +483,10 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         float multiplier = 1.0f;
         for (Element element : entity.getAllElements()) {
-            if (element.getMaxLevel() == 0.0f) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
                 continue;
             }
             float f = element.getProtectionMultiplier(entity.world, entity) - 1;

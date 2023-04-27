@@ -21,6 +21,7 @@ public class ElementalWorld implements ModInitializer {
         Element.register();
         EWCommands.register();
         EWItemGroups.register();
+        EWItems.register();
         EWBlocks.register();
         EWEffects.register();
         EWPotions.register();

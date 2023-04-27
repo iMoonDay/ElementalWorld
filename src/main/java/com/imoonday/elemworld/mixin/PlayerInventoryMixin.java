@@ -21,7 +21,10 @@ public class PlayerInventoryMixin {
         ArrayList<Element> elements = inventory.main.get(inventory.selectedSlot).getElements();
         float multiplier = 1.0f;
         for (Element element : elements) {
-            if (element.getMaxLevel() == 0.0f) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
                 continue;
             }
             float f = element.getMiningSpeedMultiplier(player.world, player, block) - 1;

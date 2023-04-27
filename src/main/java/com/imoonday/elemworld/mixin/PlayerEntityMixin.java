@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.imoonday.elemworld.init.EWElements.*;
+import static com.imoonday.elemworld.init.EWElements.SPACE;
 
 @Mixin(PlayerEntity.class)
 public class PlayerEntityMixin extends LivingEntityMixin {

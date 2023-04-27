@@ -4,9 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.imoonday.elemworld.init.EWElements;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.registry.RegistryEntryAddedCallback;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -78,11 +75,11 @@ public class Element {
     /**
      * String -> Element name
      */
-    public static @NotNull ImmutableMap<String, Element> getRegistryMap() {
+    public static ImmutableMap<String, Element> getRegistryMap() {
         return ImmutableMap.copyOf(ELEMENTS);
     }
 
-    public static @NotNull ImmutableSet<Element> getRegistrySet() {
+    public static ImmutableSet<Element> getRegistrySet() {
         return ImmutableSet.copyOf(ELEMENTS.values());
     }
 
@@ -98,7 +95,6 @@ public class Element {
         return value;
     }
 
-    @NotNull
     public NbtCompound toNbt() {
         NbtCompound nbt = new NbtCompound();
         nbt.putString(NAME_KEY, this.getName());
@@ -144,6 +140,9 @@ public class Element {
     }
 
     public float getLevelMultiplier(float multiplier) {
+        if (multiplier == 0.0f) {
+            return multiplier;
+        }
         float f1 = (float) this.getLevel() / this.getMaxLevel();
         float f2 = (this.getMaxLevel() > 1) ? ((float) (this.getMaxLevel() - this.getLevel()) / (this.getMaxLevel() - 1)) : 1.0f;
         multiplier *= multiplier >= 0 ? f1 : f2;
@@ -186,7 +185,7 @@ public class Element {
         return Optional.ofNullable(getRegistryMap().get(name)).orElse(EWElements.EMPTY);
     }
 
-    public static Element fromNbt(@NotNull NbtCompound nbt) {
+    public static Element fromNbt(NbtCompound nbt) {
         if (nbt.contains(NAME_KEY, NbtElement.STRING_TYPE)) {
             String name = nbt.getString(NAME_KEY);
             Element element = getRegistryMap().get(name);
@@ -259,7 +258,7 @@ public class Element {
                 .orElse(EWElements.EMPTY).withRandomLevel();
     }
 
-    public static @NotNull List<Text> getElementsText(@NotNull ArrayList<Element> elements, boolean prefix, boolean lineBreak) {
+    public static List<Text> getElementsText(ArrayList<Element> elements, boolean prefix, boolean lineBreak) {
         if (elements.size() == 0) {
             return new ArrayList<>();
         }
@@ -379,6 +378,10 @@ public class Element {
         return 5;
     }
 
+    public boolean isInvalid() {
+        return this.level <= 0 || this.maxLevel <= 0 || this.isOf(EWElements.EMPTY) || "null".equals(this.name);
+    }
+
     public boolean isOf(Element element) {
         return this.equals(element);
     }
@@ -489,11 +492,11 @@ public class Element {
     }
 
     public boolean isSuitableFor(@NotNull ItemStack stack) {
-        return stack.isDamageable();
+        return stack.isDamageable() && stack.getElements().stream().noneMatch(this::conflictsWith);
     }
 
     public boolean isSuitableFor(@NotNull LivingEntity entity) {
-        return entity.isAlive();
+        return entity.isAlive() && entity.getElements().stream().noneMatch(this::conflictsWith);
     }
 
     public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(int slot) {
@@ -502,6 +505,10 @@ public class Element {
 
     public boolean hasEffect() {
         return true;
+    }
+
+    public boolean conflictsWith(Element element) {
+        return false;
     }
 
     public static void register() {

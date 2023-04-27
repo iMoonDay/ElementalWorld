@@ -2,7 +2,6 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWItemStack;
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.init.EWElements;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
@@ -51,6 +50,9 @@ public class ItemStackMixin implements EWItemStack {
         for (NbtElement nbtElement : stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE)) {
             NbtCompound nbt = (NbtCompound) nbtElement;
             Element element = Element.fromNbt(nbt);
+            if (element == null) {
+                continue;
+            }
             elements.add(element);
         }
         return elements;
@@ -82,19 +84,22 @@ public class ItemStackMixin implements EWItemStack {
     @Override
     public boolean addElement(Element element) {
         ItemStack stack = (ItemStack) (Object) this;
-        if (element == null || element == EMPTY && stack.getElements().size() >= 1) {
+        if (element == null) {
+            return false;
+        }
+        if (element.isOf(EMPTY) && stack.getElements().size() >= 1) {
             return false;
         }
         if (!element.isSuitableFor(stack)) {
             return false;
         }
-        NbtList list = stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE);
-        if (!stack.hasElement(element)) {
-            list.add(element.toNbt());
-            stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
-            return true;
+        if (stack.hasElement(element)) {
+            return false;
         }
-        return false;
+        NbtList list = stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE);
+        list.add(element.toNbt());
+        stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
+        return true;
     }
 
     @Override
@@ -111,9 +116,10 @@ public class ItemStackMixin implements EWItemStack {
             return;
         }
         ItemStack stack = (ItemStack) (Object) this;
-        if (hasSuitableElement()) {
-            stack.addRandomElements();
+        if (!hasSuitableElement()) {
+            return;
         }
+        stack.addRandomElements();
     }
 
     @Override
@@ -132,16 +138,20 @@ public class ItemStackMixin implements EWItemStack {
         if (hasSuitableElement() && stack.getElements().size() == 0) {
             stack.addRandomElements();
         }
-        if (stack.getElements().size() > 1 && stack.hasElement(EMPTY)) {
-            ArrayList<Element> elements = new ArrayList<>(stack.getElements());
-            elements.remove(EMPTY);
-            stack.setElements(elements);
+        if (stack.getElements().size() <= 1 || !stack.hasElement(EMPTY)) {
+            return;
         }
+        ArrayList<Element> elements = new ArrayList<>(stack.getElements());
+        elements.remove(EMPTY);
+        stack.setElements(elements);
     }
 
     @Inject(method = "getTooltip", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     public void elementsTooltip(@Nullable PlayerEntity player, TooltipContext context, CallbackInfoReturnable<List<Text>> cir, List<Text> list) {
         ItemStack stack = (ItemStack) (Object) this;
+        if (list == null) {
+            return;
+        }
         if (stack.getElements().size() == 0) {
             return;
         }
@@ -154,8 +164,12 @@ public class ItemStackMixin implements EWItemStack {
             float damage = 1.0f;
             float protect = 1.0f;
             float mine = 1.0f;
+            float durability = 1.0f;
             for (Element element : stack.getElements()) {
-                if (element.getMaxLevel() == 0.0f) {
+                if (element == null) {
+                    continue;
+                }
+                if (element.isInvalid()) {
                     continue;
                 }
                 float f = element.getDamageMultiplier(player.world, player, null) - 1;
@@ -164,8 +178,10 @@ public class ItemStackMixin implements EWItemStack {
                 protect += element.getLevelMultiplier(f);
                 f = element.getMiningSpeedMultiplier(player.world, player, player.getSteppingBlockState()) - 1;
                 mine += element.getLevelMultiplier(f);
+                f = element.getDurabilityMultiplier() - 1;
+                durability += element.getLevelMultiplier(f);
             }
-            if (damage != 1.0f || protect != 1.0f || mine != 1.0f) {
+            if (damage != 1.0f || protect != 1.0f || mine != 1.0f || durability != 1.0f) {
                 list.add(index++, Text.literal("元素增幅：").formatted(Formatting.GRAY));
                 if (damage != 1.0f) {
                     list.add(index++, Text.literal("×" + String.format("%.2f", damage) + " 攻击伤害").formatted(Formatting.DARK_GREEN));
@@ -174,7 +190,10 @@ public class ItemStackMixin implements EWItemStack {
                     list.add(index++, Text.literal("×" + String.format("%.2f", protect) + " 护甲值").formatted(Formatting.BLUE));
                 }
                 if (mine != 1.0f) {
-                    list.add(index, Text.literal("×" + String.format("%.2f", mine) + " 挖掘速度").formatted(Formatting.RED));
+                    list.add(index++, Text.literal("×" + String.format("%.2f", mine) + " 挖掘速度").formatted(Formatting.RED));
+                }
+                if (durability != 1.0f) {
+                    list.add(index, Text.literal("×" + String.format("%.2f", durability) + " 耐久度").formatted(Formatting.WHITE));
                 }
             }
         }
@@ -188,7 +207,7 @@ public class ItemStackMixin implements EWItemStack {
             if (element == null) {
                 continue;
             }
-            if (element.isOf(EMPTY)) {
+            if (element.isInvalid()) {
                 continue;
             }
             element.addEffect(target, attacker);
@@ -200,6 +219,12 @@ public class ItemStackMixin implements EWItemStack {
     public void postMine(World world, BlockState state, BlockPos pos, PlayerEntity miner, CallbackInfo ci) {
         ItemStack stack = (ItemStack) (Object) this;
         for (Element element : stack.getElements()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
             element.postMine(world, state, pos, miner);
         }
     }
@@ -208,6 +233,12 @@ public class ItemStackMixin implements EWItemStack {
     public void useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
         ItemStack stack = (ItemStack) (Object) this;
         for (Element element : stack.getElements()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
             element.useOnBlock(context);
         }
     }
@@ -216,6 +247,12 @@ public class ItemStackMixin implements EWItemStack {
     public void useOnEntity(PlayerEntity user, LivingEntity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         ItemStack stack = (ItemStack) (Object) this;
         for (Element element : stack.getElements()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
             element.useOnEntity(user, entity, hand);
         }
     }
@@ -224,6 +261,12 @@ public class ItemStackMixin implements EWItemStack {
     public void usageTick(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
         ItemStack stack = (ItemStack) (Object) this;
         for (Element element : stack.getElements()) {
+            if (element == null) {
+                continue;
+            }
+            if (element.isInvalid()) {
+                continue;
+            }
             element.usageTick(world, user, remainingUseTicks);
         }
     }
@@ -236,7 +279,11 @@ public class ItemStackMixin implements EWItemStack {
             if (element == null) {
                 continue;
             }
-            multiplier *= element.getDurabilityMultiplier();
+            if (element.isInvalid()) {
+                continue;
+            }
+            float f = element.getDurabilityMultiplier() - 1;
+            multiplier += element.getLevelMultiplier(f);
         }
         int value = (int) (cir.getReturnValueI() * multiplier);
         cir.setReturnValue(value);
