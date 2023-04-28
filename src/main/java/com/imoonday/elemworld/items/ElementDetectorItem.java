@@ -22,9 +22,7 @@ public class ElementDetectorItem extends Item {
         if (world.isClient) {
             return TypedActionResult.success(stack);
         }
-        for (Text text : Element.getElementsText(user.getElements(), false, false)) {
-            user.sendMessage(text, true);
-        }
+        sendElements(user, user);
         return TypedActionResult.consume(stack);
     }
 
@@ -33,9 +31,13 @@ public class ElementDetectorItem extends Item {
         if (user.world.isClient) {
             return ActionResult.SUCCESS;
         }
+        sendElements(user, entity);
+        return ActionResult.CONSUME;
+    }
+
+    private static void sendElements(PlayerEntity user, LivingEntity entity) {
         for (Text text : Element.getElementsText(entity.getElements(), false, false)) {
             user.sendMessage(text, true);
         }
-        return super.useOnEntity(stack, user, entity, hand);
     }
 }

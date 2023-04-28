@@ -23,7 +23,7 @@ public class IceElement extends Element {
     }
 
     @Override
-    public void applyUpdateEffect (LivingEntity entity,int amplifier){
+    public void applyUpdateEffect(LivingEntity entity, int amplifier) {
         if (entity.isIn(WATER)) {
             if (entity.hasStatusEffect(EWEffects.FREEZE)) {
                 return;
@@ -35,7 +35,7 @@ public class IceElement extends Element {
     }
 
     @Override
-    public int getEffectTime (LivingEntity target){
+    public int getEffectTime(LivingEntity target) {
         if (target.hasStatusEffect(EWEffects.FREEZING_RESISTANCE)) {
             return 0;
         }
@@ -43,7 +43,7 @@ public class IceElement extends Element {
     }
 
     @Override
-    public void postHit (LivingEntity target, PlayerEntity attacker){
+    public void postHit(LivingEntity target, PlayerEntity attacker) {
         if (target.isIn(FIRE)) {
             target.removeEffectOf(FIRE);
             if (target.isOnFire()) {
@@ -58,12 +58,12 @@ public class IceElement extends Element {
     }
 
     @Override
-    public void writeDamageMultiplier (Map<Predicate< LivingEntity >, Float > map){
+    public void writeDamageMultiplier(Map<Predicate<LivingEntity>, Float> map) {
         map.put(living -> living.hasStatusEffect(EWEffects.FREEZE), 1.5f);
     }
 
     @Override
-    public float getExtraDamage (LivingEntity target, float amount){
+    public float getExtraDamage(LivingEntity target, float amount) {
         if (target.isIn(FIRE)) {
             return 3.0f;
         }

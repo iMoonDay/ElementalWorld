@@ -1,5 +1,0 @@
-accessWidener   v1    named
-
-accessible method net/minecraft/entity/projectile/TridentEntity asItemStack ()Lnet/minecraft/item/ItemStack;
-
-accessible method net/minecraft/registry/Registries create (Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/registry/Registries$Initializer;)Lnet/minecraft/registry/Registry;

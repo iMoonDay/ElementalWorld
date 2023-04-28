@@ -16,10 +16,10 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.potion.Potion;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
@@ -405,7 +405,6 @@ public class LivingEntityMixin implements EWLivingEntity {
     }
 
     private float getDamageMultiplier(LivingEntity attacker, Entity sourceEntity, LivingEntity target) {
-        ItemStack stack = getAttackStack(attacker, sourceEntity);
         float multiplier = 1.0f;
         for (Element element : attacker.getAllElements()) {
             if (element == null) {
@@ -417,15 +416,27 @@ public class LivingEntityMixin implements EWLivingEntity {
             float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
             multiplier += element.getLevelMultiplier(f);
         }
-        for (Element element : stack.getElements()) {
-            if (element == null) {
-                continue;
+        if (sourceEntity instanceof ArrowEntity arrow) {
+            Potion potion = ((ArrowEntityAccessor) arrow).getPotion();
+            if (potion instanceof Element.ElementPotion elementPotion) {
+                Element element = elementPotion.getElement();
+                if (element != null && !element.isInvalid()) {
+                    float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
+                    multiplier += element.getLevelMultiplier(f);
+                }
             }
-            if (element.isInvalid()) {
-                continue;
+        } else {
+            ItemStack stack = getAttackStack(attacker, sourceEntity);
+            for (Element element : stack.getElements()) {
+                if (element == null) {
+                    continue;
+                }
+                if (element.isInvalid()) {
+                    continue;
+                }
+                float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
+                multiplier += element.getLevelMultiplier(f);
             }
-            float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
-            multiplier += element.getLevelMultiplier(f);
         }
         for (Map.Entry<Predicate<LivingEntity>, Float> entry : Element.getDamageMultiplierMap().entrySet()) {
             if (entry.getKey().test(target)) {
@@ -436,37 +447,26 @@ public class LivingEntityMixin implements EWLivingEntity {
     }
 
     private float getExtraDamage(LivingEntity attacker, Entity sourceEntity, LivingEntity target, float amount) {
-        ItemStack stack = getAttackStack(attacker, sourceEntity);
         float damage = 0.0f;
         for (Element element : attacker.getAllElements()) {
             damage += element.getExtraDamage(target, amount);
         }
-        for (Element element : stack.getElements()) {
-            damage += element.getExtraDamage(target, amount);
+        if (sourceEntity instanceof ArrowEntity arrow) {
+            Potion potion = ((ArrowEntityAccessor) arrow).getPotion();
+            if (potion instanceof Element.ElementPotion elementPotion) {
+                damage += elementPotion.getElement().getExtraDamage(target, amount);
+            }
+        } else {
+            ItemStack stack = getAttackStack(attacker, sourceEntity);
+            for (Element element : stack.getElements()) {
+                damage += element.getExtraDamage(target, amount);
+            }
         }
         return damage;
     }
 
     private static ItemStack getAttackStack(LivingEntity attacker, Entity sourceEntity) {
-        ItemStack stack;
-        if (sourceEntity instanceof TridentEntity trident) {
-            stack = trident.asItemStack();
-        } else {
-            ItemStack mainHandStack = attacker.getMainHandStack();
-            ItemStack offHandStack = attacker.getOffHandStack();
-            if (sourceEntity instanceof ArrowEntity) {
-                if (mainHandStack.isOf(Items.BOW) || mainHandStack.isOf(Items.CROSSBOW)) {
-                    stack = mainHandStack;
-                } else if (offHandStack.isOf(Items.BOW) || offHandStack.isOf(Items.CROSSBOW)) {
-                    stack = offHandStack;
-                } else {
-                    stack = ItemStack.EMPTY;
-                }
-            } else {
-                stack = mainHandStack;
-            }
-        }
-        return stack;
+        return sourceEntity instanceof TridentEntity trident ? ((TridentEntityInvoker) trident).asItemStack() : attacker.getMainHandStack();
     }
 
     @Inject(method = "getArmor", at = @At("RETURN"), cancellable = true)

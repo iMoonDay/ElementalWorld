@@ -3,7 +3,9 @@ package com.imoonday.elemworld.api;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.imoonday.elemworld.init.EWElements;
+import com.imoonday.elemworld.init.EWItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -16,16 +18,19 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.potion.Potion;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
@@ -80,7 +85,9 @@ public class Element {
     }
 
     public static ImmutableSet<Element> getRegistrySet() {
-        return ImmutableSet.copyOf(ELEMENTS.values());
+        ArrayList<Element> elements = new ArrayList<>(ELEMENTS.values());
+        sortElements(elements);
+        return ImmutableSet.copyOf(elements);
     }
 
     /**
@@ -202,17 +209,7 @@ public class Element {
 
     @Override
     public String toString() {
-        return "Element{" +
-                "name='" + name + '\'' +
-                ", level=" + level +
-                ", maxLevel=" + maxLevel +
-                ", rareLevel=" + rareLevel +
-                ", weight=" + weight +
-                ", miningSpeedMultiplier=" + miningSpeedMultiplier +
-                ", damageMultiplier=" + damageMultiplier +
-                ", protectionMultiplier=" + protectionMultiplier +
-                ", durabilityMultiplier=" + durabilityMultiplier +
-                '}';
+        return "Element{" + "name='" + name + '\'' + ", level=" + level + ", maxLevel=" + maxLevel + ", rareLevel=" + rareLevel + ", weight=" + weight + ", miningSpeedMultiplier=" + miningSpeedMultiplier + ", damageMultiplier=" + damageMultiplier + ", protectionMultiplier=" + protectionMultiplier + ", durabilityMultiplier=" + durabilityMultiplier + '}';
     }
 
     @Override
@@ -254,8 +251,7 @@ public class Element {
     }
 
     public static Element createRandom(LivingEntity entity) {
-        return Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element -> element.isSuitableFor(entity), Element::getWeight))
-                .orElse(EWElements.EMPTY).withRandomLevel();
+        return Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element -> element.isSuitableFor(entity), Element::getWeight)).orElse(EWElements.EMPTY).withRandomLevel();
     }
 
     public static List<Text> getElementsText(ArrayList<Element> elements, boolean prefix, boolean lineBreak) {
@@ -265,42 +261,37 @@ public class Element {
         if (elements.size() == 1 && elements.get(0) == EWElements.EMPTY) {
             return new ArrayList<>();
         }
-        Comparator<Element> rareLevel = Comparator.comparingInt(o -> o.rareLevel);
-        Comparator<Element> level = Comparator.comparingInt(o -> o.level);
-        Comparator<Element> name = Comparator.comparing(o -> o.name);
-        elements.sort(rareLevel.thenComparing(level).thenComparing(name));
+        sortElements(elements);
         MutableText text;
         List<Text> list = new ArrayList<>();
-        if (prefix || !lineBreak) {
-            text = prefix ? Text.translatable("element.elemworld.name.prefix").formatted(Formatting.WHITE) : Text.empty();
-            for (Element element : elements) {
-                Text translationName = element.getTranslationName();
-                if (translationName != null) {
-                    appendText(text, element, translationName);
-                }
-            }
-            list.add(text);
-        } else {
-            text = Text.empty();
-            int lastLevel = -1;
-            Iterator<Element> iterator = elements.iterator();
-            while (iterator.hasNext()) {
-                Element element = iterator.next();
-                Text translationName = element.getTranslationName();
-                if (translationName != null) {
+        text = prefix ? Text.translatable("element.elemworld.name.prefix").formatted(Formatting.WHITE) : Text.empty();
+        int lastLevel = -1;
+        Iterator<Element> iterator = elements.iterator();
+        while (iterator.hasNext()) {
+            Element element = iterator.next();
+            Text translationName = element.getTranslationName();
+            if (translationName != null) {
+                if (lineBreak) {
                     if (element.rareLevel != lastLevel && lastLevel != -1) {
                         list.add(text);
                         text = Text.empty();
                     }
                     lastLevel = element.rareLevel;
-                    appendText(text, element, translationName);
-                    if (!iterator.hasNext()) {
-                        list.add(text);
-                    }
+                }
+                appendText(text, element, translationName);
+                if (!iterator.hasNext()) {
+                    list.add(text);
                 }
             }
         }
         return list;
+    }
+
+    public static void sortElements(ArrayList<Element> elements) {
+        Comparator<Element> rareLevel = Comparator.comparingInt(o -> o.rareLevel);
+        Comparator<Element> level = Comparator.comparingInt(o -> o.level);
+        Comparator<Element> name = Comparator.comparing(o -> o.name);
+        elements.sort(rareLevel.thenComparing(level).thenComparing(name));
     }
 
     private static void appendText(MutableText text, Element element, Text translationName) {
@@ -352,7 +343,7 @@ public class Element {
     }
 
     public StatusEffect getEffect() {
-        return Effect.get(this);
+        return Registries.STATUS_EFFECT.get(id(name));
     }
 
     public void addEffect(LivingEntity target, @Nullable Entity attacker) {
@@ -511,25 +502,49 @@ public class Element {
         return false;
     }
 
+    public boolean hasFragmentItem() {
+        return true;
+    }
+
+    public Item getFragmentItem() {
+        return Registries.ITEM.get(id(this.getFragmentId()));
+    }
+
+    public String getFragmentId() {
+        return this.name + "_element_fragment";
+    }
+
     public static void register() {
         for (Element element : getRegistrySet()) {
             if (element == EWElements.EMPTY) {
                 continue;
             }
-            if (!element.hasEffect()) {
-                continue;
+            if (element.hasEffect()) {
+                Identifier id = id(element.getName());
+                ElementEffect effect = Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
+                Registry.register(Registries.POTION, id, new ElementPotion(element));
             }
-            Registry.register(Registries.STATUS_EFFECT, id(element.getName()), new Effect(element));
+            if (element.hasFragmentItem()) {
+                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element));
+            }
         }
         ServerLifecycleEvents.SERVER_STARTED.register(server -> frozen = true);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
     }
 
-    private static class Effect extends StatusEffect {
+    public Potion getElementPotion() {
+        return Registries.POTION.get(id(this.getName()));
+    }
+
+    public int getPotionDuration() {
+        return 10 * 20;
+    }
+
+    private static class ElementEffect extends StatusEffect {
 
         private final Element element;
 
-        private Effect(@NotNull Element element) {
+        private ElementEffect(Element element) {
             super(StatusEffectCategory.HARMFUL, element.getColor().getRGB());
             this.element = element;
         }
@@ -556,13 +571,53 @@ public class Element {
             this.element.onEffectRemoved(entity, attributes, amplifier);
         }
 
-        public static StatusEffect get(@NotNull Element element) {
-            return Registries.STATUS_EFFECT.get(id(element.name));
+        @Override
+        public Text getName() {
+            return this.element.getTranslationName();
+        }
+
+        @Override
+        public String getTranslationKey() {
+            return this.element.getTranslationKey();
+        }
+    }
+
+    public static class ElementPotion extends Potion {
+
+        private final Element element;
+
+        private ElementPotion(Element element) {
+            super(new StatusEffectInstance(element.getEffect(), element.getPotionDuration()));
+            this.element = element;
+        }
+
+        @Override
+        public String finishTranslationKey(String prefix) {
+            return element.getTranslationKey() + "." + prefix.substring(15).replace(".effect.", "");
+        }
+
+        public Element getElement() {
+            return element;
+        }
+    }
+
+    private static class ElementFragmentItem extends Item {
+
+        private final Element element;
+
+        private ElementFragmentItem(Element element) {
+            super(new FabricItemSettings().maxCount(16));
+            this.element = element;
         }
 
         @Override
         public Text getName() {
-            return this.element.getTranslationName();
+            return Text.translatable("element.elemworld.name.fragment", this.element.getTranslationName());
+        }
+
+        @Override
+        public Text getName(ItemStack stack) {
+            return this.getName();
         }
     }
 }

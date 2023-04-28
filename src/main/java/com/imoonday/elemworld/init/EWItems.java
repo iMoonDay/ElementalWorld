@@ -11,13 +11,13 @@ import static com.imoonday.elemworld.ElementalWorld.id;
 
 public class EWItems {
 
-    public static final Item ELEMENT_DETECTOR = register("element_detector",new ElementDetectorItem());
+    public static final Item ELEMENT_DETECTOR = register("element_detector", new ElementDetectorItem());
 
-    public static void register(){
+    public static void register() {
         LOGGER.info("Loading Items");
     }
 
-    static <T extends Item> T register(String id, T item) {
+    public static <T extends Item> T register(String id, T item) {
         ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(item.getDefaultStack()));
         return Registry.register(Registries.ITEM, id(id), item);
     }

@@ -32,7 +32,6 @@
   "suggests": {
     "trinkets": ">=3.6.0"
   },
-  "accessWidener": "elemworld.accesswidener",
   "custom": {
     "loom:injected_interfaces": {
       "net/minecraft/class_1799": [

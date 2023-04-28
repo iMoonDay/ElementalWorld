@@ -18,7 +18,7 @@ import net.minecraft.world.World;
 public class ElementModifierBlock extends Block {
 
     public ElementModifierBlock() {
-        super(FabricBlockSettings.copyOf(Blocks.CRAFTING_TABLE));
+        super(FabricBlockSettings.copyOf(Blocks.SMITHING_TABLE));
     }
 
     @Override

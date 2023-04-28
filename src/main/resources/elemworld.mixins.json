@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "ArgumentTypesMixin",
+    "ArrowEntityAccessor",
     "EnderPearlEntityMixin",
     "EntityMixin",
     "ItemStackMixin",
@@ -13,7 +14,8 @@
     "PlayerEntityMixin",
     "PlayerInventoryMixin",
     "ServerPlayerInteractionManagerMixin",
-    "StatusEffectInstanceMixin"
+    "StatusEffectInstanceMixin",
+    "TridentEntityInvoker"
   ],
   "client": [
     "ClientPlayerEntityMixin",
