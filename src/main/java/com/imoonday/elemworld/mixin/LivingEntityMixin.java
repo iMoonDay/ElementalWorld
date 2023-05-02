@@ -2,6 +2,7 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWLivingEntity;
 import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.init.EWElements;
 import dev.emi.trinkets.api.TrinketComponent;
 import dev.emi.trinkets.api.TrinketsApi;
@@ -15,6 +16,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.TridentEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -22,6 +24,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.potion.Potion;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import org.spongepowered.asm.mixin.Mixin;
@@ -115,10 +118,34 @@ public class LivingEntityMixin implements EWLivingEntity {
         this.immuneCooldown = immuneCooldown;
     }
 
+    @Inject(method = "dropLoot", at = @At("TAIL"))
+    public void dropLoot(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (entity.hasNoElement() || !causedByPlayer) {
+            return;
+        }
+        WeightRandom<Element> random = WeightRandom.create();
+        random.addAll(entity.getElements(), Element::getWeight);
+        random.add(EWElements.EMPTY, EWElements.EMPTY.getWeight());
+        Element element = random.next();
+        if (element != null && !element.isInvalid()) {
+            Item item = element.getFragmentItem();
+            if (item != null) {
+                entity.dropItem(item);
+            }
+        }
+    }
+
+    @Override
+    public boolean hasNoElement() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        return entity.getElements().isEmpty() || entity.getElements().size() == 1 && entity.getElements().get(0).isOf(EWElements.EMPTY);
+    }
+
     @Inject(method = "tick", at = @At("TAIL"))
     public void tick(CallbackInfo ci) {
         elementTick();
-        checkEffects();
+//        checkEffects();
         checkElements();
         setNameWithElements();
         cooldownTick();
@@ -128,20 +155,14 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         ArrayList<Element> list = entity.getAllElements();
         for (Element element : list) {
-            if (element == null) {
-                continue;
-            }
-            if (element.isInvalid()) {
+            if (element == null || element.isInvalid()) {
                 continue;
             }
             element.tick(entity);
             element.addPersistentEffects(entity);
         }
         for (Element element : Element.getRegistrySet()) {
-            if (element == null) {
-                continue;
-            }
-            if (element.isInvalid()) {
+            if (element == null || element.isInvalid()) {
                 continue;
             }
             if (element.shouldAddEffect(entity)) {
@@ -166,10 +187,7 @@ public class LivingEntityMixin implements EWLivingEntity {
                 }
                 if (!oldStack.isEmpty()) {
                     for (Element element : oldStack.getElements()) {
-                        if (element == null) {
-                            continue;
-                        }
-                        if (element.isInvalid()) {
+                        if (element == null || element.isInvalid()) {
                             continue;
                         }
                         if (newStack.getElements().contains(element)) {
@@ -180,10 +198,7 @@ public class LivingEntityMixin implements EWLivingEntity {
                 }
                 if (!newStack.isEmpty()) {
                     for (Element element : newStack.getElements()) {
-                        if (element == null) {
-                            continue;
-                        }
-                        if (element.isInvalid()) {
+                        if (element == null || element.isInvalid()) {
                             continue;
                         }
                         if (oldStack.getElements().contains(element)) {
@@ -298,28 +313,6 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
     }
 
-    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
-    public void damage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity.isInvulnerableTo(source)) {
-            cir.setReturnValue(false);
-        }
-        if (entity.world.isClient) {
-            cir.setReturnValue(false);
-        }
-        for (Element element : entity.getAllElements()) {
-            if (element == null) {
-                continue;
-            }
-            if (element.isInvalid()) {
-                continue;
-            }
-            if (element.ignoreDamage(source, entity)) {
-                cir.setReturnValue(false);
-            }
-        }
-    }
-
     @Inject(method = "applyDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getHealth()F"), cancellable = true)
     public void tryImmune(DamageSource source, float amount, CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
@@ -334,13 +327,10 @@ public class LivingEntityMixin implements EWLivingEntity {
     private boolean shouldImmuneOnDeath() {
         LivingEntity entity = (LivingEntity) (Object) this;
         for (Element element : entity.getAllElements()) {
-            if (element == null) {
+            if (element == null || element.isInvalid()) {
                 continue;
             }
-            if (element.isInvalid()) {
-                continue;
-            }
-            if (element.shouldImmuneOnDeath(entity)) {
+            if (element.immuneOnDeath(entity)) {
                 return true;
             }
         }
@@ -355,19 +345,13 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
         Entity attacker = source.getAttacker();
         for (Element element : entity.getAllElements()) {
-            if (element == null) {
-                continue;
-            }
-            if (element.isInvalid()) {
+            if (element == null || element.isInvalid()) {
                 continue;
             }
             element.afterInjury(entity, source, amount);
         }
         for (Element element : Element.getRegistrySet()) {
-            if (element == null) {
-                continue;
-            }
-            if (element.isInvalid()) {
+            if (element == null || element.isInvalid()) {
                 continue;
             }
             if (element.shouldAddEffectAfterInjury(entity, source, amount)) {
@@ -377,10 +361,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (attacker instanceof LivingEntity living && !source.isIndirect()) {
             ArrayList<Element> list = living.getMainHandStack().getElements();
             for (Element element : list) {
-                if (element == null) {
-                    continue;
-                }
-                if (element.isInvalid()) {
+                if (element == null || element.isInvalid()) {
                     continue;
                 }
                 element.postHit(entity, living, amount);
@@ -394,26 +375,31 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
     }
 
+    //最终伤害
     @Inject(method = "modifyAppliedDamage", at = @At("RETURN"), cancellable = true)
     public void modifyAppliedDamage(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
+        float finalDamage = cir.getReturnValueF();
         if (source.getAttacker() instanceof LivingEntity attacker) {
             float baseDamage = cir.getReturnValueF() + getExtraDamage(attacker, source.getSource(), entity, amount);
-            float finalDamage = baseDamage * getDamageMultiplier(attacker, source.getSource(), entity);
-            cir.setReturnValue(Float.valueOf(String.format("%.2f", finalDamage)));
+            finalDamage = baseDamage * getDamageMultiplier(attacker, source.getSource(), entity);
         }
+        float protectionMultiplier = 1.0f;
+        for (Element element : entity.getAllElements()) {
+            float multiplier = element.getDamageProtectionMultiplier(source, entity);
+            protectionMultiplier = MathHelper.clamp(protectionMultiplier, 0.0f, multiplier);
+        }
+        finalDamage *= protectionMultiplier;
+        cir.setReturnValue(Float.valueOf(String.format("%.2f", finalDamage)));
     }
 
     private float getDamageMultiplier(LivingEntity attacker, Entity sourceEntity, LivingEntity target) {
         float multiplier = 1.0f;
         for (Element element : attacker.getAllElements()) {
-            if (element == null) {
+            if (element == null || element.isInvalid()) {
                 continue;
             }
-            if (element.isInvalid()) {
-                continue;
-            }
-            float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
+            float f = element.getDamageMultiplier(attacker.world, attacker, target);
             multiplier += element.getLevelMultiplier(f);
         }
         if (sourceEntity instanceof ArrowEntity arrow) {
@@ -421,26 +407,23 @@ public class LivingEntityMixin implements EWLivingEntity {
             if (potion instanceof Element.ElementPotion elementPotion) {
                 Element element = elementPotion.getElement();
                 if (element != null && !element.isInvalid()) {
-                    float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
+                    float f = element.getDamageMultiplier(attacker.world, attacker, target);
                     multiplier += element.getLevelMultiplier(f);
                 }
             }
         } else {
             ItemStack stack = getAttackStack(attacker, sourceEntity);
             for (Element element : stack.getElements()) {
-                if (element == null) {
+                if (element == null || element.isInvalid()) {
                     continue;
                 }
-                if (element.isInvalid()) {
-                    continue;
-                }
-                float f = element.getDamageMultiplier(attacker.world, attacker, target) - 1;
+                float f = element.getDamageMultiplier(attacker.world, attacker, target);
                 multiplier += element.getLevelMultiplier(f);
             }
         }
         for (Map.Entry<Predicate<LivingEntity>, Float> entry : Element.getDamageMultiplierMap().entrySet()) {
             if (entry.getKey().test(target)) {
-                multiplier += entry.getValue() - 1;
+                multiplier += entry.getValue();
             }
         }
         return multiplier;
@@ -471,7 +454,7 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     @Inject(method = "getArmor", at = @At("RETURN"), cancellable = true)
     public void getArmor(CallbackInfoReturnable<Integer> cir) {
-        float multiplier = getProtectionMultiplier();
+        float multiplier = getArmorMultiplier();
         int value = (int) (cir.getReturnValueI() * multiplier);
         if (value == 0 && multiplier != 1.0f) {
             value += multiplier;
@@ -479,17 +462,14 @@ public class LivingEntityMixin implements EWLivingEntity {
         cir.setReturnValue(value);
     }
 
-    private float getProtectionMultiplier() {
+    private float getArmorMultiplier() {
         LivingEntity entity = (LivingEntity) (Object) this;
         float multiplier = 1.0f;
         for (Element element : entity.getAllElements()) {
-            if (element == null) {
+            if (element == null || element.isInvalid()) {
                 continue;
             }
-            if (element.isInvalid()) {
-                continue;
-            }
-            float f = element.getProtectionMultiplier(entity.world, entity) - 1;
+            float f = element.getArmorMultiplier(entity.world, entity);
             multiplier += element.getLevelMultiplier(f);
         }
         return multiplier;

@@ -7,18 +7,18 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.random.Random;
 
 public class TimeElement extends Element {
-    public TimeElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    public TimeElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
     }
 
     @Override
-    public boolean shouldImmuneOnDeath (LivingEntity entity){
+    public boolean immuneOnDeath(LivingEntity entity){
         if (entity.getImmuneCooldown() <= 0) {
             entity.setImmuneCooldown(5 * 60 * 20);
             entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
             return true;
         }
-        return super.shouldImmuneOnDeath(entity);
+        return super.immuneOnDeath(entity);
     }
 
     @Override

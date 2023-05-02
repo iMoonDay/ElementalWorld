@@ -15,16 +15,13 @@ public class GrassElement extends Element {
     }
 
     @Override
-    public boolean ignoreDamage (DamageSource source, LivingEntity entity){
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         BlockState state = entity.getSteppingBlockState();
-        if (source.isIn(IS_FALL) && (state.isOf(Blocks.GRASS_BLOCK) || state.isIn(BlockTags.LEAVES))) {
-            return true;
-        }
-        return super.ignoreDamage(source, entity);
+        return source.isIn(IS_FALL) && (state.isOf(Blocks.GRASS_BLOCK) || state.isIn(BlockTags.LEAVES)) ? 0.2f : 1.0f;
     }
 
     @Override
-    public void tick (LivingEntity entity){
+    public void tick(LivingEntity entity) {
         if (entity.getHealth() < entity.getMaxHealth()) {
             entity.setHealTick(entity.getHealTick() + 1);
             int healTick = entity.getHealTick();

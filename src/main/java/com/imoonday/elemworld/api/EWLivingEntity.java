@@ -44,6 +44,10 @@ public interface EWLivingEntity {
 
     }
 
+    default boolean hasNoElement() {
+        return false;
+    }
+
     default double getSpeed() {
         return 0;
     }

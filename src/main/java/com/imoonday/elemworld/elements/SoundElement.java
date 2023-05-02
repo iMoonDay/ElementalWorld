@@ -14,8 +14,8 @@ import static net.minecraft.entity.damage.DamageTypes.SONIC_BOOM;
 import static net.minecraft.entity.effect.StatusEffects.GLOWING;
 
 public class SoundElement extends Element {
-    public SoundElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    public SoundElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
     }
 
     @Override
@@ -35,16 +35,16 @@ public class SoundElement extends Element {
     }
 
     @Override
-    public float getProtectionMultiplier (World world, LivingEntity entity){
+    public float getArmorMultiplier(World world, LivingEntity entity){
         if (entity.isSubmergedInWater()) {
             return 1.5f;
         }
-        return super.getProtectionMultiplier(world, entity);
+        return super.getArmorMultiplier(world, entity);
     }
 
     @Override
-    public boolean ignoreDamage (DamageSource source, LivingEntity entity){
-        return source.isOf(SONIC_BOOM);
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity){
+        return source.isOf(SONIC_BOOM) ? 0.2f : 1.0f;
     }
 
     @Override

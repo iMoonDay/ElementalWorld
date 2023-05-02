@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "elemworld:item/light_element_fragment"
+  }
+}

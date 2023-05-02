@@ -21,12 +21,12 @@ import static net.minecraft.registry.tag.DamageTypeTags.IS_DROWNING;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_EXPLOSION;
 
 public class SpaceElement extends Element {
-    public SpaceElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    public SpaceElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
     }
 
     @Override
-    public boolean ignoreDamage (DamageSource source, LivingEntity entity){
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity){
         if (source.isIndirect() || source.isIn(IS_DROWNING) || source.isIn(IS_EXPLOSION)) {
             if (source.isOf(DamageTypes.DROWN)) {
                 BlockPos pos = BlockPos.ofFloored(entity.getEyePos());
@@ -38,20 +38,20 @@ public class SpaceElement extends Element {
                 randomTeleport(entity);
                 entity.setVelocity(Vec3d.ZERO);
             }
-            return true;
+            return 0.2f;
         } else {
-            return entity.getRandom().nextFloat() < 0.25f;
+            return entity.getRandom().nextFloat() < 0.25f ? 0.2f : 1.0f;
         }
     }
 
     @Override
-    public boolean shouldImmuneOnDeath (LivingEntity entity){
+    public boolean immuneOnDeath(LivingEntity entity){
         if (entity.getRandom().nextFloat() < 0.25f) {
             randomTeleport(entity);
             entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
             return true;
         }
-        return super.shouldImmuneOnDeath(entity);
+        return super.immuneOnDeath(entity);
     }
 
     private static void randomTeleport (LivingEntity entity){

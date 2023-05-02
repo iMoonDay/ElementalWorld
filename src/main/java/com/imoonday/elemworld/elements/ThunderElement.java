@@ -18,13 +18,13 @@ import static com.imoonday.elemworld.init.EWElements.*;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_LIGHTNING;
 
 public class ThunderElement extends Element {
-    public ThunderElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    public ThunderElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
     }
 
     @Override
-    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
-        return source.isIn(IS_LIGHTNING);
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
+        return source.isIn(IS_LIGHTNING) ? 0.2f : 1.0f;
     }
 
     @Override

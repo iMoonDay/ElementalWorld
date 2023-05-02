@@ -33,7 +33,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -60,26 +59,23 @@ public class Element {
     protected final int weight;
     protected final float miningSpeedMultiplier;
     protected final float damageMultiplier;
-    protected final float protectionMultiplier;
+    protected final float armorMultiplier;
     protected final float durabilityMultiplier;
 
     public Element(int maxLevel, int rareLevel, int weight) {
-        this(maxLevel, rareLevel, weight, 1.0f, 1.0f, 1.0f, 1.0f);
+        this(maxLevel, rareLevel, weight, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    public Element(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
+    public Element(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
         this.maxLevel = maxLevel;
         this.rareLevel = rareLevel;
         this.weight = weight;
         this.miningSpeedMultiplier = miningSpeedMultiplier;
         this.damageMultiplier = damageMultiplier;
-        this.protectionMultiplier = protectionMultiplier;
+        this.armorMultiplier = armorMultiplier;
         this.durabilityMultiplier = durabilityMultiplier;
     }
 
-    /**
-     * String -> Element name
-     */
     public static ImmutableMap<String, Element> getRegistryMap() {
         return ImmutableMap.copyOf(ELEMENTS);
     }
@@ -90,10 +86,6 @@ public class Element {
         return ImmutableSet.copyOf(elements);
     }
 
-    /**
-     * @param name    Element name
-     * @param element Element
-     */
     public static Element register(String name, Element element) {
         if (frozen) throw new IllegalStateException("Registry is already frozen");
         if (ELEMENTS.containsKey(name)) throw new IllegalStateException("The name is already registered");
@@ -164,8 +156,8 @@ public class Element {
         return damageMultiplier;
     }
 
-    public float getProtectionMultiplier(World world, LivingEntity entity) {
-        return protectionMultiplier;
+    public float getArmorMultiplier(World world, LivingEntity entity) {
+        return armorMultiplier;
     }
 
     public float getDurabilityMultiplier() {
@@ -176,8 +168,8 @@ public class Element {
         return weight;
     }
 
-    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
-        return false;
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
+        return 1.0f;
     }
 
     public Map<StatusEffect, Integer> getPersistentEffects() {
@@ -209,19 +201,19 @@ public class Element {
 
     @Override
     public String toString() {
-        return "Element{" + "name='" + name + '\'' + ", level=" + level + ", maxLevel=" + maxLevel + ", rareLevel=" + rareLevel + ", weight=" + weight + ", miningSpeedMultiplier=" + miningSpeedMultiplier + ", damageMultiplier=" + damageMultiplier + ", protectionMultiplier=" + protectionMultiplier + ", durabilityMultiplier=" + durabilityMultiplier + '}';
+        return "Element{" + "name='" + name + '\'' + ", level=" + level + ", maxLevel=" + maxLevel + ", rareLevel=" + rareLevel + ", weight=" + weight + ", miningSpeedMultiplier=" + miningSpeedMultiplier + ", damageMultiplier=" + damageMultiplier + ", armorMultiplier=" + armorMultiplier + ", durabilityMultiplier=" + durabilityMultiplier + '}';
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Element element)) return false;
-        return maxLevel == element.maxLevel && rareLevel == element.rareLevel && weight == element.weight && Float.compare(element.miningSpeedMultiplier, miningSpeedMultiplier) == 0 && Float.compare(element.damageMultiplier, damageMultiplier) == 0 && Float.compare(element.protectionMultiplier, protectionMultiplier) == 0 && Float.compare(element.durabilityMultiplier, durabilityMultiplier) == 0 && Objects.equals(name, element.name);
+        return maxLevel == element.maxLevel && rareLevel == element.rareLevel && weight == element.weight && Float.compare(element.miningSpeedMultiplier, miningSpeedMultiplier) == 0 && Float.compare(element.damageMultiplier, damageMultiplier) == 0 && Float.compare(element.armorMultiplier, armorMultiplier) == 0 && Float.compare(element.durabilityMultiplier, durabilityMultiplier) == 0 && Objects.equals(name, element.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+        return Objects.hash(name, maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
     }
 
     private Element withRandomLevel() {
@@ -270,18 +262,26 @@ public class Element {
         while (iterator.hasNext()) {
             Element element = iterator.next();
             Text translationName = element.getTranslationName();
-            if (translationName != null) {
-                if (lineBreak) {
-                    if (element.rareLevel != lastLevel && lastLevel != -1) {
-                        list.add(text);
-                        text = Text.empty();
-                    }
-                    lastLevel = element.rareLevel;
-                }
-                appendText(text, element, translationName);
-                if (!iterator.hasNext()) {
+            if (translationName == null) {
+                continue;
+            }
+            if (lineBreak) {
+                if (element.rareLevel != lastLevel && lastLevel != -1) {
                     list.add(text);
+                    text = Text.empty();
                 }
+                lastLevel = element.rareLevel;
+            }
+            if (!text.equals(Text.empty())) {
+                text.append(" ");
+            }
+            int levelInt = Math.max(element.level, 0);
+            String levelStr = levelInt > LEVELS.length - 1 ? String.valueOf(element.level) : LEVELS[levelInt];
+            Formatting formatting = element.getFormatting();
+            Text levelText = formatting == null ? Text.empty() : Text.literal(levelStr).formatted(formatting);
+            text.append(translationName).append(levelText);
+            if (!iterator.hasNext()) {
+                list.add(text);
             }
         }
         return list;
@@ -294,17 +294,6 @@ public class Element {
         elements.sort(rareLevel.thenComparing(level).thenComparing(name));
     }
 
-    private static void appendText(MutableText text, Element element, Text translationName) {
-        if (!text.equals(Text.empty())) {
-            text.append(" ");
-        }
-        int levelInt = Math.max(element.level, 0);
-        String levelStr = levelInt > LEVELS.length - 1 ? String.valueOf(element.level) : LEVELS[levelInt];
-        Formatting formatting = element.getFormatting();
-        Text levelText = formatting == null ? Text.empty() : Text.literal(levelStr).formatted(formatting);
-        text.append(translationName).append(levelText);
-    }
-
     @Nullable
     public Text getTranslationName() {
         Formatting color = getFormatting();
@@ -313,7 +302,7 @@ public class Element {
 
     @Nullable
     public Formatting getFormatting() {
-        return switch (this.getRareLevel()) {
+        return switch (this.rareLevel) {
             case 0 -> null;
             case 1 -> Formatting.WHITE;
             case 2 -> Formatting.AQUA;
@@ -327,7 +316,7 @@ public class Element {
     }
 
     public Color getColor() {
-        return switch (this.getRareLevel()) {
+        return switch (this.rareLevel) {
             case 0 -> Color.BLACK;
             case 1 -> Color.WHITE;
             case 2 -> Color.CYAN;
@@ -336,7 +325,7 @@ public class Element {
         };
     }
 
-    public static @NotNull Map<Predicate<LivingEntity>, Float> getDamageMultiplierMap() {
+    public static Map<Predicate<LivingEntity>, Float> getDamageMultiplierMap() {
         Map<Predicate<LivingEntity>, Float> map = new HashMap<>();
         getRegistrySet().forEach(element -> element.writeDamageMultiplier(map));
         return map;
@@ -355,14 +344,7 @@ public class Element {
     }
 
     public void addPersistentEffects(LivingEntity entity) {
-        for (Map.Entry<StatusEffect, Integer> entry : this.getPersistentEffects().entrySet()) {
-            StatusEffect effect = entry.getKey();
-            int amplifier = entry.getValue();
-            StatusEffectInstance instance = entity.getStatusEffect(effect);
-            if (instance == null || instance.isFromElement() && instance.getAmplifier() != amplifier) {
-                entity.addStatusEffect(new StatusEffectInstance(effect, -1, amplifier, false, false, false).setFromElement(true));
-            }
-        }
+        this.getPersistentEffects().forEach((key, value) -> entity.addStatusEffect(new StatusEffectInstance(key, 2, value, false, false, false)));
     }
 
     public int getEffectTime(LivingEntity target) {
@@ -381,11 +363,11 @@ public class Element {
         return Arrays.asList(elements).contains(this);
     }
 
-    public boolean isIn(@NotNull ArrayList<Element> elements) {
+    public boolean isIn(ArrayList<Element> elements) {
         return elements.contains(this);
     }
 
-    public boolean shouldImmuneOnDeath(LivingEntity entity) {
+    public boolean immuneOnDeath(LivingEntity entity) {
         return false;
     }
 
@@ -453,7 +435,7 @@ public class Element {
         return false;
     }
 
-    public void onElementApplied(@NotNull LivingEntity entity, int slot) {
+    public void onElementApplied(LivingEntity entity, int slot) {
         if (entity.world.isClient) {
             return;
         }
@@ -467,7 +449,7 @@ public class Element {
         }
     }
 
-    public void onElementRemoved(@NotNull LivingEntity entity, int slot) {
+    public void onElementRemoved(LivingEntity entity, int slot) {
         if (entity.world.isClient) {
             return;
         }
@@ -482,11 +464,11 @@ public class Element {
         }
     }
 
-    public boolean isSuitableFor(@NotNull ItemStack stack) {
+    public boolean isSuitableFor(ItemStack stack) {
         return stack.isDamageable() && stack.getElements().stream().noneMatch(this::conflictsWith);
     }
 
-    public boolean isSuitableFor(@NotNull LivingEntity entity) {
+    public boolean isSuitableFor(LivingEntity entity) {
         return entity.isAlive() && entity.getElements().stream().noneMatch(this::conflictsWith);
     }
 

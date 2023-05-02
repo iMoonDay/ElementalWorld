@@ -35,10 +35,10 @@ public class DarknessElement extends Element {
     }
 
     @Override
-    public float getProtectionMultiplier(World world, LivingEntity entity) {
+    public float getArmorMultiplier(World world, LivingEntity entity) {
         Float x = getMultiplier(world, entity);
         if (x != null) return x;
-        return super.getProtectionMultiplier(world, entity);
+        return super.getArmorMultiplier(world, entity);
     }
 
     @Nullable
@@ -46,25 +46,25 @@ public class DarknessElement extends Element {
         long time = world.getTimeOfDay();
         if (time < 1000 || time >= 13000) {
             if (world.getLightLevel(entity.getBlockPos()) == 0) {
-                return 3.0f;
+                return 2.0f;
             }
-            return 2.0f;
+            return 1.0f;
         }
         return null;
     }
 
     @Override
-    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         if (source.isIndirect()) {
-            return false;
+            return 1.0f;
         }
         if (source.getAttacker() instanceof LivingEntity attacker) {
             long time = entity.world.getTimeOfDay();
             if (attacker.getMainHandStack().hasElement(LIGHT) || attacker.isIn(LIGHT) || time >= 1000 && time < 13000) {
-                return false;
+                return 1.0f;
             }
         }
-        return source.isOf(MOB_ATTACK) || source.isOf(MOB_ATTACK_NO_AGGRO) || source.isOf(PLAYER_ATTACK);
+        return source.isOf(MOB_ATTACK) || source.isOf(MOB_ATTACK_NO_AGGRO) || source.isOf(PLAYER_ATTACK) ? 0.2f : 1.0f;
     }
 
     @Override

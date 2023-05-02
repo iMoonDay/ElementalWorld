@@ -41,24 +41,24 @@ public class LightElement extends Element {
     }
 
     @Override
-    public float getProtectionMultiplier(World world, LivingEntity entity) {
+    public float getArmorMultiplier(World world, LivingEntity entity) {
         Float x = getMultiplier(world);
         if (x != null) return x;
-        return super.getProtectionMultiplier(world, entity);
+        return super.getArmorMultiplier(world, entity);
     }
 
     @Nullable
     private Float getMultiplier(World world) {
         long time = world.getTimeOfDay();
         if (time >= 1000 && time < 13000) {
-            return 1.5f;
+            return 0.5f;
         }
         return null;
     }
 
     @Override
-    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
-        return source.isIn(IS_FIRE) || source.isIn(IS_EXPLOSION);
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
+        return source.isIn(IS_FIRE) || source.isIn(IS_EXPLOSION) ? 0.2f : 1.0f;
     }
 
     @Override

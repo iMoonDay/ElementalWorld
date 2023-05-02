@@ -19,10 +19,14 @@ public class ElementDetectorItem extends Item {
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
+        if (!user.isSneaking()) {
+            return TypedActionResult.fail(stack);
+        }
         if (world.isClient) {
             return TypedActionResult.success(stack);
         }
         sendElements(user, user);
+        user.getItemCooldownManager().set(this, 20);
         return TypedActionResult.consume(stack);
     }
 
@@ -32,6 +36,7 @@ public class ElementDetectorItem extends Item {
             return ActionResult.SUCCESS;
         }
         sendElements(user, entity);
+        user.getItemCooldownManager().set(this, 20);
         return ActionResult.CONSUME;
     }
 

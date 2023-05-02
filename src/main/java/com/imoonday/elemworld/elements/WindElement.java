@@ -23,8 +23,8 @@ public class WindElement extends Element {
     }
 
     @Override
-    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
-        return source.isIn(IS_FALL);
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
+        return source.isIn(IS_FALL) ? 0.2f : 1.0f;
     }
 
     @Override

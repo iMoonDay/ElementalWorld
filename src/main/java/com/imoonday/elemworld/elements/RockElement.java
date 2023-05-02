@@ -16,27 +16,27 @@ import java.util.Map;
 import static net.minecraft.entity.damage.DamageTypes.IN_WALL;
 
 public class RockElement extends Element {
-    public RockElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float protectionMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, protectionMultiplier, durabilityMultiplier);
+    public RockElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
     }
 
     @Override
     public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
         if (state.isIn(BlockTags.PICKAXE_MINEABLE)) {
-            return 2.0f;
+            return 1.0f;
         }
         return super.getMiningSpeedMultiplier(world, entity, state);
     }
 
     @Override
-    public boolean ignoreDamage(DamageSource source, LivingEntity entity) {
-        return source.isOf(IN_WALL);
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
+        return source.isOf(IN_WALL) ? 0.2f : 1.0f;
     }
 
     @Override
     public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(int slot) {
         Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
-        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 4.0, EntityAttributeModifier.Operation.ADDITION));
+        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 0.2, EntityAttributeModifier.Operation.MULTIPLY_BASE));
         return map;
     }
 }
