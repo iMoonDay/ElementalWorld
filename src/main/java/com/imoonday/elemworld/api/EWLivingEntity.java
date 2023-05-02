@@ -52,7 +52,7 @@ public interface EWLivingEntity {
         return 0;
     }
 
-    default ArrayList<Element> getAllElements() {
+    default ArrayList<Element> getAllElements(boolean repeat) {
         return new ArrayList<>();
     }
 

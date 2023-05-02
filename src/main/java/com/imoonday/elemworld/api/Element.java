@@ -343,10 +343,6 @@ public class Element {
         }
     }
 
-    public void addPersistentEffects(LivingEntity entity) {
-        this.getPersistentEffects().forEach((key, value) -> entity.addStatusEffect(new StatusEffectInstance(key, 2, value, false, false, false)));
-    }
-
     public int getEffectTime(LivingEntity target) {
         return 5;
     }

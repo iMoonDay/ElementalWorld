@@ -39,9 +39,6 @@
       ],
       "net/minecraft/class_1309": [
         "com/imoonday/elemworld/api/EWLivingEntity"
-      ],
-      "net/minecraft/class_1293": [
-        "com/imoonday/elemworld/api/EWStatusEffectInstance"
       ]
     }
   }
