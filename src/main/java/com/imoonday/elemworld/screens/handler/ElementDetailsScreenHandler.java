@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public class ElementDetailsScreenHandler extends ScreenHandler {
 
     private final Inventory equipments;
-    private final ArrayList<Element> elements;
+    private final PlayerEntity player;
 
     public ElementDetailsScreenHandler(int syncId, PlayerInventory playerInventory) {
         this(syncId, playerInventory, new SimpleInventory(7));
@@ -24,17 +24,14 @@ public class ElementDetailsScreenHandler extends ScreenHandler {
     public ElementDetailsScreenHandler(int syncId, PlayerInventory playerInventory, Inventory equipments) {
         super(EWScreens.ELEMENT_DETAILS_SCREEN_HANDLER, syncId);
         this.equipments = equipments;
-        this.elements = equipments.getStack(0).getElements();
+        this.player = playerInventory.player;
         checkSize(equipments, 7);
         int y;
         int x;
         int index = 0;
-        this.addSlot(new EquipmentSlot(equipments, ++index, 8, 8));
-        this.addSlot(new EquipmentSlot(equipments, ++index, 8, 26));
-        this.addSlot(new EquipmentSlot(equipments, ++index, 153, 8));
-        this.addSlot(new EquipmentSlot(equipments, ++index, 153, 26));
-        this.addSlot(new EquipmentSlot(equipments, ++index, 8, 55));
-        this.addSlot(new EquipmentSlot(equipments, ++index, 153, 55));
+        for (int weight : new int[]{8, 44, 62, 80, 98, 134, 152}) {
+            this.addSlot(new EquipmentSlot(equipments, index++, weight, 54));
+        }
         for (y = 0; y < 3; ++y) {
             for (x = 0; x < 9; ++x) {
                 this.addSlot(new Slot(playerInventory, x + y * 9 + 9, 8 + x * 18, 84 + y * 18));
@@ -45,27 +42,27 @@ public class ElementDetailsScreenHandler extends ScreenHandler {
         }
     }
 
-    public ArrayList<Element> getElements() {
-        return elements;
+    public ArrayList<Element> getElements(int index) {
+        return equipments.getStack(index).getElements();
     }
 
     @Override
     public boolean canUse(PlayerEntity player) {
-        return true;
+        return this.equipments.canPlayerUse(player);
     }
 
     @Override
     public ItemStack quickMove(PlayerEntity player, int invSlot) {
         ItemStack newStack = ItemStack.EMPTY;
         Slot slot = this.slots.get(invSlot);
-        if (slot != null && slot.hasStack()) {
+        if (slot.hasStack()) {
             ItemStack originalStack = slot.getStack();
             newStack = originalStack.copy();
-            if (invSlot < this.equipments.size()) {
-                if (!this.insertItem(originalStack, this.equipments.size(), this.slots.size(), true)) {
+            if (invSlot >= 7 && invSlot < 34) {
+                if (!this.insertItem(originalStack, 34, this.slots.size(), false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.insertItem(originalStack, 0, this.equipments.size(), false)) {
+            } else if (!this.insertItem(originalStack, 7, 34, false)) {
                 return ItemStack.EMPTY;
             }
 
@@ -77,6 +74,10 @@ public class ElementDetailsScreenHandler extends ScreenHandler {
         }
 
         return newStack;
+    }
+
+    public PlayerEntity getPlayer() {
+        return player;
     }
 
     private static class EquipmentSlot extends Slot {

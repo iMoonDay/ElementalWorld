@@ -65,9 +65,6 @@ public class ItemStackMixin implements EWItemStack {
             if (element == null) {
                 continue;
             }
-            if (!element.isSuitableFor(stack)) {
-                continue;
-            }
             NbtCompound nbt = element.toNbt();
             list.add(nbt);
         }
@@ -167,32 +164,19 @@ public class ItemStackMixin implements EWItemStack {
         for (Text text : texts) {
             list.add(index++, text);
         }
-        float damage = 1.0f;
-        float protect = 1.0f;
-        float mine = 1.0f;
-        float durability = 1.0f;
-        for (Element element : elements) {
-            if (element == null || element.isInvalid()) {
-                continue;
-            }
-            float f = element.getDamageMultiplier(player.world, player, null);
-            damage += element.getLevelMultiplier(f);
-            f = element.getArmorMultiplier(player.world, player);
-            protect += element.getLevelMultiplier(f);
-            f = element.getMiningSpeedMultiplier(player.world, player, player.getSteppingBlockState());
-            mine += element.getLevelMultiplier(f);
-            f = element.getDurabilityMultiplier();
-            durability += element.getLevelMultiplier(f);
-        }
-        if (damage == 1.0f && protect == 1.0f && mine == 1.0f && durability == 1.0f) {
+        float damage = stack.getDamageMultiplier(player);
+        float maxHealth = stack.getMaxHealthMultiplier(player);
+        float mine = stack.getMiningSpeedMultiplier(player);
+        float durability = stack.getDurabilityMultiplier();
+        if (damage == 1.0f && maxHealth == 1.0f && mine == 1.0f && durability == 1.0f) {
             return;
         }
-        list.add(index++, Text.literal("元素增幅：").formatted(Formatting.GRAY));
+        list.add(index++, Text.literal("元素增幅(" + elements.size() + ")：").formatted(Formatting.GRAY));
         if (damage != 1.0f) {
             list.add(index++, Text.literal("×" + String.format("%.2f", damage) + " 攻击伤害").formatted(Formatting.DARK_GREEN));
         }
-        if (protect != 1.0f) {
-            list.add(index++, Text.literal("×" + String.format("%.2f", protect) + " 护甲值").formatted(Formatting.BLUE));
+        if (maxHealth != 1.0f) {
+            list.add(index++, Text.literal("×" + String.format("%.2f", maxHealth) + " 生命上限").formatted(Formatting.BLUE));
         }
         if (mine != 1.0f) {
             list.add(index++, Text.literal("×" + String.format("%.2f", mine) + " 挖掘速度").formatted(Formatting.RED));
@@ -200,6 +184,62 @@ public class ItemStackMixin implements EWItemStack {
         if (durability != 1.0f) {
             list.add(index, Text.literal("×" + String.format("%.2f", durability) + " 耐久度").formatted(Formatting.WHITE));
         }
+    }
+
+    @Override
+    public float getDamageMultiplier(LivingEntity entity) {
+        ItemStack stack = (ItemStack) (Object) this;
+        float multiplier = 1.0f;
+        for (Element element : stack.getElements()) {
+            if (element == null || element.isInvalid()) {
+                continue;
+            }
+            float f = element.getDamageMultiplier(entity.world, entity, null);
+            multiplier += element.getLevelMultiplier(f);
+        }
+        return multiplier;
+    }
+
+    @Override
+    public float getMaxHealthMultiplier(LivingEntity entity) {
+        ItemStack stack = (ItemStack) (Object) this;
+        float multiplier = 1.0f;
+        for (Element element : stack.getElements()) {
+            if (element == null || element.isInvalid()) {
+                continue;
+            }
+            float f = element.getMaxHealthMultiplier(entity.world, entity);
+            multiplier += element.getLevelMultiplier(f);
+        }
+        return multiplier;
+    }
+
+    @Override
+    public float getMiningSpeedMultiplier(LivingEntity entity) {
+        ItemStack stack = (ItemStack) (Object) this;
+        float multiplier = 1.0f;
+        for (Element element : stack.getElements()) {
+            if (element == null || element.isInvalid()) {
+                continue;
+            }
+            float f = element.getMiningSpeedMultiplier(entity.world, entity, entity.getSteppingBlockState());
+            multiplier += element.getLevelMultiplier(f);
+        }
+        return multiplier;
+    }
+
+    @Override
+    public float getDurabilityMultiplier() {
+        ItemStack stack = (ItemStack) (Object) this;
+        float multiplier = 1.0f;
+        for (Element element : stack.getElements()) {
+            if (element == null || element.isInvalid()) {
+                continue;
+            }
+            float f = element.getDurabilityMultiplier();
+            multiplier += element.getLevelMultiplier(f);
+        }
+        return multiplier;
     }
 
     //攻击后执行

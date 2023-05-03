@@ -18,9 +18,9 @@ public class EWElements {
     public static final Element ICE = Element.register("ice", new IceElement(2, 2, 20, 0.0f, 0.0f, 0.0f, -0.25f));
     public static final Element LIGHT = Element.register("light", new LightElement(1, 3, 5));
     public static final Element DARKNESS = Element.register("darkness", new DarknessElement(1, 3, 5));
-    public static final Element TIME = Element.register("time", new TimeElement(1, 3, 5, 0.75f, 0.75f, 0.75f, 0.0f));
-    public static final Element SPACE = Element.register("space", new SpaceElement(1, 3, 5, 0.5f, 0.5f, 0.5f, 0.0f));
-    public static final Element SOUND = Element.register("sound", new SoundElement(1, 3, 5, 0.75f, 0.75f, 0.75f, 0.0f));
+    public static final Element TIME = Element.register("time", new TimeElement(1, 3, 5, 0.75f, 0.75f, 0.25f, 0.0f));
+    public static final Element SPACE = Element.register("space", new SpaceElement(1, 3, 5, 0.5f, 0.5f, 0.2f, 0.0f));
+    public static final Element SOUND = Element.register("sound", new SoundElement(1, 3, 5, 0.75f, 0.75f, 0.25f, 0.0f));
 
     public static void register() {
 

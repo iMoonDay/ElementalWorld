@@ -41,10 +41,10 @@ public class LightElement extends Element {
     }
 
     @Override
-    public float getArmorMultiplier(World world, LivingEntity entity) {
+    public float getMaxHealthMultiplier(World world, LivingEntity entity) {
         Float x = getMultiplier(world);
-        if (x != null) return x;
-        return super.getArmorMultiplier(world, entity);
+        if (x != null) return x / 2.0f;
+        return super.getMaxHealthMultiplier(world, entity);
     }
 
     @Nullable

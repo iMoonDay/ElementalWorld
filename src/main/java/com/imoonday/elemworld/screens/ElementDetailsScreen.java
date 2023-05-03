@@ -1,17 +1,18 @@
 package com.imoonday.elemworld.screens;
 
-import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.screens.handler.ElementDetailsScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.awt.*;
-import java.util.List;
 
 import static com.imoonday.elemworld.ElementalWorld.id;
 
@@ -31,10 +32,21 @@ public class ElementDetailsScreen extends HandledScreen<ElementDetailsScreenHand
         int x = (width - backgroundWidth) / 2;
         int y = (height - backgroundHeight) / 2;
         drawTexture(matrices, x, y, 0, 0, backgroundWidth, backgroundHeight);
-        List<Text> elementsText = Element.getElementsText(this.handler.getElements(), false, true);
-        for (int i = 0; i < elementsText.size(); i++) {
-            Text text = elementsText.get(i);
-            textRenderer.drawWithShadow(matrices, text, 54, 16 + i * 8, Color.WHITE.getRGB());
+        PlayerEntity player = this.handler.getPlayer();
+        float[] multipliers = {1.0f, 1.0f};
+        int count = 0;
+        for (int i = 0; i < 5; i++) {
+            ItemStack stack = this.handler.getSlot(i).getStack();
+            multipliers[0] += stack.getDamageMultiplier(player) - 1;
+            multipliers[1] += stack.getMaxHealthMultiplier(player) - 1;
+            count += stack.getElements().size();
+        }
+        textRenderer.draw(matrices, Text.literal("元素个数 - " + count).formatted(Formatting.BOLD), x + 44, y + 18, Color.WHITE.getRGB());
+        String[] strings = {"攻击伤害", "生命上限"};
+        Formatting[] formattings = {Formatting.DARK_GREEN, Formatting.BLUE};
+        for (int i = 0; i < 2; i++) {
+            Text text = Text.literal(strings[i] + " × " + String.format("%.2f", multipliers[i])).formatted(formattings[i], Formatting.BOLD);
+            textRenderer.draw(matrices, text, x + 44, y + 18 + (i + 1) * 12, Color.WHITE.getRGB());
         }
     }
 

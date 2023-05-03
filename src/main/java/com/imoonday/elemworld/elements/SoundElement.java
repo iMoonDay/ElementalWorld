@@ -14,14 +14,14 @@ import static net.minecraft.entity.damage.DamageTypes.SONIC_BOOM;
 import static net.minecraft.entity.effect.StatusEffects.GLOWING;
 
 public class SoundElement extends Element {
-    public SoundElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
+    public SoundElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
     }
 
     @Override
     public float getMiningSpeedMultiplier (World world, LivingEntity entity, BlockState state){
         if (entity.isSubmergedInWater()) {
-            return 1.5f;
+            return 0.5f;
         }
         return super.getMiningSpeedMultiplier(world, entity, state);
     }
@@ -29,17 +29,17 @@ public class SoundElement extends Element {
     @Override
     public float getDamageMultiplier (World world, LivingEntity entity, LivingEntity target){
         if (entity.isSubmergedInWater()) {
-            return 1.5f;
+            return 0.5f;
         }
         return super.getDamageMultiplier(world, entity, target);
     }
 
     @Override
-    public float getArmorMultiplier(World world, LivingEntity entity){
+    public float getMaxHealthMultiplier(World world, LivingEntity entity){
         if (entity.isSubmergedInWater()) {
-            return 1.5f;
+            return 0.25f;
         }
-        return super.getArmorMultiplier(world, entity);
+        return super.getMaxHealthMultiplier(world, entity);
     }
 
     @Override

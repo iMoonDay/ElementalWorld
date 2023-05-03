@@ -13,6 +13,7 @@ import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
@@ -33,7 +34,6 @@ public class ElementDetectorItem extends Item {
             return TypedActionResult.success(stack);
         }
         openScreen(user, user);
-        user.getItemCooldownManager().set(this, 20);
         return TypedActionResult.consume(stack);
     }
 
@@ -50,16 +50,17 @@ public class ElementDetectorItem extends Item {
         user.openHandledScreen(new NamedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
-                return entity.getDisplayName();
+                return entity.getName();
             }
 
             @Override
             public @NotNull ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
                 SimpleInventory equipments = new SimpleInventory(7);
-                ItemStack itemStack = Items.IRON_PICKAXE.getDefaultStack();
-                itemStack.setElements(entity.getElements());
                 int slot = 0;
-                equipments.setStack(slot++, itemStack);
+                ItemStack stack = new ItemStack(Items.ARMOR_STAND);
+                stack.setElements(entity.getElements());
+                stack.setCustomName(entity.getName().copy().formatted(Formatting.WHITE, Formatting.BOLD, Formatting.UNDERLINE));
+                equipments.setStack(slot++, stack);
                 equipments.setStack(slot++, entity.getEquippedStack(EquipmentSlot.HEAD).copy());
                 equipments.setStack(slot++, entity.getEquippedStack(EquipmentSlot.CHEST).copy());
                 equipments.setStack(slot++, entity.getEquippedStack(EquipmentSlot.LEGS).copy());

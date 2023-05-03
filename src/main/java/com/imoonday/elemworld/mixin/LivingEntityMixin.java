@@ -38,7 +38,6 @@ import java.util.*;
 import java.util.function.Predicate;
 
 import static com.imoonday.elemworld.api.Element.createRandom;
-import static com.imoonday.elemworld.api.Element.getElementsText;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin implements EWLivingEntity {
@@ -146,7 +145,6 @@ public class LivingEntityMixin implements EWLivingEntity {
     public void tick(CallbackInfo ci) {
         elementTick();
         checkElements();
-        setNameWithElements();
         cooldownTick();
     }
 
@@ -266,17 +264,6 @@ public class LivingEntityMixin implements EWLivingEntity {
     public boolean hasSuitableElement() {
         LivingEntity entity = (LivingEntity) (Object) this;
         return Element.getRegistrySet().stream().anyMatch(element -> element.isSuitableFor(entity));
-    }
-
-    private void setNameWithElements() {
-        LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity.world.isClient) {
-            return;
-        }
-        List<Text> texts = getElementsText(this.elements, true, false);
-        if (entity.getCustomName() == null || entity.getCustomName().getString().startsWith("[元素]")) {
-            entity.setCustomName(!texts.isEmpty() ? texts.get(0) : null);
-        }
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
@@ -447,29 +434,6 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private static ItemStack getAttackStack(LivingEntity attacker, Entity sourceEntity) {
         return sourceEntity instanceof TridentEntity trident ? ((TridentEntityInvoker) trident).asItemStack() : attacker.getMainHandStack();
-    }
-
-    @Inject(method = "getArmor", at = @At("RETURN"), cancellable = true)
-    public void getArmor(CallbackInfoReturnable<Integer> cir) {
-        float multiplier = getArmorMultiplier();
-        int value = (int) (cir.getReturnValueI() * multiplier);
-        if (value == 0 && multiplier != 1.0f) {
-            value += multiplier;
-        }
-        cir.setReturnValue(value);
-    }
-
-    private float getArmorMultiplier() {
-        LivingEntity entity = (LivingEntity) (Object) this;
-        float multiplier = 1.0f;
-        for (Element element : entity.getAllElements(true)) {
-            if (element == null || element.isInvalid()) {
-                continue;
-            }
-            float f = element.getArmorMultiplier(entity.world, entity);
-            multiplier += element.getLevelMultiplier(f);
-        }
-        return multiplier;
     }
 
     @Override

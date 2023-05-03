@@ -18,8 +18,8 @@ import static com.imoonday.elemworld.init.EWElements.*;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_LIGHTNING;
 
 public class ThunderElement extends Element {
-    public ThunderElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
+    public ThunderElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
+        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
     }
 
     @Override

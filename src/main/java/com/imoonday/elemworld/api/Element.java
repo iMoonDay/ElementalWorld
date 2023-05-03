@@ -9,10 +9,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.AttributeContainer;
-import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
@@ -59,20 +56,20 @@ public class Element {
     protected final int weight;
     protected final float miningSpeedMultiplier;
     protected final float damageMultiplier;
-    protected final float armorMultiplier;
+    protected final float maxHealthMultiplier;
     protected final float durabilityMultiplier;
 
     public Element(int maxLevel, int rareLevel, int weight) {
         this(maxLevel, rareLevel, weight, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    public Element(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float armorMultiplier, float durabilityMultiplier) {
+    public Element(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
         this.maxLevel = maxLevel;
         this.rareLevel = rareLevel;
         this.weight = weight;
         this.miningSpeedMultiplier = miningSpeedMultiplier;
         this.damageMultiplier = damageMultiplier;
-        this.armorMultiplier = armorMultiplier;
+        this.maxHealthMultiplier = maxHealthMultiplier;
         this.durabilityMultiplier = durabilityMultiplier;
     }
 
@@ -156,8 +153,8 @@ public class Element {
         return damageMultiplier;
     }
 
-    public float getArmorMultiplier(World world, LivingEntity entity) {
-        return armorMultiplier;
+    public float getMaxHealthMultiplier(World world, LivingEntity entity) {
+        return maxHealthMultiplier;
     }
 
     public float getDurabilityMultiplier() {
@@ -201,19 +198,19 @@ public class Element {
 
     @Override
     public String toString() {
-        return "Element{" + "name='" + name + '\'' + ", level=" + level + ", maxLevel=" + maxLevel + ", rareLevel=" + rareLevel + ", weight=" + weight + ", miningSpeedMultiplier=" + miningSpeedMultiplier + ", damageMultiplier=" + damageMultiplier + ", armorMultiplier=" + armorMultiplier + ", durabilityMultiplier=" + durabilityMultiplier + '}';
+        return "Element{" + "name='" + name + '\'' + ", level=" + level + ", maxLevel=" + maxLevel + ", rareLevel=" + rareLevel + ", weight=" + weight + ", miningSpeedMultiplier=" + miningSpeedMultiplier + ", damageMultiplier=" + damageMultiplier + ", maxHealthMultiplier=" + maxHealthMultiplier + ", durabilityMultiplier=" + durabilityMultiplier + '}';
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Element element)) return false;
-        return maxLevel == element.maxLevel && rareLevel == element.rareLevel && weight == element.weight && Float.compare(element.miningSpeedMultiplier, miningSpeedMultiplier) == 0 && Float.compare(element.damageMultiplier, damageMultiplier) == 0 && Float.compare(element.armorMultiplier, armorMultiplier) == 0 && Float.compare(element.durabilityMultiplier, durabilityMultiplier) == 0 && Objects.equals(name, element.name);
+        return maxLevel == element.maxLevel && rareLevel == element.rareLevel && weight == element.weight && Float.compare(element.miningSpeedMultiplier, miningSpeedMultiplier) == 0 && Float.compare(element.damageMultiplier, damageMultiplier) == 0 && Float.compare(element.maxHealthMultiplier, maxHealthMultiplier) == 0 && Float.compare(element.durabilityMultiplier, durabilityMultiplier) == 0 && Objects.equals(name, element.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, armorMultiplier, durabilityMultiplier);
+        return Objects.hash(name, maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
     }
 
     private Element withRandomLevel() {
@@ -436,12 +433,18 @@ public class Element {
             return;
         }
         AttributeContainer attributes = entity.getAttributes();
-        for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : this.getAttributeModifiers(slot).entrySet()) {
+        Map<EntityAttribute, EntityAttributeModifier> map = this.getAttributeModifiers(slot);
+        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, this.getMaxHealthMultiplier(entity.world, entity), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
             EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
             if (entityAttributeInstance == null) continue;
             EntityAttributeModifier entityAttributeModifier = entry.getValue();
+            float percent = entity.getHealth() / entity.getMaxHealth();
             entityAttributeInstance.removeModifier(entityAttributeModifier);
             entityAttributeInstance.addPersistentModifier(new EntityAttributeModifier(entityAttributeModifier.getId(), this.getTranslationKey() + " " + slot, entityAttributeModifier.getValue(), entityAttributeModifier.getOperation()));
+            if (entry.getKey().equals(EntityAttributes.GENERIC_MAX_HEALTH)) {
+                entity.setHealth(entity.getMaxHealth() * percent);
+            }
         }
     }
 
@@ -450,12 +453,15 @@ public class Element {
             return;
         }
         AttributeContainer attributes = entity.getAttributes();
-        for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : this.getAttributeModifiers(slot).entrySet()) {
+        Map<EntityAttribute, EntityAttributeModifier> map = this.getAttributeModifiers(slot);
+        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, this.getMaxHealthMultiplier(entity.world, entity), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
             EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
             if (entityAttributeInstance == null) continue;
+            float percent = entity.getHealth() / entity.getMaxHealth();
             entityAttributeInstance.removeModifier(entry.getValue());
-            if (entity.getHealth() > entity.getMaxHealth()) {
-                entity.setHealth(entity.getMaxHealth());
+            if (entry.getKey().equals(EntityAttributes.GENERIC_MAX_HEALTH)) {
+                entity.setHealth(entity.getMaxHealth() * percent);
             }
         }
     }

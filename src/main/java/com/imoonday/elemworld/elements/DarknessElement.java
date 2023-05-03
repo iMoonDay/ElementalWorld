@@ -35,10 +35,10 @@ public class DarknessElement extends Element {
     }
 
     @Override
-    public float getArmorMultiplier(World world, LivingEntity entity) {
+    public float getMaxHealthMultiplier(World world, LivingEntity entity) {
         Float x = getMultiplier(world, entity);
-        if (x != null) return x;
-        return super.getArmorMultiplier(world, entity);
+        if (x != null) return x / 5.0f;
+        return super.getMaxHealthMultiplier(world, entity);
     }
 
     @Nullable

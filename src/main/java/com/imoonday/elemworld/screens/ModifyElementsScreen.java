@@ -3,7 +3,7 @@ package com.imoonday.elemworld.screens;
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.screens.handler.ModifyElementsScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.screen.ingame.AnvilScreen;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -73,7 +73,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
         Text tooltip = getTooltip();
         if (tooltip != null) {
             int i = textRenderer.getWidth(tooltip);
-            AnvilScreen.fill(matrices, x + 8, y + 21 - 2, x + 8 + i + 2, y + 21 - 2 + 12, 0x4F000000);
+            DrawableHelper.fill(matrices, x + 8, y + 21 - 2, x + 8 + i + 2, y + 21 - 2 + 12, 0x4F000000);
             textRenderer.drawWithShadow(matrices, tooltip, x + 8 + 2, y + 21, Color.RED.getRGB());
         }
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null) {
@@ -98,14 +98,14 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
             if (textWidth > backgroundWidth - 16) {
                 startX = x + (backgroundWidth / 2) - half;
             }
-            AnvilScreen.fill(matrices, startX - 2, y + 21 - 2, startX + textWidth + 2, y + 21 - 2 + 12, 0x4F000000);
+            DrawableHelper.fill(matrices, startX - 2, y + 21 - 2, startX + textWidth + 2, y + 21 - 2 + 12, 0x4F000000);
             textRenderer.drawWithShadow(matrices, text, startX, y + 21, Color.WHITE.getRGB());
         }
         if (!this.handler.getResult().isEmpty()) {
             Color color = player.experienceLevel >= this.handler.getRequiredLevel() || player.isCreative() ? Color.GREEN : Color.RED;
             Text cost = Text.translatable("text.eleworld.modify_elements_screen.cost", this.handler.getRequiredLevel());
             int x1 = x + backgroundWidth - textRenderer.getWidth(cost) - 8;
-            AnvilScreen.fill(matrices, x1 - 4, y + BUTTON_Y + 2, x + this.backgroundWidth - 8, y + BUTTON_Y + 2 + 12, 0x4F000000);
+            DrawableHelper.fill(matrices, x1 - 4, y + BUTTON_Y + 2, x + this.backgroundWidth - 8, y + BUTTON_Y + 2 + 12, 0x4F000000);
             textRenderer.drawWithShadow(matrices, cost, x1 - 2, y + BUTTON_Y + 4, color.getRGB());
         }
     }
