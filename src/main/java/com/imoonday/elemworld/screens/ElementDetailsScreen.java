@@ -14,7 +14,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.Set;
 
 import static com.imoonday.elemworld.ElementalWorld.id;
 
@@ -41,9 +41,9 @@ public class ElementDetailsScreen extends HandledScreen<ElementDetailsScreenHand
             ItemStack stack = this.handler.getSlot(i).getStack();
             multipliers[0] += stack.getDamageMultiplier(player) - 1;
             multipliers[1] += stack.getMaxHealthMultiplier(player) - 1;
-            ArrayList<Element> elements = stack.getElements();
+            Set<Element> elements = stack.getElements().keySet();
             int size = elements.size();
-            if (size == 1 && elements.get(0).isInvalid()) {
+            if (size == 1 && elements.iterator().next().isInvalid()) {
                 continue;
             }
             count += size;

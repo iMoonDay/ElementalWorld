@@ -1,5 +1,6 @@
 package com.imoonday.elemworld.items;
 
+import com.imoonday.elemworld.api.EWLivingEntity;
 import com.imoonday.elemworld.screens.handler.ElementDetailsScreenHandler;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -58,7 +59,7 @@ public class ElementDetectorItem extends Item {
                 SimpleInventory equipments = new SimpleInventory(7);
                 int slot = 0;
                 ItemStack stack = new ItemStack(Items.ARMOR_STAND);
-                stack.setElements(entity.getElements());
+                stack.setElements(((EWLivingEntity) entity).getElements());
                 stack.setCustomName(entity.getName().copy().formatted(Formatting.WHITE, Formatting.BOLD, Formatting.UNDERLINE));
                 equipments.setStack(slot++, stack);
                 equipments.setStack(slot++, entity.getEquippedStack(EquipmentSlot.HEAD).copy());

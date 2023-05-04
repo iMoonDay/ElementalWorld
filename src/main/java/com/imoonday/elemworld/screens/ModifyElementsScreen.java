@@ -17,8 +17,8 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.imoonday.elemworld.ElementalWorld.id;
 
@@ -77,7 +77,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
             textRenderer.drawWithShadow(matrices, tooltip, x + 8 + 2, y + 21, Color.RED.getRGB());
         }
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null) {
-            ArrayList<Element> elements = this.handler.getNewElements();
+            Map<Element, Integer> elements = this.handler.getNewElements();
             List<Text> texts = Element.getElementsText(elements, false, false);
             Text text;
             if (texts.isEmpty()) {

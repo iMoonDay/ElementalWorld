@@ -1,6 +1,5 @@
 package com.imoonday.elemworld.screens.handler;
 
-import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWScreens;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -9,8 +8,6 @@ import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
-
-import java.util.ArrayList;
 
 public class ElementDetailsScreenHandler extends ScreenHandler {
 
@@ -40,10 +37,6 @@ public class ElementDetailsScreenHandler extends ScreenHandler {
         for (y = 0; y < 9; ++y) {
             this.addSlot(new Slot(playerInventory, y, 8 + y * 18, 142));
         }
-    }
-
-    public ArrayList<Element> getElements(int index) {
-        return equipments.getStack(index).getElements();
     }
 
     @Override

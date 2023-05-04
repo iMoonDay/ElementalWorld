@@ -19,8 +19,7 @@ public class ElementFragmentItem extends Item {
 
     @Override
     public Text getName() {
-        Element element = new Element(0, this.rareLevel, 0);
-        Formatting formatting = element.getFormatting();
+        Formatting formatting = Element.getFormatting(this.rareLevel);
         Text name = super.getName();
         if (formatting == null) {
             return name;

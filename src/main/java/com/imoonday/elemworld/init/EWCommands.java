@@ -16,8 +16,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -36,7 +35,7 @@ public class EWCommands {
                             Element element = ElementArgumentType.getElement(context, "element");
                             int level = IntegerArgumentType.getInteger(context, "level");
                             if (entity instanceof LivingEntity livingEntity && element != null && player != null) {
-                                boolean success = livingEntity.addElement(element.withLevel(level));
+                                boolean success = livingEntity.addElement(element, level);
                                 player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
                                 if (element.isOf(EWElements.EMPTY)) {
                                     player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
@@ -50,7 +49,7 @@ public class EWCommands {
                             if (entity instanceof LivingEntity livingEntity && player != null) {
                                 livingEntity.clearElements();
                                 for (Element element : Element.getRegistrySet()) {
-                                    livingEntity.addElement(element.withLevel(element.getMaxLevel()));
+                                    livingEntity.addElement(element, element.getMaxLevel());
                                 }
                                 player.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
                             }
@@ -98,7 +97,7 @@ public class EWCommands {
                             ItemStack stackInSlot = getStackInSlot(entity, slot);
                             int level = IntegerArgumentType.getInteger(context, "level");
                             if (element != null && player != null && isValidStack(player, stackInSlot)) {
-                                boolean success = stackInSlot.addElement(element.withLevel(level));
+                                boolean success = stackInSlot.addElement(element, level);
                                 player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
                                 if (element.isOf(EWElements.EMPTY)) {
                                     player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
@@ -112,9 +111,9 @@ public class EWCommands {
                             int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
                             ItemStack stackInSlot = getStackInSlot(entity, slot);
                             if (player != null && isValidStack(player, stackInSlot)) {
-                                stackInSlot.setElements(new ArrayList<>());
+                                stackInSlot.setElements(new HashMap<>());
                                 for (Element element : Element.getRegistrySet()) {
-                                    stackInSlot.addElement(element.withLevel(element.getMaxLevel()));
+                                    stackInSlot.addElement(element, element.getMaxLevel());
                                 }
                                 player.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
                             }
@@ -139,7 +138,9 @@ public class EWCommands {
                             int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
                             ItemStack stackInSlot = getStackInSlot(entity, slot);
                             if (player != null && isValidStack(player, stackInSlot)) {
-                                stackInSlot.setElements(new ArrayList<>(Collections.singleton(EWElements.EMPTY)));
+                                HashMap<Element, Integer> map = new HashMap<>();
+                                map.put(EWElements.EMPTY, 0);
+                                stackInSlot.setElements(map);
                                 player.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
                             }
                             return 0;

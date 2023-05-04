@@ -1,17 +1,18 @@
 package com.imoonday.elemworld.api;
 
 import net.minecraft.entity.LivingEntity;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.util.Pair;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public interface EWItemStack {
-    @NotNull
-    default ArrayList<Element> getElements() {
-        return new ArrayList<>();
+
+    default Map<Element, Integer> getElements() {
+        return new HashMap<>();
     }
 
-    default void setElements(ArrayList<Element> elements) {
+    default void setElements(Map<Element, Integer> elements) {
 
     }
 
@@ -19,7 +20,11 @@ public interface EWItemStack {
         return false;
     }
 
-    default boolean addElement(Element element) {
+    default boolean addElement(Element element, int level) {
+        return false;
+    }
+
+    default boolean addElement(Pair<Element, Integer> pair) {
         return false;
     }
 

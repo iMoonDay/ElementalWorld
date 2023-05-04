@@ -1,19 +1,28 @@
 package com.imoonday.elemworld.api;
 
+import net.minecraft.util.Pair;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface EWLivingEntity {
 
-    default ArrayList<Element> getElements() {
-        return new ArrayList<>();
+    default Map<Element, Integer> getElements() {
+        return new HashMap<>();
     }
 
-    default boolean addElement(Element elements) {
+    default boolean addElement(Element element, int level) {
         return false;
     }
 
-    default void removeElement(Element elements) {
+    default void removeElement(Element element) {
 
+    }
+
+    default boolean addElement(Pair<Element, Integer> pair) {
+        return false;
     }
 
     default void clearElements() {
@@ -24,7 +33,7 @@ public interface EWLivingEntity {
         return false;
     }
 
-    default void setElements(ArrayList<Element> elements) {
+    default void setElements(Map<Element, Integer> elements) {
 
     }
 
@@ -52,7 +61,7 @@ public interface EWLivingEntity {
         return 0;
     }
 
-    default ArrayList<Element> getAllElements(boolean repeat) {
+    default List<Pair<Element, Integer>> getAllElements(boolean repeat) {
         return new ArrayList<>();
     }
 
@@ -60,7 +69,7 @@ public interface EWLivingEntity {
         return false;
     }
 
-   default boolean hasOneOf(Element... elements) {
+    default boolean hasOneOf(Element... elements) {
         return false;
     }
 

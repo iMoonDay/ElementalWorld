@@ -5,7 +5,7 @@ import com.imoonday.elemworld.elements.*;
 
 public class EWElements {
 
-    public static final Element EMPTY = Element.register("empty", new Element(0, 0, 50));
+    public static final Element EMPTY = Element.register("empty", new Element(0, 0, 50){});
     public static final Element GOLD = Element.register("gold", new GoldElement(3, 1, 40, 0.25f, 0.25f, 0.0f, -0.25f));
     public static final Element WOOD = Element.register("wood", new WoodElement(3, 1, 40, -0.25f, -0.25f, 0.0f, 0.25f));
     public static final Element WATER = Element.register("water", new WaterElement(3, 1, 40, 0.0f, 0.25f, 0.0f, 0.0f));

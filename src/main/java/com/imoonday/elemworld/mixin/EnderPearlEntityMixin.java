@@ -22,7 +22,7 @@ public class EnderPearlEntityMixin {
         EnderPearlEntity pearl = (EnderPearlEntity) (Object) this;
         if (entity instanceof ServerPlayerEntity player) {
             for (ItemStack armorItem : player.getArmorItems()) {
-                for (Element element : armorItem.getElements()) {
+                for (Element element : armorItem.getElements().keySet()) {
                     if (element == SPACE) {
                         pearl.discard();
                         ci.cancel();

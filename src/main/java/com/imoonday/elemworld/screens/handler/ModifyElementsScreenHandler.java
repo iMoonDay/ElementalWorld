@@ -15,10 +15,12 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.random.Random;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class ModifyElementsScreenHandler extends ScreenHandler {
 
@@ -121,20 +123,21 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         if (stack.isEmpty()) {
             return 0;
         }
-        ArrayList<Element> elements = stack.getElements();
+        Map<Element, Integer> elements = stack.getElements();
         float sum = 0;
-        for (Element element1 : elements) {
-            float i = element1.getRareLevel() * elements.size() * ((float) element1.getLevel() / element1.getMaxLevel());
+        for (Map.Entry<Element, Integer> entry : elements.entrySet()) {
+            float i = entry.getKey().getRareLevel() * elements.size() * ((float) entry.getValue() / entry.getKey().getMaxLevel());
             sum += i;
         }
         int randomCost = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY).getInt(RANDOM_COST_KEY);
         return Math.max((int) sum + randomCost, 1);
     }
 
-    @NotNull
-    public ArrayList<Element> getNewElements() {
-        ArrayList<Element> elements = new ArrayList<>(this.result.getStack(0).getElements());
-        elements.removeAll(getStack().getElements());
+    public Map<Element, Integer> getNewElements() {
+        Map<Element, Integer> elements = new HashMap<>(this.result.getStack(0).getElements());
+        for (Element element : getStack().getElements().keySet()) {
+            elements.remove(element);
+        }
         return elements;
     }
 
@@ -178,7 +181,7 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         boolean hasStack = !stack.isEmpty();
         if (hasStack) {
             ItemStack newStack = stack.copy();
-            ArrayList<Element> elements = material.getElements();
+            Map<Element, Integer> elements = material.getElements();
             if (material.isEmpty() || elements.isEmpty()) {
                 if (stack.getOrCreateNbt().contains(LAST_RANDOM_ELEMENT_KEY)) {
                     NbtCompound nbt = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY);
@@ -190,9 +193,9 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
             } else {
                 elements.forEach(newStack::addElement);
             }
-            ArrayList<Element> list = new ArrayList<>(newStack.getElements());
-            list.removeAll(stack.getElements());
-            if (list.isEmpty() || !material.isOf(stack.getItem()) && !material.isOf(Items.DIAMOND) && !material.isEmpty()) {
+            Set<Element> set = newStack.getElements().keySet();
+            set.removeAll(stack.getElements().keySet());
+            if (set.isEmpty() || !material.isOf(stack.getItem()) && !material.isOf(Items.DIAMOND) && !material.isEmpty()) {
                 this.result.setStack(0, ItemStack.EMPTY);
             } else {
                 this.result.setStack(0, newStack);
@@ -203,10 +206,12 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         this.sendContentUpdates();
     }
 
-    public void recordNewElement(ArrayList<Element> elements) {
-        elements.removeAll(getStack().getElements());
-        Element element = elements.isEmpty() ? EWElements.EMPTY : elements.get(0);
-        NbtCompound nbt = element.toNbt();
+    public void recordNewElement(Map<Element, Integer> elements) {
+        for (Element element : getStack().getElements().keySet()) {
+            elements.remove(element);
+        }
+        Pair<Element, Integer> pair = elements.size() != 1 ? new Pair<>(EWElements.EMPTY, 0) : new Pair<>(elements.keySet().iterator().next(), elements.values().iterator().next());
+        NbtCompound nbt = pair.getLeft().toNbt(pair.getRight());
         nbt.putInt(RANDOM_COST_KEY, Random.create().nextBetween(-3, 3));
         getStack().getOrCreateNbt().put(LAST_RANDOM_ELEMENT_KEY, nbt);
     }
