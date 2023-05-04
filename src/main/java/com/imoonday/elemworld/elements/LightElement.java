@@ -13,7 +13,6 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static net.minecraft.entity.effect.StatusEffects.NIGHT_VISION;
@@ -76,10 +75,8 @@ public class LightElement extends Element {
     }
 
     @Override
-    public Map<StatusEffect, Integer> getPersistentEffects() {
-        Map<StatusEffect, Integer> effects = new HashMap<>();
+    public void getPersistentEffects(Map<StatusEffect, Integer> effects) {
         effects.put(SPEED, 0);
         effects.put(NIGHT_VISION, 0);
-        return effects;
     }
 }

@@ -3,9 +3,14 @@ package com.imoonday.elemworld.elements;
 import com.imoonday.elemworld.api.Element;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.world.World;
+
+import java.util.Map;
 
 import static net.minecraft.entity.damage.DamageTypes.IN_WALL;
 
@@ -25,5 +30,10 @@ public class RockElement extends Element {
     @Override
     public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         return source.isOf(IN_WALL) ? 0.2f : 1.0f;
+    }
+
+    @Override
+    public void getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
+        map.put(EntityAttributes.GENERIC_ARMOR, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 2, EntityAttributeModifier.Operation.ADDITION));
     }
 }

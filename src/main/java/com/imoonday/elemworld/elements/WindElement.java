@@ -8,7 +8,6 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,10 +43,8 @@ public class WindElement extends Element {
     }
 
     @Override
-    public Map<StatusEffect, Integer> getPersistentEffects() {
-        Map<StatusEffect, Integer> effects = new HashMap<>();
+    public void getPersistentEffects(Map<StatusEffect, Integer> effects) {
         effects.put(JUMP_BOOST, 0);
         effects.put(SPEED, 0);
-        return effects;
     }
 }

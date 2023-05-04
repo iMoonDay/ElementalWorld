@@ -1,5 +1,6 @@
 package com.imoonday.elemworld.screens;
 
+import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.screens.handler.ElementDetailsScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -13,6 +14,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 import static com.imoonday.elemworld.ElementalWorld.id;
 
@@ -39,7 +41,12 @@ public class ElementDetailsScreen extends HandledScreen<ElementDetailsScreenHand
             ItemStack stack = this.handler.getSlot(i).getStack();
             multipliers[0] += stack.getDamageMultiplier(player) - 1;
             multipliers[1] += stack.getMaxHealthMultiplier(player) - 1;
-            count += stack.getElements().size();
+            ArrayList<Element> elements = stack.getElements();
+            int size = elements.size();
+            if (size == 1 && elements.get(0).isInvalid()) {
+                continue;
+            }
+            count += size;
         }
         textRenderer.draw(matrices, Text.literal("元素个数 - " + count).formatted(Formatting.BOLD), x + 44, y + 18, Color.WHITE.getRGB());
         String[] strings = {"攻击伤害", "生命上限"};

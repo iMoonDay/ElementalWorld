@@ -156,7 +156,9 @@ public class LivingEntityMixin implements EWLivingEntity {
                 continue;
             }
             element.tick(entity);
-            for (Map.Entry<StatusEffect, Integer> entry : element.getPersistentEffects().entrySet()) {
+            HashMap<StatusEffect, Integer> effects = new HashMap<>();
+            element.getPersistentEffects(effects);
+            for (Map.Entry<StatusEffect, Integer> entry : effects.entrySet()) {
                 StatusEffect key = entry.getKey();
                 Integer value = entry.getValue();
                 entity.addStatusEffect(new StatusEffectInstance(key, 2, value, false, false, false));
@@ -191,7 +193,16 @@ public class LivingEntityMixin implements EWLivingEntity {
                         if (element == null || element.isInvalid()) {
                             continue;
                         }
-                        if (newStack.getElements().contains(element)) {
+                        boolean contains = false;
+                        for (Element newElement : newStack.getElements()) {
+                            int level = newElement.getLevel();
+                            int level1 = element.getLevel();
+                            if (newElement.isOf(element) && level == level1) {
+                                contains = true;
+                                break;
+                            }
+                        }
+                        if (contains) {
                             continue;
                         }
                         element.onElementRemoved(entity, i);
@@ -202,7 +213,16 @@ public class LivingEntityMixin implements EWLivingEntity {
                         if (element == null || element.isInvalid()) {
                             continue;
                         }
-                        if (oldStack.getElements().contains(element)) {
+                        boolean contains = false;
+                        for (Element oldElement : oldStack.getElements()) {
+                            int level = oldElement.getLevel();
+                            int level1 = element.getLevel();
+                            if (oldElement.isOf(element) && level == level1) {
+                                contains = true;
+                                break;
+                            }
+                        }
+                        if (contains) {
                             continue;
                         }
                         element.onElementApplied(entity, i);
@@ -405,7 +425,11 @@ public class LivingEntityMixin implements EWLivingEntity {
                 multiplier += element.getLevelMultiplier(f);
             }
         }
-        for (Map.Entry<Predicate<LivingEntity>, Float> entry : Element.getDamageMultiplierMap().entrySet()) {
+        Map<Predicate<LivingEntity>, Float> map = new HashMap<>();
+        for (Element element : Element.getRegistrySet()) {
+            element.getDamageMultiplier(map);
+        }
+        for (Map.Entry<Predicate<LivingEntity>, Float> entry : map.entrySet()) {
             if (entry.getKey().test(target)) {
                 multiplier += entry.getValue();
             }
@@ -471,7 +495,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         boolean success;
         do {
             success = addElement(createRandom(entity));
-        } while (!success && this.elements.size() < Element.getRegistryMap().size());
+        } while (!success && this.elements.size() < Element.getRegistrySet().size());
     }
 
     @Override

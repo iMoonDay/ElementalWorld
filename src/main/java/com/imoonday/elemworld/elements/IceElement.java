@@ -58,7 +58,7 @@ public class IceElement extends Element {
     }
 
     @Override
-    public void writeDamageMultiplier(Map<Predicate<LivingEntity>, Float> map) {
+    public void getDamageMultiplier(Map<Predicate<LivingEntity>, Float> map) {
         map.put(living -> living.hasStatusEffect(EWEffects.FREEZE), 1.5f);
     }
 

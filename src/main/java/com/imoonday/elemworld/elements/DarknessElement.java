@@ -8,7 +8,6 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.imoonday.elemworld.init.EWElements.LIGHT;
@@ -68,9 +67,7 @@ public class DarknessElement extends Element {
     }
 
     @Override
-    public Map<StatusEffect, Integer> getPersistentEffects() {
-        Map<StatusEffect, Integer> effects = new HashMap<>();
+    public void getPersistentEffects(Map<StatusEffect, Integer> effects) {
         effects.put(SPEED, 0);
-        return effects;
     }
 }

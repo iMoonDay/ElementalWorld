@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.imoonday.elemworld.init.EWElements.EMPTY;
 
@@ -104,6 +105,21 @@ public class ItemStackMixin implements EWItemStack {
         ArrayList<Element> elements = stack.getElements();
         elements.remove(element);
         stack.setElements(elements);
+    }
+
+    public Optional<Element> getElement(Element element) {
+        ItemStack stack = (ItemStack) (Object) this;
+        if (!stack.hasNbt()) {
+            return Optional.empty();
+        }
+        for (NbtElement nbtElement : stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE)) {
+            NbtCompound nbt = (NbtCompound) nbtElement;
+            Element element1 = Element.fromNbt(nbt);
+            if (element1.isOf(element)) {
+                return Optional.of(element1);
+            }
+        }
+        return Optional.empty();
     }
 
     @Inject(method = "onCraft", at = @At("TAIL"))
@@ -250,8 +266,15 @@ public class ItemStackMixin implements EWItemStack {
             if (element == null || element.isInvalid()) {
                 continue;
             }
-            element.addEffect(target, attacker);
             element.postHit(target, attacker);
+        }
+        for (Element element : stack.getElements()) {
+            if (element == null || element.isInvalid()) {
+                continue;
+            }
+            if (attacker.getRandom().nextFloat() < element.getEffectChance()) {
+                element.addEffect(target, attacker);
+            }
         }
     }
 

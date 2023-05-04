@@ -44,11 +44,11 @@ import static com.imoonday.elemworld.ElementalWorld.id;
 @SuppressWarnings("unused")
 public class Element {
 
-    public static final String[] LEVELS = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
     private static final ConcurrentHashMap<String, Element> ELEMENTS = new ConcurrentHashMap<>();
+    private static volatile boolean frozen = false;
+    public static final String[] LEVELS = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
     public static final String NAME_KEY = "Name";
     public static final String LEVEL_KEY = "Level";
-    private static volatile boolean frozen = false;
     private String name = "null";
     private int level = 0;
     protected final int maxLevel;
@@ -63,6 +63,12 @@ public class Element {
         this(maxLevel, rareLevel, weight, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
+    public Element(Element element) {
+        this(element.maxLevel, element.rareLevel, element.weight, element.miningSpeedMultiplier, element.damageMultiplier, element.maxHealthMultiplier, element.durabilityMultiplier);
+        this.name = element.name;
+        this.level = element.level;
+    }
+
     public Element(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
         this.maxLevel = maxLevel;
         this.rareLevel = rareLevel;
@@ -71,6 +77,24 @@ public class Element {
         this.damageMultiplier = damageMultiplier;
         this.maxHealthMultiplier = maxHealthMultiplier;
         this.durabilityMultiplier = durabilityMultiplier;
+    }
+
+    public static void register() {
+        for (Element element : getRegistrySet()) {
+            if (element == EWElements.EMPTY) {
+                continue;
+            }
+            if (element.hasEffect()) {
+                Identifier id = id(element.getName());
+                ElementEffect effect = Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
+                Registry.register(Registries.POTION, id, new ElementPotion(element));
+            }
+            if (element.hasFragmentItem()) {
+                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element));
+            }
+        }
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> frozen = true);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
     }
 
     public static ImmutableMap<String, Element> getRegistryMap() {
@@ -111,6 +135,7 @@ public class Element {
     public String getName() {
         return name;
     }
+
 
     public int getRareLevel() {
         return rareLevel;
@@ -169,8 +194,8 @@ public class Element {
         return 1.0f;
     }
 
-    public Map<StatusEffect, Integer> getPersistentEffects() {
-        return new HashMap<>();
+    public void getPersistentEffects(Map<StatusEffect, Integer> effects) {
+
     }
 
     public UUID getUuid(int slot) {
@@ -190,10 +215,18 @@ public class Element {
             }
             if (nbt.contains(LEVEL_KEY, NbtElement.INT_TYPE)) {
                 int level = nbt.getInt(LEVEL_KEY);
-                return element.withLevel(level);
+                return element.copy();
             }
         }
         return EWElements.EMPTY;
+    }
+
+    public Element copy() {
+        return new Element(this);
+    }
+
+    public Element copyWithLevel(int level) {
+        return this.copy().withLevel(level);
     }
 
     @Override
@@ -322,12 +355,6 @@ public class Element {
         };
     }
 
-    public static Map<Predicate<LivingEntity>, Float> getDamageMultiplierMap() {
-        Map<Predicate<LivingEntity>, Float> map = new HashMap<>();
-        getRegistrySet().forEach(element -> element.writeDamageMultiplier(map));
-        return map;
-    }
-
     public StatusEffect getEffect() {
         return Registries.STATUS_EFFECT.get(id(name));
     }
@@ -342,6 +369,10 @@ public class Element {
 
     public int getEffectTime(LivingEntity target) {
         return 5;
+    }
+
+    public float getEffectChance() {
+        return 0.5f;
     }
 
     public boolean isInvalid() {
@@ -404,7 +435,7 @@ public class Element {
         //受伤后，带伤害
     }
 
-    public void writeDamageMultiplier(Map<Predicate<LivingEntity>, Float> map) {
+    public void getDamageMultiplier(Map<Predicate<LivingEntity>, Float> map) {
 
     }
 
@@ -433,15 +464,16 @@ public class Element {
             return;
         }
         AttributeContainer attributes = entity.getAttributes();
-        Map<EntityAttribute, EntityAttributeModifier> map = this.getAttributeModifiers(slot);
-        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, this.getMaxHealthMultiplier(entity.world, entity), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
+        this.getAttributeModifiers(map, slot);
+        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, this.getLevelMultiplier(this.getMaxHealthMultiplier(entity.world, entity)), EntityAttributeModifier.Operation.MULTIPLY_BASE));
         for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
             EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
             if (entityAttributeInstance == null) continue;
             EntityAttributeModifier entityAttributeModifier = entry.getValue();
             float percent = entity.getHealth() / entity.getMaxHealth();
             entityAttributeInstance.removeModifier(entityAttributeModifier);
-            entityAttributeInstance.addPersistentModifier(new EntityAttributeModifier(entityAttributeModifier.getId(), this.getTranslationKey() + " " + slot, entityAttributeModifier.getValue(), entityAttributeModifier.getOperation()));
+            entityAttributeInstance.addPersistentModifier(new EntityAttributeModifier(entityAttributeModifier.getId(), this.getTranslationKey() + " " + slot, entityAttributeModifier.getValue() * this.getLevelMultiplier(1.0f), entityAttributeModifier.getOperation()));
             if (entry.getKey().equals(EntityAttributes.GENERIC_MAX_HEALTH)) {
                 entity.setHealth(entity.getMaxHealth() * percent);
             }
@@ -453,8 +485,9 @@ public class Element {
             return;
         }
         AttributeContainer attributes = entity.getAttributes();
-        Map<EntityAttribute, EntityAttributeModifier> map = this.getAttributeModifiers(slot);
-        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, this.getMaxHealthMultiplier(entity.world, entity), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
+        this.getAttributeModifiers(map, slot);
+        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, this.getLevelMultiplier(this.getMaxHealthMultiplier(entity.world, entity)), EntityAttributeModifier.Operation.MULTIPLY_BASE));
         for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
             EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
             if (entityAttributeInstance == null) continue;
@@ -474,8 +507,8 @@ public class Element {
         return entity.isAlive() && entity.getElements().stream().noneMatch(this::conflictsWith);
     }
 
-    public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(int slot) {
-        return new HashMap<>();
+    public void getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
+
     }
 
     public boolean hasEffect() {
@@ -496,24 +529,6 @@ public class Element {
 
     public String getFragmentId() {
         return this.name + "_element_fragment";
-    }
-
-    public static void register() {
-        for (Element element : getRegistrySet()) {
-            if (element == EWElements.EMPTY) {
-                continue;
-            }
-            if (element.hasEffect()) {
-                Identifier id = id(element.getName());
-                ElementEffect effect = Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
-                Registry.register(Registries.POTION, id, new ElementPotion(element));
-            }
-            if (element.hasFragmentItem()) {
-                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element));
-            }
-        }
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> frozen = true);
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
     }
 
     public Potion getElementPotion() {
