@@ -15,7 +15,7 @@ import net.minecraft.registry.Registry;
 import java.util.Arrays;
 
 import static com.imoonday.elemworld.ElementalWorld.LOGGER;
-import static com.imoonday.elemworld.ElementalWorld.id;
+import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWPotions {
 

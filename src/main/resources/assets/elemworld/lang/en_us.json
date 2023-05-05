@@ -114,5 +114,7 @@
   "text.eleworld.commands.get.empty": "Empty",
   "text.eleworld.commands.clear.success": "Cleanup succeeded",
   "text.eleworld.commands.item.invalid": "The item does not exist",
-  "text.eleworld.commands.item.unsupport": "The item is not supported"
+  "text.eleworld.commands.item.unsupport": "The item is not supported",
+  "key.categories.elemworld": "Elemental World",
+  "key.elemworld.display": "Open the element screen"
 }

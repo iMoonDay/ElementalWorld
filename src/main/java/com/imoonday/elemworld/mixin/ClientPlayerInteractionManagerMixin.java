@@ -22,7 +22,7 @@ public class ClientPlayerInteractionManagerMixin {
     @Inject(method = "getReachDistance", at = @At("RETURN"), cancellable = true)
     public void getReachDistance(CallbackInfoReturnable<Float> cir) {
         ClientPlayerEntity player = this.client.player;
-        if (player != null && (player.hasSpace() || player.isHolding(SPACE))) {
+        if (player != null && (player.hasElement(SPACE) || player.isHolding(SPACE))) {
             cir.setReturnValue(cir.getReturnValueF() + 3);
         }
     }

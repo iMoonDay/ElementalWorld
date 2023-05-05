@@ -5,6 +5,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.tag.BlockTags;
 
 import static net.minecraft.registry.tag.DamageTypeTags.IS_FALL;
@@ -22,6 +23,9 @@ public class GrassElement extends Element {
 
     @Override
     public void tick(LivingEntity entity) {
+        if (entity instanceof PlayerEntity player && (player.isCreative() || player.isSpectator())) {
+            return;
+        }
         if (entity.getHealth() < entity.getMaxHealth()) {
             entity.setHealTick(entity.getHealTick() + 1);
             int healTick = entity.getHealTick();

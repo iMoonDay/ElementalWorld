@@ -8,6 +8,7 @@
     "ArrowEntityAccessor",
     "EnderPearlEntityMixin",
     "EntityMixin",
+    "ItemMixin",
     "ItemStackMixin",
     "LivingEntityMixin",
     "MobEntityMixin",
@@ -18,7 +19,8 @@
   ],
   "client": [
     "ClientPlayerEntityMixin",
-    "ClientPlayerInteractionManagerMixin"
+    "ClientPlayerInteractionManagerMixin",
+    "InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1

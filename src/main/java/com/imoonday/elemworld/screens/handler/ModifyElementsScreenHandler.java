@@ -1,8 +1,8 @@
 package com.imoonday.elemworld.screens.handler;
 
 import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.api.ElementInstance;
 import com.imoonday.elemworld.init.EWBlocks;
-import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWScreens;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -15,11 +15,9 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.random.Random;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 
 public class ModifyElementsScreenHandler extends ScreenHandler {
@@ -123,22 +121,22 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         if (stack.isEmpty()) {
             return 0;
         }
-        Map<Element, Integer> elements = stack.getElements();
+        Set<ElementInstance> instances = stack.getElements();
         float sum = 0;
-        for (Map.Entry<Element, Integer> entry : elements.entrySet()) {
-            float i = entry.getKey().getRareLevel() * elements.size() * ((float) entry.getValue() / entry.getKey().getMaxLevel());
+        for (ElementInstance instance : instances) {
+            float i = instance.element().getRareLevel() * instances.size() * ((float) instance.level() / instance.element().getMaxLevel());
             sum += i;
         }
         int randomCost = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY).getInt(RANDOM_COST_KEY);
         return Math.max((int) sum + randomCost, 1);
     }
 
-    public Map<Element, Integer> getNewElements() {
-        Map<Element, Integer> elements = new HashMap<>(this.result.getStack(0).getElements());
-        for (Element element : getStack().getElements().keySet()) {
-            elements.remove(element);
+    public Set<ElementInstance> getNewElements() {
+        Set<ElementInstance> instances = new HashSet<>(this.result.getStack(0).getElements());
+        for (ElementInstance instance1 : getStack().getElements()) {
+            instances.removeIf(instance -> instance.element().isOf(instance1.element()));
         }
-        return elements;
+        return instances;
     }
 
     public ItemStack getStack() {
@@ -181,21 +179,21 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         boolean hasStack = !stack.isEmpty();
         if (hasStack) {
             ItemStack newStack = stack.copy();
-            Map<Element, Integer> elements = material.getElements();
-            if (material.isEmpty() || elements.isEmpty()) {
+            Set<ElementInstance> instances = material.getElements();
+            if (material.isEmpty() || instances.isEmpty()) {
                 if (stack.getOrCreateNbt().contains(LAST_RANDOM_ELEMENT_KEY)) {
                     NbtCompound nbt = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY);
-                    newStack.addElement(Element.fromNbt(nbt));
+                    ElementInstance.fromNbt(nbt).ifPresent(newStack::addElement);
                 } else {
                     newStack.addNewRandomElement();
                     recordNewElement(newStack.getElements());
                 }
             } else {
-                elements.forEach(newStack::addElement);
+                instances.forEach(newStack::addElement);
             }
-            Set<Element> set = newStack.getElements().keySet();
-            set.removeAll(stack.getElements().keySet());
-            if (set.isEmpty() || !material.isOf(stack.getItem()) && !material.isOf(Items.DIAMOND) && !material.isEmpty()) {
+            Set<ElementInstance> instances1 = newStack.getElements();
+            instances1.removeAll(stack.getElements());
+            if (instances1.isEmpty() || !material.isOf(stack.getItem()) && !material.isOf(Items.DIAMOND) && !material.isEmpty()) {
                 this.result.setStack(0, ItemStack.EMPTY);
             } else {
                 this.result.setStack(0, newStack);
@@ -206,13 +204,15 @@ public class ModifyElementsScreenHandler extends ScreenHandler {
         this.sendContentUpdates();
     }
 
-    public void recordNewElement(Map<Element, Integer> elements) {
-        for (Element element : getStack().getElements().keySet()) {
-            elements.remove(element);
+    public void recordNewElement(Set<ElementInstance> instances) {
+        for (ElementInstance instance : getStack().getElements()) {
+            instances.remove(instance);
         }
-        Pair<Element, Integer> pair = elements.size() != 1 ? new Pair<>(EWElements.EMPTY, 0) : new Pair<>(elements.keySet().iterator().next(), elements.values().iterator().next());
-        NbtCompound nbt = pair.getLeft().toNbt(pair.getRight());
-        nbt.putInt(RANDOM_COST_KEY, Random.create().nextBetween(-3, 3));
+        ElementInstance instance;
+        instance = instances.size() == 1 ? instances.iterator().next() : ElementInstance.EMPTY;
+        NbtCompound nbt = instance.toNbt();
+        int between = instance.element().getRandomLevel() * 3;
+        nbt.putInt(RANDOM_COST_KEY, Random.create().nextBetween(-between, between));
         getStack().getOrCreateNbt().put(LAST_RANDOM_ELEMENT_KEY, nbt);
     }
 

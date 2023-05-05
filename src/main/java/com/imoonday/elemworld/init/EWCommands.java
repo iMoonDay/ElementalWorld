@@ -2,7 +2,9 @@ package com.imoonday.elemworld.init;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.api.ElementArgumentType;
+import com.imoonday.elemworld.api.ElementInstance;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -12,11 +14,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -30,122 +34,156 @@ public class EWCommands {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("element").requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(3))
                 .then(literal("entity")
                         .then(literal("add").then(argument("entity", EntityArgumentType.entity()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            Element element = ElementArgumentType.getElement(context, "element");
-                            int level = IntegerArgumentType.getInteger(context, "level");
-                            if (entity instanceof LivingEntity livingEntity && element != null && player != null) {
-                                boolean success = livingEntity.addElement(element, level);
-                                player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
-                                if (element.isOf(EWElements.EMPTY)) {
-                                    player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
-                                }
-                            }
+                            entityAdd(context);
                             return 0;
                         })))))
                         .then(literal("addall").then(argument("entity", EntityArgumentType.entity()).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            if (entity instanceof LivingEntity livingEntity && player != null) {
-                                livingEntity.clearElements();
-                                for (Element element : Element.getRegistrySet()) {
-                                    livingEntity.addElement(element, element.getMaxLevel());
-                                }
-                                player.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
-                            }
+                            entityAddAll(context);
                             return 0;
                         })))
                         .then(literal("remove").then(argument("entity", EntityArgumentType.entity()).then(argument("element", ElementArgumentType.element()).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            Element element = ElementArgumentType.getElement(context, "element");
-                            if (entity instanceof LivingEntity livingEntity && element != null && player != null) {
-                                boolean exist = livingEntity.hasElement(element);
-                                livingEntity.removeElement(element);
-                                player.sendMessage(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"));
-                            }
+                            entityRemove(context);
                             return 0;
                         }))))
                         .then(literal("get").then(argument("entity", EntityArgumentType.entity()).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            if (entity instanceof LivingEntity livingEntity && player != null) {
-                                List<Text> texts = Element.getElementsText(livingEntity.getElements(), false, true);
-                                if (texts.isEmpty()) {
-                                    player.sendMessage(Text.translatable("text.eleworld.commands.get.empty"));
-                                } else {
-                                    texts.forEach(player::sendMessage);
-                                }
-                            }
+                            entityGet(context);
                             return 0;
                         })))
                         .then(literal("clear").then(argument("entity", EntityArgumentType.entity()).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            if (entity instanceof LivingEntity livingEntity && player != null) {
-                                livingEntity.clearElements();
-                                player.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
-                            }
+                            entityClear(context);
                             return 0;
                         }))))
                 .then(literal("item")
                         .then(literal("add").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            Element element = ElementArgumentType.getElement(context, "element");
-                            int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
-                            ItemStack stackInSlot = getStackInSlot(entity, slot);
-                            int level = IntegerArgumentType.getInteger(context, "level");
-                            if (element != null && player != null && isValidStack(player, stackInSlot)) {
-                                boolean success = stackInSlot.addElement(element, level);
-                                player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
-                                if (element.isOf(EWElements.EMPTY)) {
-                                    player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
-                                }
-                            }
+                            itemAdd(context);
                             return 0;
                         }))))))
                         .then(literal("addall").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
-                            ItemStack stackInSlot = getStackInSlot(entity, slot);
-                            if (player != null && isValidStack(player, stackInSlot)) {
-                                stackInSlot.setElements(new HashMap<>());
-                                for (Element element : Element.getRegistrySet()) {
-                                    stackInSlot.addElement(element, element.getMaxLevel());
-                                }
-                                player.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
-                            }
+                            itemAddAll(context);
                             return 0;
                         }))))
                         .then(literal("remove").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            Element element = ElementArgumentType.getElement(context, "element");
-                            int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
-                            ItemStack stackInSlot = getStackInSlot(entity, slot);
-                            if (element != null && player != null && isValidStack(player, stackInSlot)) {
-                                boolean exist = stackInSlot.hasElement(element);
-                                stackInSlot.removeElement(element);
-                                player.sendMessage(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"));
-                            }
+                            itemRemove(context);
                             return 0;
                         })))))
                         .then(literal("clear").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).executes(context -> {
-                            ServerPlayerEntity player = context.getSource().getPlayer();
-                            Entity entity = EntityArgumentType.getEntity(context, "entity");
-                            int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
-                            ItemStack stackInSlot = getStackInSlot(entity, slot);
-                            if (player != null && isValidStack(player, stackInSlot)) {
-                                HashMap<Element, Integer> map = new HashMap<>();
-                                map.put(EWElements.EMPTY, 0);
-                                stackInSlot.setElements(map);
-                                player.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
-                            }
+                            itemClear(context);
                             return 0;
                         }))))))
         );
+    }
+
+    private static void itemClear(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
+        ItemStack stackInSlot = getStackInSlot(entity, slot);
+        if (player != null && isValidStack(player, stackInSlot)) {
+            stackInSlot.setElements(new HashSet<>(Collections.singleton(ElementInstance.EMPTY)));
+            player.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
+        }
+    }
+
+    private static void itemRemove(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        Element element = ElementArgumentType.getElement(context, "element");
+        int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
+        ItemStack stackInSlot = getStackInSlot(entity, slot);
+        if (element != null && player != null && isValidStack(player, stackInSlot)) {
+            boolean exist = stackInSlot.hasElement(element);
+            stackInSlot.removeElement(element);
+            player.sendMessage(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"));
+        }
+    }
+
+    private static void itemAddAll(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
+        ItemStack stackInSlot = getStackInSlot(entity, slot);
+        if (player != null && isValidStack(player, stackInSlot)) {
+            stackInSlot.setElements(new HashSet<>());
+            for (Element element : Element.getRegistrySet()) {
+                stackInSlot.addElement(new ElementInstance(element, element.getMaxLevel()));
+            }
+            player.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
+        }
+    }
+
+    private static void itemAdd(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        Element element = ElementArgumentType.getElement(context, "element");
+        int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
+        ItemStack stackInSlot = getStackInSlot(entity, slot);
+        int level = IntegerArgumentType.getInteger(context, "level");
+        if (element != null && player != null && isValidStack(player, stackInSlot)) {
+            boolean success = stackInSlot.addElement(new ElementInstance(element, level));
+            player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
+            if (element.isOf(EWElements.EMPTY)) {
+                player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
+            }
+        }
+    }
+
+    private static void entityClear(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        if (entity instanceof LivingEntity livingEntity && player != null) {
+            livingEntity.clearElements();
+            player.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
+        }
+    }
+
+    private static void entityGet(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        if (entity instanceof LivingEntity livingEntity && player != null) {
+            List<Text> texts = Element.getElementsText(livingEntity.getElements(), false, true);
+            if (texts.isEmpty()) {
+                player.sendMessage(Text.translatable("text.eleworld.commands.get.empty"));
+            } else {
+                texts.forEach(player::sendMessage);
+            }
+        }
+    }
+
+    private static void entityRemove(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        Element element = ElementArgumentType.getElement(context, "element");
+        if (entity instanceof LivingEntity livingEntity && element != null && player != null) {
+            boolean exist = livingEntity.hasElement(element);
+            livingEntity.removeElement(element);
+            player.sendMessage(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"));
+        }
+    }
+
+    private static void entityAddAll(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        if (entity instanceof LivingEntity livingEntity && player != null) {
+            livingEntity.clearElements();
+            for (Element element : Element.getRegistrySet()) {
+                livingEntity.addElement(new ElementInstance(element, element.getMaxLevel()));
+            }
+            player.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
+        }
+    }
+
+    private static void entityAdd(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayer();
+        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        Element element = ElementArgumentType.getElement(context, "element");
+        int level = IntegerArgumentType.getInteger(context, "level");
+        if (entity instanceof LivingEntity livingEntity && element != null && player != null) {
+            boolean success = livingEntity.addElement(new ElementInstance(element, level));
+            player.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
+            if (element.isOf(EWElements.EMPTY)) {
+                player.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
+            }
+        }
     }
 
     private static boolean isValidStack(ServerPlayerEntity player, ItemStack stackInSlot) {

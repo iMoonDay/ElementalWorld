@@ -1,35 +1,41 @@
 package com.imoonday.elemworld.api;
 
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Pair;
+import net.minecraft.item.ItemStack;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 public interface EWItemStack {
 
-    default Map<Element, Integer> getElements() {
-        return new HashMap<>();
+    default Set<ElementInstance> getElements() {
+        return new HashSet<>();
     }
 
-    default void setElements(Map<Element, Integer> elements) {
+    default void setElements(Set<ElementInstance> instances) {
 
+    }
+
+    default ItemStack withElements(Set<ElementInstance> instances){
+        return null;
     }
 
     default boolean hasElement(Element element) {
         return false;
     }
 
-    default boolean addElement(Element element, int level) {
-        return false;
-    }
 
-    default boolean addElement(Pair<Element, Integer> pair) {
+    default boolean addElement(ElementInstance instance) {
         return false;
     }
 
     default void removeElement(Element element) {
 
+    }
+
+    default Optional<ElementInstance> getElement(Element element) {
+        return Optional.empty();
     }
 
     default boolean hasSuitableElement() {

@@ -1,6 +1,7 @@
 package com.imoonday.elemworld.screens;
 
 import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.api.ElementInstance;
 import com.imoonday.elemworld.screens.handler.ModifyElementsScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.DrawableHelper;
@@ -18,9 +19,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
-import static com.imoonday.elemworld.ElementalWorld.id;
+import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHandler> {
 
@@ -77,7 +78,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
             textRenderer.drawWithShadow(matrices, tooltip, x + 8 + 2, y + 21, Color.RED.getRGB());
         }
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null) {
-            Map<Element, Integer> elements = this.handler.getNewElements();
+            Set<ElementInstance> elements = this.handler.getNewElements();
             List<Text> texts = Element.getElementsText(elements, false, false);
             Text text;
             if (texts.isEmpty()) {

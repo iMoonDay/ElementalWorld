@@ -2,6 +2,7 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWLivingEntity;
 import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.api.ElementInstance;
 import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.init.EWElements;
 import dev.emi.trinkets.api.SlotReference;
@@ -39,7 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.*;
 import java.util.function.Predicate;
 
-import static com.imoonday.elemworld.api.Element.createRandom;
+import static com.imoonday.elemworld.api.ElementInstance.createRandomFor;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin implements EWLivingEntity {
@@ -48,60 +49,60 @@ public class LivingEntityMixin implements EWLivingEntity {
     private static final String HEAL_TICK_KEY = "HealTick";
     private static final String IMMUNE_COOLDOWN_KEY = "ImmuneCooldown";
     private final List<ItemStack> oldStacks = new ArrayList<>();
-    private Map<Element, Integer> elements = new HashMap<>();
+    protected Set<ElementInstance> elements = new HashSet<>();
     private int healTick = 0;
     private int immuneCooldown = 0;
 
     @Override
-    public Map<Element, Integer> getElements() {
+    public Set<ElementInstance> getElements() {
         return elements;
     }
 
     @Override
-    public boolean addElement(Element element, int level) {
+    public boolean addElement(ElementInstance instance) {
         LivingEntity entity = (LivingEntity) (Object) this;
+        Element element = instance.element();
         if (element == null) {
             return false;
         }
         if (!element.isSuitableFor(entity)) {
             return false;
         }
-        if (this.elements.containsKey(element)) {
+        if (this.elements.stream().anyMatch(instance1 -> instance1.element().isOf(element))) {
             return false;
         }
-        this.elements.put(element, level);
-        element.onElementApplied(entity, -1, level);
+        this.elements.add(instance);
+        element.onElementApplied(entity, -1, instance.level());
         return true;
-    }
-
-    @Override
-    public boolean addElement(Pair<Element, Integer> pair) {
-        return addElement(pair.getLeft(), pair.getRight());
     }
 
     @Override
     public void removeElement(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        int level = this.elements.get(element);
-        this.elements.remove(element);
-        element.onElementRemoved(entity, -1, level);
+        for (ElementInstance instance : this.elements) {
+            if (instance.element().isOf(element)) {
+                this.elements.remove(instance);
+                element.onElementRemoved(entity, -1, instance.level());
+                break;
+            }
+        }
     }
 
     @Override
     public void clearElements() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        for (Map.Entry<Element, Integer> entry : this.elements.entrySet()) {
-            entry.getKey().onElementRemoved(entity, -1, entry.getValue());
+        for (ElementInstance instance : this.elements) {
+            instance.element().onElementRemoved(entity, -1, instance.level());
         }
         this.elements.clear();
-        this.elements.put(EWElements.EMPTY, 0);
+        this.elements.add(ElementInstance.EMPTY);
     }
 
     @Override
-    public void setElements(Map<Element, Integer> elements) {
+    public void setElements(Set<ElementInstance> instances) {
         this.clearElements();
-        for (Map.Entry<Element, Integer> entry : elements.entrySet()) {
-            this.addElement(entry.getKey(), entry.getValue());
+        for (ElementInstance instance : instances) {
+            this.addElement(instance);
         }
     }
 
@@ -132,7 +133,8 @@ public class LivingEntityMixin implements EWLivingEntity {
             return;
         }
         WeightRandom<Element> random = WeightRandom.create();
-        random.addAll(entity.getElements().keySet(), Element::getWeight);
+        Set<ElementInstance> instances = entity.getElements();
+        random.addAll(ElementInstance.getElementSet(instances), Element::getWeight);
         random.add(EWElements.EMPTY, EWElements.EMPTY.getWeight());
         Element element = random.next();
         if (element != null && !element.isInvalid()) {
@@ -146,7 +148,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Override
     public boolean hasNoElement() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        return entity.getElements().isEmpty() || entity.getElements().size() == 1 && entity.getElements().get(EWElements.EMPTY) != null;
+        return entity.getElements().isEmpty() || entity.getElements().size() == 1 && entity.getElements().contains(ElementInstance.EMPTY);
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -158,14 +160,14 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private void elementTick() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        List<Pair<Element, Integer>> list = entity.getAllElements(false);
-        for (Pair<Element, Integer> pair : list) {
-            Element element = pair.getLeft();
+        List<ElementInstance> list = entity.getAllElements(false);
+        for (ElementInstance instance : list) {
+            Element element = instance.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
             element.tick(entity);
-            HashMap<StatusEffect, Integer> effects = new HashMap<>();
+            Map<StatusEffect, Integer> effects = new HashMap<>();
             element.getPersistentEffects(effects);
             for (Map.Entry<StatusEffect, Integer> entry : effects.entrySet()) {
                 StatusEffect key = entry.getKey();
@@ -198,41 +200,27 @@ public class LivingEntityMixin implements EWLivingEntity {
                     continue;
                 }
                 if (!oldStack.isEmpty()) {
-                    for (Map.Entry<Element, Integer> entry : oldStack.getElements().entrySet()) {
-                        Element element = entry.getKey();
+                    for (ElementInstance instance : oldStack.getElements()) {
+                        Element element = instance.element();
                         if (element.isInvalid()) {
                             continue;
                         }
-                        boolean contains = false;
-                        for (Map.Entry<Element, Integer> newElement : newStack.getElements().entrySet()) {
-                            if (newElement.getKey().isOf(element) && newElement.getValue().intValue() == entry.getValue().intValue()) {
-                                contains = true;
-                                break;
-                            }
-                        }
-                        if (contains) {
+                        if (newStack.getElement(instance.element()).isPresent()) {
                             continue;
                         }
-                        element.onElementRemoved(entity, i, entry.getValue());
+                        element.onElementRemoved(entity, i, instance.level());
                     }
                 }
                 if (!newStack.isEmpty()) {
-                    for (Map.Entry<Element, Integer> entry : newStack.getElements().entrySet()) {
-                        Element element = entry.getKey();
+                    for (ElementInstance instance : newStack.getElements()) {
+                        Element element = instance.element();
                         if (element.isInvalid()) {
                             continue;
                         }
-                        boolean contains = false;
-                        for (Map.Entry<Element, Integer> oldElement : oldStack.getElements().entrySet()) {
-                            if (oldElement.getKey().isOf(element) && oldElement.getValue().intValue() == entry.getValue().intValue()) {
-                                contains = true;
-                                break;
-                            }
-                        }
-                        if (contains) {
+                        if (oldStack.getElement(instance.element()).isPresent()) {
                             continue;
                         }
-                        element.onElementApplied(entity, i, entry.getValue());
+                        element.onElementApplied(entity, i, instance.level());
                     }
                 }
             }
@@ -273,7 +261,7 @@ public class LivingEntityMixin implements EWLivingEntity {
             addRandomElements();
         }
         if (this.elements.size() > 1) {
-            this.elements.remove(EWElements.EMPTY);
+            this.elements.remove(ElementInstance.EMPTY);
         }
         ArrayList<ItemStack> stacks = new ArrayList<>();
         for (ItemStack stack : entity.getArmorItems()) {
@@ -282,7 +270,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         stacks.add(entity.getMainHandStack());
         stacks.add(entity.getOffHandStack());
         for (ItemStack stack : stacks) {
-            if (hasSuitableElement() && stack.getElements().size() == 0) {
+            if (stack.hasSuitableElement() && stack.getElements().size() == 0) {
                 stack.addRandomElements();
             }
         }
@@ -296,8 +284,8 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
     public void writeCustomDataToNbt(NbtCompound nbt, CallbackInfo ci) {
         NbtList list = new NbtList();
-        for (Map.Entry<Element, Integer> entry : this.elements.entrySet()) {
-            NbtCompound nbtCompound = entry.getKey().toNbt(entry.getValue());
+        for (ElementInstance instance : this.elements) {
+            NbtCompound nbtCompound = instance.toNbt();
             list.add(nbtCompound);
         }
         nbt.put(ELEMENTS_KEY, list);
@@ -308,13 +296,16 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
     public void readCustomDataFromNbt(NbtCompound nbt, CallbackInfo ci) {
         if (nbt.contains(ELEMENTS_KEY, NbtElement.LIST_TYPE)) {
-            Map<Element, Integer> map = new HashMap<>();
+            Set<ElementInstance> instances = new HashSet<>();
             for (NbtElement nbtElement : nbt.getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE)) {
                 NbtCompound nbtCompound = (NbtCompound) nbtElement;
-                Pair<Element, Integer> element = Element.fromNbt(nbtCompound);
-                map.put(element.getLeft(), element.getRight());
+                Optional<ElementInstance> element = ElementInstance.fromNbt(nbtCompound);
+                if (element.isEmpty()) {
+                    continue;
+                }
+                instances.add(element.get());
             }
-            this.elements = map;
+            this.elements = instances;
         }
         if (nbt.contains(HEAL_TICK_KEY, NbtElement.INT_TYPE)) {
             this.healTick = nbt.getInt(HEAL_TICK_KEY);
@@ -337,11 +328,11 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private boolean shouldImmuneOnDeath() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        for (Pair<Element, Integer> element : entity.getAllElements(false)) {
-            if (element == null || element.getLeft().isInvalid()) {
+        for (ElementInstance instance : entity.getAllElements(false)) {
+            if (instance == null || instance.element().isInvalid()) {
                 continue;
             }
-            if (element.getLeft().immuneOnDeath(entity)) {
+            if (instance.element().immuneOnDeath(entity)) {
                 return true;
             }
         }
@@ -355,11 +346,11 @@ public class LivingEntityMixin implements EWLivingEntity {
             return;
         }
         Entity attacker = source.getAttacker();
-        for (Pair<Element, Integer> element : entity.getAllElements(false)) {
-            if (element == null || element.getLeft().isInvalid()) {
+        for (ElementInstance instance : entity.getAllElements(false)) {
+            if (instance == null || instance.element().isInvalid()) {
                 continue;
             }
-            element.getLeft().afterInjury(entity, source, amount);
+            instance.element().afterInjury(entity, source, amount);
         }
         for (Element element : Element.getRegistrySet()) {
             if (element == null || element.isInvalid()) {
@@ -370,12 +361,11 @@ public class LivingEntityMixin implements EWLivingEntity {
             }
         }
         if (attacker instanceof LivingEntity living && !source.isIndirect()) {
-            Map<Element, Integer> map = living.getMainHandStack().getElements();
-            for (Element element : map.keySet()) {
-                if (element == null || element.isInvalid()) {
+            for (ElementInstance instance : living.getMainHandStack().getElements()) {
+                if (instance == null || instance.element().isInvalid()) {
                     continue;
                 }
-                element.postHit(entity, living, amount);
+                instance.element().postHit(entity, living, amount);
             }
         }
         if (this.healTick > 0 && !entity.getSteppingBlockState().isOf(Blocks.GRASS_BLOCK)) {
@@ -396,8 +386,8 @@ public class LivingEntityMixin implements EWLivingEntity {
             finalDamage = baseDamage * getDamageMultiplier(attacker, source.getSource(), entity);
         }
         float protectionMultiplier = 1.0f;
-        for (Pair<Element, Integer> element : entity.getAllElements(true)) {
-            float multiplier = element.getLeft().getDamageProtectionMultiplier(source, entity);
+        for (ElementInstance instance : entity.getAllElements(true)) {
+            float multiplier = instance.element().getDamageProtectionMultiplier(source, entity);
             protectionMultiplier = MathHelper.clamp(protectionMultiplier, 0.0f, multiplier);
         }
         finalDamage *= protectionMultiplier;
@@ -406,12 +396,12 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private float getDamageMultiplier(LivingEntity attacker, Entity sourceEntity, LivingEntity target) {
         float multiplier = 1.0f;
-        for (Pair<Element, Integer> pair : attacker.getAllElements(true)) {
-            if (pair == null || pair.getLeft().isInvalid()) {
+        for (ElementInstance instance : attacker.getAllElements(true)) {
+            if (instance == null || instance.element().isInvalid()) {
                 continue;
             }
-            float f = pair.getLeft().getDamageMultiplier(attacker.world, attacker, target);
-            multiplier += pair.getLeft().getLevelMultiplier(pair.getRight(), f);
+            float f = instance.element().getDamageMultiplier(attacker.world, attacker, target);
+            multiplier += instance.getLevelMultiplier(f);
         }
         if (sourceEntity instanceof ArrowEntity arrow) {
             Potion potion = ((ArrowEntityAccessor) arrow).getPotion();
@@ -419,18 +409,18 @@ public class LivingEntityMixin implements EWLivingEntity {
                 Element element = elementPotion.getElement();
                 if (element != null && !element.isInvalid()) {
                     float f = element.getDamageMultiplier(attacker.world, attacker, target);
-                    multiplier += element.getLevelMultiplier(element.getMaxLevel(), f);
+                    multiplier += new ElementInstance(element, element.getMaxLevel()).getLevelMultiplier(f);
                 }
             }
         } else {
             ItemStack stack = getAttackStack(attacker, sourceEntity);
-            for (Map.Entry<Element, Integer> map : stack.getElements().entrySet()) {
-                Element element = map.getKey();
+            for (ElementInstance instance : stack.getElements()) {
+                Element element = instance.element();
                 if (element == null || element.isInvalid()) {
                     continue;
                 }
                 float f = element.getDamageMultiplier(attacker.world, attacker, target);
-                multiplier += element.getLevelMultiplier(map.getValue(), f);
+                multiplier += instance.getLevelMultiplier(f);
             }
         }
         Map<Predicate<LivingEntity>, Float> map = new HashMap<>();
@@ -447,8 +437,8 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private float getExtraDamage(LivingEntity attacker, Entity sourceEntity, LivingEntity target, float amount) {
         float damage = 0.0f;
-        for (Pair<Element, Integer> element : attacker.getAllElements(false)) {
-            damage += element.getLeft().getExtraDamage(target, amount);
+        for (ElementInstance element : attacker.getAllElements(false)) {
+            damage += element.element().getExtraDamage(target, amount);
         }
         if (sourceEntity instanceof ArrowEntity arrow) {
             Potion potion = ((ArrowEntityAccessor) arrow).getPotion();
@@ -457,8 +447,8 @@ public class LivingEntityMixin implements EWLivingEntity {
             }
         } else {
             ItemStack stack = getAttackStack(attacker, sourceEntity);
-            for (Element element : stack.getElements().keySet()) {
-                damage += element.getExtraDamage(target, amount);
+            for (ElementInstance instance : stack.getElements()) {
+                damage += instance.element().getExtraDamage(target, amount);
             }
         }
         return damage;
@@ -469,16 +459,13 @@ public class LivingEntityMixin implements EWLivingEntity {
     }
 
     @Override
-    public List<Pair<Element, Integer>> getAllElements(boolean repeat) {
+    public List<ElementInstance> getAllElements(boolean repeat) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        List<Pair<Element, Integer>> list = new ArrayList<>();
-        for (Map.Entry<Element, Integer> entry : entity.getElements().entrySet()) {
-            list.add(new Pair<>(entry.getKey(), entry.getValue()));
-        }
+        List<ElementInstance> list = new ArrayList<>(entity.getElements());
         for (ItemStack armorItem : entity.getArmorItems()) {
-            for (Map.Entry<Element, Integer> entry : armorItem.getElements().entrySet()) {
-                if (repeat || list.stream().noneMatch(pair -> pair.getLeft().isOf(entry.getKey()))) {
-                    list.add(new Pair<>(entry.getKey(), entry.getValue()));
+            for (ElementInstance instance : armorItem.getElements()) {
+                if (repeat || list.stream().noneMatch(instance1 -> instance1.isElementEqual(instance))) {
+                    list.add(instance);
                 }
             }
         }
@@ -487,9 +474,9 @@ public class LivingEntityMixin implements EWLivingEntity {
                 Optional<TrinketComponent> trinketComponent = TrinketsApi.getTrinketComponent(entity);
                 trinketComponent.ifPresent(component -> {
                     for (Pair<SlotReference, ItemStack> stackPair : component.getAllEquipped()) {
-                        for (Map.Entry<Element, Integer> entry : stackPair.getRight().getElements().entrySet()) {
-                            if (repeat || list.stream().noneMatch(pair -> pair.getLeft().isOf(entry.getKey()))) {
-                                list.add(new Pair<>(entry.getKey(), entry.getValue()));
+                        for (ElementInstance instance : stackPair.getRight().getElements()) {
+                            if (repeat || list.stream().noneMatch(instance1 -> instance1.isElementEqual(instance))) {
+                                list.add(instance);
                             }
                         }
                     }
@@ -514,20 +501,20 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         boolean success;
         do {
-            success = addElement(createRandom(entity));
+            success = addElement(createRandomFor(entity));
         } while (!success && this.elements.size() < Element.getRegistrySet().size());
     }
 
     @Override
     public boolean hasElement(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        return entity.getAllElements(false).stream().anyMatch(pair -> pair.getLeft().isOf(element));
+        return entity.getAllElements(false).stream().anyMatch(instance -> instance.element().isOf(element));
     }
 
     @Override
     public boolean hasOneOf(Element... elements) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        return entity.getAllElements(false).stream().anyMatch(pair -> pair.getLeft().isIn(elements));
+        return entity.getAllElements(false).stream().anyMatch(instance -> instance.element().isIn(elements));
     }
 
     @Override

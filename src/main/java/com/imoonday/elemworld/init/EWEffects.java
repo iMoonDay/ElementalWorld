@@ -8,7 +8,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 
 import static com.imoonday.elemworld.ElementalWorld.LOGGER;
-import static com.imoonday.elemworld.ElementalWorld.id;
+import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWEffects {
 

@@ -114,5 +114,7 @@
   "text.eleworld.commands.get.empty": "空",
   "text.eleworld.commands.clear.success": "清除成功",
   "text.eleworld.commands.item.invalid": "物品不存在",
-  "text.eleworld.commands.item.unsupport": "物品不支持"
+  "text.eleworld.commands.item.unsupport": "物品不支持",
+  "key.categories.elemworld": "元素世界",
+  "key.elemworld.display": "打开元素界面"
 }

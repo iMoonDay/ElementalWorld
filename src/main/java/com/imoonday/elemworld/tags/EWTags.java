@@ -4,7 +4,7 @@ import net.minecraft.item.Item;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 
-import static com.imoonday.elemworld.ElementalWorld.id;
+import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWTags {
 

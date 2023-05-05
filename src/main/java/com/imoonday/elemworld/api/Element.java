@@ -18,8 +18,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.potion.Potion;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
@@ -28,7 +26,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.imoonday.elemworld.ElementalWorld.id;
+import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 @SuppressWarnings("unused")
 public abstract class Element {
@@ -49,8 +46,6 @@ public abstract class Element {
     private static final ConcurrentHashMap<String, ? extends Element> ELEMENTS = new ConcurrentHashMap<>();
     private static volatile boolean frozen = false;
     public static final String[] LEVELS = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
-    public static final String NAME_KEY = "Name";
-    public static final String LEVEL_KEY = "Level";
     private String name = "null";
     protected final int maxLevel;
     protected final int rareLevel;
@@ -80,8 +75,8 @@ public abstract class Element {
     }
 
     public static void register() {
-        for (Element element : getRegistrySet()) {
-            if (element == EWElements.EMPTY) {
+        for (Element element : getSortedElements(getRegistrySet().stream().map(element1 -> new ElementInstance(element1, element1.getMaxLevel())).collect(Collectors.toSet())).keySet()) {
+            if (element.isInvalid()) {
                 continue;
             }
             if (element.hasEffect()) {
@@ -97,13 +92,17 @@ public abstract class Element {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
     }
 
-    public static ImmutableMap<String, Element> getRegistryMap() {
+    public static ImmutableMap<String, ? extends Element> getRegistryMap() {
         return ImmutableMap.copyOf(ELEMENTS);
     }
 
-    public static ImmutableSet<Element> getRegistrySet() {
-        ArrayList<Element> elements = new ArrayList<>(ELEMENTS.values());
+    public static ImmutableSet<? extends Element> getRegistrySet() {
+        ArrayList<? extends Element> elements = new ArrayList<>(ELEMENTS.values());
         return ImmutableSet.copyOf(elements);
+    }
+
+    public static int getSizeOf(Predicate<Element> predicate) {
+        return ELEMENTS.values().stream().filter(predicate).collect(Collectors.toSet()).size();
     }
 
     public static <T extends Element> T register(String name, T element) {
@@ -117,13 +116,6 @@ public abstract class Element {
     @SuppressWarnings("unchecked")
     private static <T> T cast(Object o) {
         return (T) o;
-    }
-
-    public NbtCompound toNbt(int level) {
-        NbtCompound nbt = new NbtCompound();
-        nbt.putString(NAME_KEY, this.getName());
-        nbt.putInt(LEVEL_KEY, level);
-        return nbt;
     }
 
     Element withName(String name) {
@@ -141,16 +133,6 @@ public abstract class Element {
 
     public int getMaxLevel() {
         return maxLevel;
-    }
-
-    public float getLevelMultiplier(int level, float multiplier) {
-        if (multiplier == 0.0f) {
-            return multiplier;
-        }
-        float f1 = (float) level / this.getMaxLevel();
-        float f2 = (this.getMaxLevel() > 1) ? ((float) (this.getMaxLevel() - level) / (this.getMaxLevel() - 1)) : 1.0f;
-        multiplier *= multiplier >= 0 ? f1 : f2;
-        return multiplier;
     }
 
     public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
@@ -185,23 +167,12 @@ public abstract class Element {
         return UUID.nameUUIDFromBytes((this.getName() + " " + slot).getBytes(StandardCharsets.UTF_8));
     }
 
-    public static Element byName(String name) {
-        return Optional.ofNullable(getRegistryMap().get(name)).orElse(EWElements.EMPTY);
-    }
-
-    public static Pair<Element, Integer> fromNbt(NbtCompound nbt) {
-        if (nbt.contains(NAME_KEY, NbtElement.STRING_TYPE)) {
-            String name = nbt.getString(NAME_KEY);
-            Element element = getRegistryMap().get(name);
-            if (element == null) {
-                return new Pair<>(EWElements.EMPTY, 0);
-            }
-            if (nbt.contains(LEVEL_KEY, NbtElement.INT_TYPE)) {
-                int level = nbt.getInt(LEVEL_KEY);
-                return new Pair<>(element, nbt.getInt(LEVEL_KEY));
-            }
+    public static Optional<Element> byName(String name) {
+        Element element = getRegistryMap().get(name);
+        if (element == null) {
+            return Optional.empty();
         }
-        return new Pair<>(EWElements.EMPTY, 0);
+        return Optional.of(element);
     }
 
     @Override
@@ -232,26 +203,11 @@ public abstract class Element {
         return Optional.ofNullable(random.next()).orElse(0);
     }
 
-    public static Pair<Element, Integer> createRandom(ItemStack stack) {
-        Element element = Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element1 -> element1.isSuitableFor(stack), Element::getWeight)).orElse(EWElements.EMPTY);
-        return new Pair<>(element, element.getRandomLevel());
-    }
-
-    public static Pair<Element, Integer> createRandom(ItemStack stack, Set<Element> exclude) {
-        Element element = Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element1 -> !element1.isIn(exclude) && element1.isSuitableFor(stack), Element::getWeight)).orElse(EWElements.EMPTY);
-        return new Pair<>(element, element.getRandomLevel());
-    }
-
-    public static Pair<Element, Integer> createRandom(LivingEntity entity) {
-        Element element = Optional.ofNullable(WeightRandom.getRandom(getRegistrySet(), element1 -> element1.isSuitableFor(entity), Element::getWeight)).orElse(EWElements.EMPTY);
-        return new Pair<>(element, element.getRandomLevel());
-    }
-
-    public static List<Text> getElementsText(Map<Element, Integer> elements, boolean prefix, boolean lineBreak) {
+    public static List<Text> getElementsText(Set<ElementInstance> elements, boolean prefix, boolean lineBreak) {
         if (elements.size() == 0) {
             return new ArrayList<>();
         }
-        if (elements.size() == 1 && elements.get(EWElements.EMPTY) != null) {
+        if (elements.size() == 1 && elements.iterator().next().element().isInvalid()) {
             return new ArrayList<>();
         }
         LinkedHashMap<Element, Integer> sortedElements = getSortedElements(elements);
@@ -290,13 +246,13 @@ public abstract class Element {
         return list;
     }
 
-    public static LinkedHashMap<Element, Integer> getSortedElements(Map<Element, Integer> elements) {
-        List<Map.Entry<Element, Integer>> list = new ArrayList<>(elements.entrySet());
-        Comparator<Map.Entry<Element, Integer>> rareLevel = Comparator.comparingInt(o -> o.getKey().rareLevel);
-        Comparator<Map.Entry<Element, Integer>> level = Comparator.comparingInt(Map.Entry::getValue);
-        Comparator<Map.Entry<Element, Integer>> name = Comparator.comparing(o -> o.getKey().name);
+    public static LinkedHashMap<Element, Integer> getSortedElements(Set<ElementInstance> elements) {
+        List<ElementInstance> list = new ArrayList<>(elements);
+        Comparator<ElementInstance> rareLevel = Comparator.comparingInt(o -> o.element().rareLevel);
+        Comparator<ElementInstance> level = Comparator.comparingInt(ElementInstance::level);
+        Comparator<ElementInstance> name = Comparator.comparing(o -> o.element().name);
         list.sort(rareLevel.thenComparing(level).thenComparing(name));
-        return list.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, LinkedHashMap::new));
+        return list.stream().collect(Collectors.toMap(ElementInstance::element, ElementInstance::level, (a, b) -> b, LinkedHashMap::new));
     }
 
     @Nullable
@@ -446,14 +402,17 @@ public abstract class Element {
         AttributeContainer attributes = entity.getAttributes();
         Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
         this.getAttributeModifiers(map, slot);
-        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, this.getLevelMultiplier(level, this.getMaxHealthMultiplier(entity.world, entity)), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        float multiplier = this.getMaxHealthMultiplier(entity.world, entity);
+        if (multiplier != 0.0f) {
+            map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, new ElementInstance(this, level).getLevelMultiplier(multiplier), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        }
         for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
             EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
             if (entityAttributeInstance == null) continue;
             EntityAttributeModifier entityAttributeModifier = entry.getValue();
             float percent = entity.getHealth() / entity.getMaxHealth();
             entityAttributeInstance.removeModifier(entityAttributeModifier);
-            entityAttributeInstance.addPersistentModifier(new EntityAttributeModifier(entityAttributeModifier.getId(), this.getTranslationKey() + " " + slot, entityAttributeModifier.getValue() * this.getLevelMultiplier(level, 1.0f), entityAttributeModifier.getOperation()));
+            entityAttributeInstance.addPersistentModifier(new EntityAttributeModifier(entityAttributeModifier.getId(), this.getTranslationKey() + " " + slot, entityAttributeModifier.getValue() * new ElementInstance(this, level).getLevelMultiplier(1.0f), entityAttributeModifier.getOperation()));
             if (entry.getKey().equals(EntityAttributes.GENERIC_MAX_HEALTH)) {
                 entity.setHealth(entity.getMaxHealth() * percent);
             }
@@ -467,7 +426,10 @@ public abstract class Element {
         AttributeContainer attributes = entity.getAttributes();
         Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
         this.getAttributeModifiers(map, slot);
-        map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, this.getLevelMultiplier(level, this.getMaxHealthMultiplier(entity.world, entity)), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        float multiplier = this.getMaxHealthMultiplier(entity.world, entity);
+        if (multiplier != 0.0f) {
+            map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, new ElementInstance(this, level).getLevelMultiplier(multiplier), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        }
         for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
             EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
             if (entityAttributeInstance == null) continue;
@@ -480,11 +442,11 @@ public abstract class Element {
     }
 
     public boolean isSuitableFor(ItemStack stack) {
-        return stack.isDamageable() && stack.getElements().keySet().stream().noneMatch(this::conflictsWith);
+        return stack.isDamageable() && stack.getElements().stream().noneMatch(this::conflictsWith);
     }
 
     public boolean isSuitableFor(LivingEntity entity) {
-        return entity.isAlive() && entity.getElements().keySet().stream().noneMatch(this::conflictsWith);
+        return entity.isAlive() && entity.getElements().stream().noneMatch(this::conflictsWith);
     }
 
     public void getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
@@ -497,6 +459,10 @@ public abstract class Element {
 
     public boolean conflictsWith(Element element) {
         return false;
+    }
+
+    private boolean conflictsWith(ElementInstance instance) {
+        return this.conflictsWith(instance.element());
     }
 
     public boolean hasFragmentItem() {

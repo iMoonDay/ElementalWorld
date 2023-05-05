@@ -1,19 +1,17 @@
 package com.imoonday.elemworld.api;
 
-import net.minecraft.util.Pair;
-
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public interface EWLivingEntity {
 
-    default Map<Element, Integer> getElements() {
-        return new HashMap<>();
+    default Set<ElementInstance> getElements() {
+        return new HashSet<>();
     }
 
-    default boolean addElement(Element element, int level) {
+    default boolean addElement(ElementInstance instance) {
         return false;
     }
 
@@ -21,19 +19,11 @@ public interface EWLivingEntity {
 
     }
 
-    default boolean addElement(Pair<Element, Integer> pair) {
-        return false;
-    }
-
     default void clearElements() {
 
     }
 
-    default boolean hasSpace() {
-        return false;
-    }
-
-    default void setElements(Map<Element, Integer> elements) {
+    default void setElements(Set<ElementInstance> instances) {
 
     }
 
@@ -61,7 +51,7 @@ public interface EWLivingEntity {
         return 0;
     }
 
-    default List<Pair<Element, Integer>> getAllElements(boolean repeat) {
+    default List<ElementInstance> getAllElements(boolean repeat) {
         return new ArrayList<>();
     }
 

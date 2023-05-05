@@ -1,6 +1,5 @@
 package com.imoonday.elemworld.api;
 
-import com.imoonday.elemworld.init.EWElements;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -14,6 +13,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class ElementArgumentType implements ArgumentType<Element> {
@@ -32,11 +32,11 @@ public class ElementArgumentType implements ArgumentType<Element> {
     @Override
     public Element parse(@NotNull StringReader reader) throws CommandSyntaxException {
         String string = reader.readUnquotedString();
-        Element element = Element.byName(string);
-        if (element == null || !"empty".equals(string) && element.isOf(EWElements.EMPTY)) {
+        Optional<Element> element = Element.byName(string);
+        if (element.isEmpty()) {
             throw INVALID_ELEMENT_EXCEPTION.create(string);
         }
-        return element;
+        return element.get();
     }
 
     @Override

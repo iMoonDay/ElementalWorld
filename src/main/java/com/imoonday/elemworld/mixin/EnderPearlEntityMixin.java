@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.mixin;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.api.ElementInstance;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.item.ItemStack;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import static com.imoonday.elemworld.init.EWElements.*;
+import static com.imoonday.elemworld.init.EWElements.SPACE;
 
 @Mixin(EnderPearlEntity.class)
 public class EnderPearlEntityMixin {
@@ -22,8 +22,8 @@ public class EnderPearlEntityMixin {
         EnderPearlEntity pearl = (EnderPearlEntity) (Object) this;
         if (entity instanceof ServerPlayerEntity player) {
             for (ItemStack armorItem : player.getArmorItems()) {
-                for (Element element : armorItem.getElements().keySet()) {
-                    if (element == SPACE) {
+                for (ElementInstance instance : armorItem.getElements()) {
+                    if (instance.element().isOf(SPACE)) {
                         pearl.discard();
                         ci.cancel();
                     }
