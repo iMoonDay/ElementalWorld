@@ -7,11 +7,11 @@ import java.util.Set;
 
 public interface EWLivingEntity {
 
-    default Set<ElementInstance> getElements() {
+    default Set<ElementEntry> getElements() {
         return new HashSet<>();
     }
 
-    default boolean addElement(ElementInstance instance) {
+    default boolean addElement(ElementEntry entry) {
         return false;
     }
 
@@ -23,7 +23,7 @@ public interface EWLivingEntity {
 
     }
 
-    default void setElements(Set<ElementInstance> instances) {
+    default void setElements(Set<ElementEntry> entries) {
 
     }
 
@@ -51,7 +51,7 @@ public interface EWLivingEntity {
         return 0;
     }
 
-    default List<ElementInstance> getAllElements(boolean repeat) {
+    default List<ElementEntry> getAllElements(boolean repeat) {
         return new ArrayList<>();
     }
 

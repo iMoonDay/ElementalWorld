@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.blocks;
 
-import com.imoonday.elemworld.screens.handler.ModifyElementsScreenHandler;
+import com.imoonday.elemworld.screens.handler.ElementSmithingTableScreenHandler;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -15,9 +15,9 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class ElementModifierBlock extends Block {
+public class ElementSmithingTableBlock extends Block {
 
-    public ElementModifierBlock() {
+    public ElementSmithingTableBlock() {
         super(FabricBlockSettings.copyOf(Blocks.SMITHING_TABLE));
     }
 
@@ -32,7 +32,7 @@ public class ElementModifierBlock extends Block {
 
     @Override
     public NamedScreenHandlerFactory createScreenHandlerFactory(BlockState state, World world, BlockPos pos) {
-        return new SimpleNamedScreenHandlerFactory((syncId, inventory, player) -> new ModifyElementsScreenHandler(syncId, inventory, ScreenHandlerContext.create(world, pos)), state.getBlock().getName());
+        return new SimpleNamedScreenHandlerFactory((syncId, inventory, player) -> new ElementSmithingTableScreenHandler(syncId, inventory, ScreenHandlerContext.create(world, pos)), state.getBlock().getName());
 
     }
 }

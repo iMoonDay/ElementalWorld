@@ -11,7 +11,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "elemworld:element_modifier"
+          "name": "elemworld:element_smithing_table"
         }
       ],
       "rolls": 1.0

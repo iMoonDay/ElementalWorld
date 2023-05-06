@@ -1,8 +1,9 @@
 package com.imoonday.elemworld.screens;
 
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.api.ElementInstance;
-import com.imoonday.elemworld.screens.handler.ModifyElementsScreenHandler;
+import com.imoonday.elemworld.api.ElementEntry;
+import com.imoonday.elemworld.init.EWItems;
+import com.imoonday.elemworld.screens.handler.ElementSmithingTableScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -23,13 +24,13 @@ import java.util.Set;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
-public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHandler> {
+public class ElementSmithingTableScreen extends HandledScreen<ElementSmithingTableScreenHandler> {
 
     private static final Identifier TEXTURE = id("textures/gui/modify_elements.png");
     public static final int BUTTON_X = 74;
     public static final int BUTTON_Y = 54;
 
-    public ModifyElementsScreen(ModifyElementsScreenHandler handler, PlayerInventory inventory, Text title) {
+    public ElementSmithingTableScreen(ElementSmithingTableScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
     }
 
@@ -77,15 +78,10 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
             DrawableHelper.fill(matrices, x + 8, y + 21 - 2, x + 8 + i + 2, y + 21 - 2 + 12, 0x4F000000);
             textRenderer.drawWithShadow(matrices, tooltip, x + 8 + 2, y + 21, Color.RED.getRGB());
         }
-        if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null) {
-            Set<ElementInstance> elements = this.handler.getNewElements();
+        if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null && (!this.handler.getStack().isOf(EWItems.ELEMENT_BOOK) || !this.handler.getMaterial().isEmpty())) {
+            Set<ElementEntry> elements = this.handler.getNewElements();
             List<Text> texts = Element.getElementsText(elements, false, false);
-            Text text;
-            if (texts.isEmpty()) {
-                text = Text.translatable("text.eleworld.modify_elements_screen.no_new");
-            } else {
-                text = texts.get(0);
-            }
+            Text text = texts.isEmpty() ? Text.translatable("text.eleworld.modify_elements_screen.no_new") : texts.get(0);
             if (elements.size() > 5) {
                 text = Text.translatable("text.eleworld.modify_elements_screen.new", elements.size());
             }
@@ -121,7 +117,7 @@ public class ModifyElementsScreen extends HandledScreen<ModifyElementsScreenHand
             tooltip = Text.translatable("text.eleworld.modify_elements_screen.full");
         } else if (player.experienceLevel < 1 && !stack.isEmpty() && material.isOf(Items.DIAMOND) && !player.isCreative()) {
             tooltip = Text.translatable("text.eleworld.modify_elements_screen.not_enough_level");
-        } else if (!stack.isOf(material.getItem()) && !stack.isEmpty() && !material.isOf(Items.DIAMOND) && !material.isEmpty()) {
+        } else if (!stack.isOf(material.getItem()) && !stack.isEmpty() && !material.isOf(Items.DIAMOND) && !material.isOf(EWItems.ELEMENT_BOOK) && !material.isEmpty()) {
             tooltip = Text.translatable("text.eleworld.modify_elements_screen.different_item");
         }
         return tooltip;

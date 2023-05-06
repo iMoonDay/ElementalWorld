@@ -9,15 +9,19 @@ import java.util.Set;
 
 public interface EWItemStack {
 
-    default Set<ElementInstance> getElements() {
+    default Set<ElementEntry> getElements() {
         return new HashSet<>();
     }
 
-    default void setElements(Set<ElementInstance> instances) {
+    default Set<ElementEntry> getStoredElementsIfBook() {
+        return new HashSet<>();
+    }
+
+    default void setElements(Set<ElementEntry> entries) {
 
     }
 
-    default ItemStack withElements(Set<ElementInstance> instances){
+    default ItemStack withElements(Set<ElementEntry> entries) {
         return null;
     }
 
@@ -26,15 +30,22 @@ public interface EWItemStack {
     }
 
 
-    default boolean addElement(ElementInstance instance) {
+    default boolean addElement(ElementEntry entry) {
         return false;
+    }
+
+    default void addStoredElementIfBook(ElementEntry entry) {
     }
 
     default void removeElement(Element element) {
 
     }
 
-    default Optional<ElementInstance> getElement(Element element) {
+    default void removeInvalidElements() {
+
+    }
+
+    default Optional<ElementEntry> getElement(Element element) {
         return Optional.empty();
     }
 

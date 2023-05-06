@@ -2,7 +2,9 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.EWItemStack;
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.api.ElementInstance;
+import com.imoonday.elemworld.api.ElementEntry;
+import com.imoonday.elemworld.init.EWItems;
+import com.imoonday.elemworld.items.ElementBookItem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
@@ -40,56 +42,62 @@ public class ItemStackMixin implements EWItemStack {
     private static final String ELEMENTS_KEY = "Elements";
 
     @Override
-    public Set<ElementInstance> getElements() {
+    public Set<ElementEntry> getElements() {
         ItemStack stack = (ItemStack) (Object) this;
         if (!stack.hasNbt()) {
             return new HashSet<>();
         }
-        Set<ElementInstance> elements = new HashSet<>();
+        Set<ElementEntry> elements = new HashSet<>();
         for (NbtElement nbtElement : stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE)) {
             NbtCompound nbt = (NbtCompound) nbtElement;
-            Optional<ElementInstance> instance = ElementInstance.fromNbt(nbt);
-            if (instance.isEmpty()) {
+            Optional<ElementEntry> entry = ElementEntry.fromNbt(nbt);
+            if (entry.isEmpty()) {
                 continue;
             }
-            elements.add(instance.get());
+            elements.add(entry.get());
         }
         return elements;
     }
 
     @Override
-    public void setElements(Set<ElementInstance> instances) {
-        if (instances == null) {
+    public Set<ElementEntry> getStoredElementsIfBook() {
+        ItemStack stack = (ItemStack) (Object) this;
+        return stack.isOf(EWItems.ELEMENT_BOOK) ? ElementBookItem.getElements(stack) : stack.getElements();
+    }
+
+    @Override
+    public void setElements(Set<ElementEntry> entries) {
+        if (entries == null) {
             return;
         }
         ItemStack stack = (ItemStack) (Object) this;
         NbtList list = new NbtList();
-        for (ElementInstance instance : instances) {
-            if (instance == null) {
+        for (ElementEntry entry : entries) {
+            if (entry == null) {
                 continue;
             }
-            NbtCompound nbt = instance.toNbt();
+            NbtCompound nbt = entry.toNbt();
             list.add(nbt);
         }
         stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
     }
 
     @Override
-    public ItemStack withElements(Set<ElementInstance> instances) {
+    public ItemStack withElements(Set<ElementEntry> entries) {
         ItemStack stack = (ItemStack) (Object) this;
-        stack.setElements(instances);
+        stack.setElements(entries);
         return stack;
     }
 
     @Override
     public boolean hasElement(Element element) {
         ItemStack stack = (ItemStack) (Object) this;
-        return stack.getElements().stream().anyMatch(instance -> instance.element().isOf(element));
+        return stack.getElements().stream().anyMatch(entry -> entry.element().isOf(element));
     }
 
     @Override
-    public boolean addElement(ElementInstance instance) {
-        Element element = instance.element();
+    public boolean addElement(ElementEntry entry) {
+        Element element = entry.element();
         ItemStack stack = (ItemStack) (Object) this;
         if (element == null) {
             return false;
@@ -104,28 +112,56 @@ public class ItemStackMixin implements EWItemStack {
             return false;
         }
         NbtList list = stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE);
-        list.add(instance.toNbt());
+        list.add(entry.toNbt());
         stack.getOrCreateNbt().put(ELEMENTS_KEY, list);
         return true;
     }
 
     @Override
-    public void removeElement(Element element) {
+    public void addStoredElementIfBook(ElementEntry entry) {
         ItemStack stack = (ItemStack) (Object) this;
-        Set<ElementInstance> elements = stack.getElements();
-        elements.removeIf(instance -> instance.element().isOf(element));
-        stack.setElements(elements);
+        if (stack.isOf(EWItems.ELEMENT_BOOK)) {
+            ElementBookItem.addElement(stack, entry);
+        } else {
+            stack.addElement(entry);
+        }
     }
 
     @Override
-    public Optional<ElementInstance> getElement(Element element) {
+    public void removeElement(Element element) {
+        ItemStack stack = (ItemStack) (Object) this;
+        Set<ElementEntry> entries = stack.getElements();
+        entries.removeIf(entry -> entry.element().isOf(element));
+        stack.setElements(entries);
+    }
+
+    @Override
+    public void removeInvalidElements() {
+        ItemStack stack = (ItemStack) (Object) this;
+        if (stack.isOf(EWItems.ELEMENT_BOOK)) {
+            Set<ElementEntry> entries = ElementBookItem.getElements(stack);
+            if (entries.size() > 1) {
+                entries.removeIf(entry -> entry.element().isInvalid());
+                stack.getOrCreateNbt().remove(ElementBookItem.STORED_ELEMENTS_KEY);
+                entries.forEach(entry -> ElementBookItem.addElement(stack, entry));
+            }
+        }
+        Set<ElementEntry> entries = stack.getElements();
+        if (entries.size() >= 1) {
+            entries.removeIf(entry -> entry.element().isInvalid());
+            stack.setElements(entries);
+        }
+    }
+
+    @Override
+    public Optional<ElementEntry> getElement(Element element) {
         ItemStack stack = (ItemStack) (Object) this;
         if (!stack.hasNbt()) {
             return Optional.empty();
         }
         for (NbtElement nbtElement : stack.getOrCreateNbt().getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE)) {
             NbtCompound nbt = (NbtCompound) nbtElement;
-            Optional<ElementInstance> optional = ElementInstance.fromNbt(nbt);
+            Optional<ElementEntry> optional = ElementEntry.fromNbt(nbt);
             if (optional.isEmpty()) {
                 continue;
             }
@@ -151,8 +187,7 @@ public class ItemStackMixin implements EWItemStack {
     @Override
     public boolean hasSuitableElement() {
         ItemStack stack = (ItemStack) (Object) this;
-        return Element.getRegistrySet()
-                .stream().anyMatch(element -> element.isSuitableFor(stack));
+        return Element.getRegistrySet().stream().anyMatch(element -> element.isSuitableFor(stack));
     }
 
     @Inject(method = "inventoryTick", at = @At("TAIL"))
@@ -161,14 +196,11 @@ public class ItemStackMixin implements EWItemStack {
             return;
         }
         ItemStack stack = (ItemStack) (Object) this;
-        Set<ElementInstance> elements = stack.getElements();
+        Set<ElementEntry> elements = stack.getElements();
         if (hasSuitableElement() && elements.size() == 0) {
             stack.addRandomElements();
         }
-        if (elements.size() <= 1 || !stack.hasElement(EMPTY)) {
-            return;
-        }
-        stack.removeElement(EMPTY);
+        stack.removeInvalidElements();
     }
 
     @Inject(method = "getTooltip", at = @At("RETURN"))
@@ -178,7 +210,7 @@ public class ItemStackMixin implements EWItemStack {
         if (list == null) {
             return;
         }
-        Set<ElementInstance> elements = stack.getElements();
+        Set<ElementEntry> elements = stack.getElements();
         if (elements.size() == 0) {
             return;
         }
@@ -219,13 +251,13 @@ public class ItemStackMixin implements EWItemStack {
     public float getDamageMultiplier(LivingEntity entity) {
         ItemStack stack = (ItemStack) (Object) this;
         float multiplier = 1.0f;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
             float f = element.getDamageMultiplier(entity.world, entity, null);
-            multiplier += instance.getLevelMultiplier(f);
+            multiplier += entry.getLevelMultiplier(f);
         }
         return multiplier;
     }
@@ -234,13 +266,13 @@ public class ItemStackMixin implements EWItemStack {
     public float getMaxHealthMultiplier(LivingEntity entity) {
         ItemStack stack = (ItemStack) (Object) this;
         float multiplier = 1.0f;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
             float f = element.getMaxHealthMultiplier(entity.world, entity);
-            multiplier += instance.getLevelMultiplier(f);
+            multiplier += entry.getLevelMultiplier(f);
         }
         return multiplier;
     }
@@ -249,13 +281,13 @@ public class ItemStackMixin implements EWItemStack {
     public float getMiningSpeedMultiplier(LivingEntity entity) {
         ItemStack stack = (ItemStack) (Object) this;
         float multiplier = 1.0f;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
             float f = element.getMiningSpeedMultiplier(entity.world, entity, entity.getSteppingBlockState());
-            multiplier += instance.getLevelMultiplier(f);
+            multiplier += entry.getLevelMultiplier(f);
         }
         return multiplier;
     }
@@ -264,13 +296,13 @@ public class ItemStackMixin implements EWItemStack {
     public float getDurabilityMultiplier() {
         ItemStack stack = (ItemStack) (Object) this;
         float multiplier = 1.0f;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
             float f = element.getDurabilityMultiplier();
-            multiplier += instance.getLevelMultiplier(f);
+            multiplier += entry.getLevelMultiplier(f);
         }
         return multiplier;
     }
@@ -279,15 +311,15 @@ public class ItemStackMixin implements EWItemStack {
     @Inject(method = "postHit", at = @At("TAIL"))
     public void postHit(LivingEntity target, PlayerEntity attacker, CallbackInfo ci) {
         ItemStack stack = (ItemStack) (Object) this;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element.isInvalid()) {
                 continue;
             }
             element.postHit(target, attacker);
         }
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
@@ -300,8 +332,8 @@ public class ItemStackMixin implements EWItemStack {
     @Inject(method = "postMine", at = @At("TAIL"))
     public void postMine(World world, BlockState state, BlockPos pos, PlayerEntity miner, CallbackInfo ci) {
         ItemStack stack = (ItemStack) (Object) this;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
@@ -312,8 +344,8 @@ public class ItemStackMixin implements EWItemStack {
     @Inject(method = "useOnBlock", at = @At("TAIL"))
     public void useOnBlock(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
         ItemStack stack = (ItemStack) (Object) this;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
@@ -324,8 +356,8 @@ public class ItemStackMixin implements EWItemStack {
     @Inject(method = "useOnEntity", at = @At("TAIL"))
     public void useOnEntity(PlayerEntity user, LivingEntity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         ItemStack stack = (ItemStack) (Object) this;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
@@ -336,8 +368,8 @@ public class ItemStackMixin implements EWItemStack {
     @Inject(method = "usageTick", at = @At("TAIL"))
     public void usageTick(World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci) {
         ItemStack stack = (ItemStack) (Object) this;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
@@ -349,13 +381,13 @@ public class ItemStackMixin implements EWItemStack {
     public void getMaxDamage(CallbackInfoReturnable<Integer> cir) {
         ItemStack stack = (ItemStack) (Object) this;
         float multiplier = 1.0f;
-        for (ElementInstance instance : stack.getElements()) {
-            Element element = instance.element();
+        for (ElementEntry entry : stack.getElements()) {
+            Element element = entry.element();
             if (element == null || element.isInvalid()) {
                 continue;
             }
             float f = element.getDurabilityMultiplier();
-            multiplier += instance.getLevelMultiplier(f);
+            multiplier += entry.getLevelMultiplier(f);
         }
         int value = (int) (cir.getReturnValueI() * multiplier);
         cir.setReturnValue(value);
@@ -376,16 +408,16 @@ public class ItemStackMixin implements EWItemStack {
     @Override
     public void addNewRandomElement() {
         ItemStack stack = (ItemStack) (Object) this;
-        stack.addElement(ElementInstance.createRandomFor(stack, true));
+        stack.addElement(ElementEntry.createRandomFor(stack, true));
     }
 
     private static boolean addRandomElement(ItemStack stack) {
         for (int i = 0; i < Element.getRegistrySet().size(); i++) {
-            ElementInstance instance = ElementInstance.createRandomFor(stack, false);
-            if (stack.addElement(instance)) {
+            ElementEntry entry = ElementEntry.createRandomFor(stack, false);
+            if (stack.addElement(entry)) {
                 return true;
             } else {
-                int size = Element.getSizeOf(element -> element.getRareLevel() == instance.element().getRareLevel());
+                int size = Element.getSizeOf(element -> element.getRareLevel() == entry.element().getRareLevel());
                 if (stack.getElements().size() >= size) {
                     return false;
                 }

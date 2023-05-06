@@ -5,6 +5,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -12,15 +14,22 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public record ElementInstance(Element element, int level) {
+public record ElementEntry(Element element, int level) {
 
     public static final String NAME_KEY = "Name";
     public static final String LEVEL_KEY = "Level";
-    public static final ElementInstance EMPTY = new ElementInstance(EWElements.EMPTY, 0);
+    public static final ElementEntry EMPTY = new ElementEntry(EWElements.EMPTY, 0);
 
-    public ElementInstance(@NotNull Element element, int level) {
+    public ElementEntry(@NotNull Element element, int level) {
         this.element = element;
         this.level = level;
+    }
+
+    public Text getLevelText() {
+        int level = Math.max(this.level(), 0);
+        String str = level > Element.LEVELS.length - 1 ? "-" + this.level() : Element.LEVELS[level];
+        Formatting formatting = this.element().getFormatting();
+        return formatting == null ? Text.empty() : Text.literal(str).formatted(formatting);
     }
 
     public float getLevelMultiplier(float multiplier) {
@@ -40,7 +49,7 @@ public record ElementInstance(Element element, int level) {
         return nbt;
     }
 
-    public static Optional<ElementInstance> fromNbt(NbtCompound nbt) {
+    public static Optional<ElementEntry> fromNbt(NbtCompound nbt) {
         if (nbt.contains(NAME_KEY, NbtElement.STRING_TYPE)) {
             String name = nbt.getString(NAME_KEY);
             Element element = Element.getRegistryMap().get(name);
@@ -48,39 +57,39 @@ public record ElementInstance(Element element, int level) {
                 return Optional.empty();
             }
             if (nbt.contains(LEVEL_KEY, NbtElement.INT_TYPE)) {
-                return Optional.of(new ElementInstance(element, nbt.getInt(LEVEL_KEY)));
+                return Optional.of(new ElementEntry(element, nbt.getInt(LEVEL_KEY)));
             }
         }
         return Optional.empty();
     }
 
-    public static ElementInstance createRandomFor(ItemStack stack, boolean exclude) {
-        Set<Element> excludes = ElementInstance.getElementSet(stack.getElements());
+    public static ElementEntry createRandomFor(ItemStack stack, boolean exclude) {
+        Set<Element> excludes = ElementEntry.getElementSet(stack.getElements());
         Element element = EWElements.EMPTY;
         Element random = WeightRandom.getRandom(Element.getRegistrySet(), element1 -> (!element1.isIn(excludes) || !exclude) && element1.isSuitableFor(stack), Element::getWeight);
         if (random != null) element = random;
-        return new ElementInstance(element, element.getRandomLevel());
+        return new ElementEntry(element, element.getRandomLevel());
     }
 
-    public static ElementInstance createRandomFor(LivingEntity entity) {
+    public static ElementEntry createRandomFor(LivingEntity entity) {
         Element element = EWElements.EMPTY;
         Element random = WeightRandom.getRandom(Element.getRegistrySet(), element1 -> element1.isSuitableFor(entity), Element::getWeight);
         if (random != null) element = random;
-        return new ElementInstance(element, element.getRandomLevel());
+        return new ElementEntry(element, element.getRandomLevel());
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ElementInstance instance)) return false;
-        return level == instance.level && Objects.equals(element, instance.element);
+        if (!(o instanceof ElementEntry entry)) return false;
+        return level == entry.level && Objects.equals(element, entry.element);
     }
 
-    public static Set<Element> getElementSet(Set<ElementInstance> instances) {
-        return instances.stream().map(ElementInstance::element).collect(Collectors.toSet());
+    public static Set<Element> getElementSet(Set<ElementEntry> entries) {
+        return entries.stream().map(ElementEntry::element).collect(Collectors.toSet());
     }
 
-    public boolean isElementEqual(ElementInstance instance) {
-        return this.element.isOf(instance.element);
+    public boolean isElementEqual(ElementEntry entry) {
+        return this.element.isOf(entry.element);
     }
 }

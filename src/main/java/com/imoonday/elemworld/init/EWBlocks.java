@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.init;
 
-import com.imoonday.elemworld.blocks.ElementModifierBlock;
+import com.imoonday.elemworld.blocks.ElementSmithingTableBlock;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
@@ -13,7 +13,7 @@ import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWBlocks {
 
-    public static final Block ELEMENT_MODIFIER_BLOCK = register("element_modifier", new ElementModifierBlock());
+    public static final Block ELEMENT_SMITHING_TABLE = register("element_smithing_table", new ElementSmithingTableBlock());
 
     public static void register() {
         LOGGER.info("Loading Blocks");

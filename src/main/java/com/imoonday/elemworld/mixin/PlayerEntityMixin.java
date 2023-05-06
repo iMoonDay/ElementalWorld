@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.mixin;
 
-import com.imoonday.elemworld.api.ElementInstance;
+import com.imoonday.elemworld.api.ElementEntry;
 import com.imoonday.elemworld.init.EWItems;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
@@ -40,13 +40,13 @@ public class PlayerEntityMixin extends LivingEntityMixin {
     }
 
     @Override
-    public Set<ElementInstance> getElements() {
+    public Set<ElementEntry> getElements() {
         PlayerEntity player = (PlayerEntity) (Object) this;
         return player.getDataTracker().get(ELEMENTS).getElements();
     }
 
     @Redirect(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;interact(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))
-    public ActionResult interact(Entity instance, PlayerEntity player, Hand hand) {
-        return player.getStackInHand(hand).isOf(EWItems.ELEMENT_DETECTOR) ? ActionResult.PASS : instance.interact(player, hand);
+    public ActionResult interact(Entity entry, PlayerEntity player, Hand hand) {
+        return player.getStackInHand(hand).isOf(EWItems.ELEMENT_DETECTOR) ? ActionResult.PASS : entry.interact(player, hand);
     }
 }
