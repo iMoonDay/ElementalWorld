@@ -1,6 +1,9 @@
 package com.imoonday.elemworld.mixin;
 
-import com.imoonday.elemworld.api.*;
+import com.imoonday.elemworld.api.EWLivingEntity;
+import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.api.ElementEntry;
+import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.init.EWElements;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketComponent;
@@ -13,6 +16,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.item.Item;
@@ -36,8 +40,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.*;
 import java.util.function.Predicate;
-
-import static com.imoonday.elemworld.api.ElementEntry.createRandomFor;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin implements EWLivingEntity {
@@ -133,9 +135,9 @@ public class LivingEntityMixin implements EWLivingEntity {
         Set<ElementEntry> entries = entity.getElements();
         random.addAll(ElementEntry.getElementSet(entries), Element::getWeight);
         random.add(EWElements.EMPTY, EWElements.EMPTY.getWeight());
-        Element element = random.next();
-        if (element != null && !element.isInvalid()) {
-            Item item = element.getFragmentItem();
+        Optional<Element> optional = random.next();
+        if (optional.isPresent() && !optional.get().isInvalid()) {
+            Item item = optional.get().getFragmentItem();
             if (item != null) {
                 entity.dropItem(item);
             }
@@ -173,6 +175,9 @@ public class LivingEntityMixin implements EWLivingEntity {
             }
         }
         for (Element element : Element.getRegistrySet()) {
+            if (entity instanceof PlayerEntity player && player.isSpectator()) {
+                break;
+            }
             if (element == null || element.isInvalid()) {
                 continue;
             }
@@ -498,7 +503,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         boolean success;
         do {
-            success = addElement(createRandomFor(entity));
+            success = addElement(ElementEntry.createRandom(element -> element.isSuitableFor(entity)));
         } while (!success && this.elements.size() < Element.getRegistrySet().size());
     }
 

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": {
+      "tag": "minecraft:planks"
+    },
+    "$": {
+      "item": "elemworld:element_ingot"
+    }
+  },
+  "pattern": [
+    "$$",
+    "##",
+    "##"
+  ],
+  "result": {
+    "item": "elemworld:element_smithing_table"
+  },
+  "show_notification": true
+}

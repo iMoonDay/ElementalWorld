@@ -22,7 +22,7 @@ import net.minecraft.util.math.random.Random;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ElementSmithingTableScreenHandler extends ScreenHandler {
+public class ElementSmithingScreenHandler extends ScreenHandler {
 
     public static final String LAST_RANDOM_ELEMENT_KEY = "LastRandomElement";
     public static final String RANDOM_COST_KEY = "RandomCost";
@@ -31,13 +31,13 @@ public class ElementSmithingTableScreenHandler extends ScreenHandler {
         @Override
         public void markDirty() {
             super.markDirty();
-            ElementSmithingTableScreenHandler.this.onContentChanged(this);
+            ElementSmithingScreenHandler.this.onContentChanged(this);
         }
     };
     private final ScreenHandlerContext context;
     private final PlayerEntity player;
 
-    public ElementSmithingTableScreenHandler(int syncId, PlayerInventory inventory) {
+    public ElementSmithingScreenHandler(int syncId, PlayerInventory inventory) {
         this(syncId, inventory, ScreenHandlerContext.EMPTY);
     }
 
@@ -49,8 +49,8 @@ public class ElementSmithingTableScreenHandler extends ScreenHandler {
         return player;
     }
 
-    public ElementSmithingTableScreenHandler(int syncId, PlayerInventory playerInventory, final ScreenHandlerContext context) {
-        super(EWScreens.ELEMENT_SMITHING_TABLE_SCREEN_HANDLER, syncId);
+    public ElementSmithingScreenHandler(int syncId, PlayerInventory playerInventory, final ScreenHandlerContext context) {
+        super(EWScreens.ELEMENT_SMITHING_SCREEN_HANDLER, syncId);
         this.context = context;
         this.player = playerInventory.player;
         checkSize(input, 2);
@@ -81,16 +81,16 @@ public class ElementSmithingTableScreenHandler extends ScreenHandler {
 
             @Override
             public void onTakeItem(PlayerEntity player, ItemStack stack) {
-                ElementSmithingTableScreenHandler.this.input.setStack(0, ItemStack.EMPTY);
+                ElementSmithingScreenHandler.this.input.setStack(0, ItemStack.EMPTY);
                 if (!getMaterial().isOf(Items.DIAMOND)) {
-                    ElementSmithingTableScreenHandler.this.input.setStack(1, ItemStack.EMPTY);
+                    ElementSmithingScreenHandler.this.input.setStack(1, ItemStack.EMPTY);
                 }
                 stack.getOrCreateNbt().remove(LAST_RANDOM_ELEMENT_KEY);
                 if (!player.isCreative()) {
-                    player.experienceLevel -= ElementSmithingTableScreenHandler.this.getRequiredLevel();
+                    player.experienceLevel -= ElementSmithingScreenHandler.this.getRequiredLevel();
                 }
                 player.playSound(SoundEvents.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.0f);
-                ElementSmithingTableScreenHandler.this.input.markDirty();
+                ElementSmithingScreenHandler.this.input.markDirty();
             }
         });
         for (y = 0; y < 3; ++y) {
@@ -185,35 +185,38 @@ public class ElementSmithingTableScreenHandler extends ScreenHandler {
     }
 
     private void updateResult() {
-        ItemStack stack = getStack();
-        ItemStack material = getMaterial();
-        boolean hasStack = !stack.isEmpty();
-        if (hasStack) {
-            ItemStack newStack = stack.copy();
-            Set<ElementEntry> entries = material.getStoredElementsIfBook();
-            if ((material.isEmpty() || entries.isEmpty()) && !stack.isOf(EWItems.ELEMENT_BOOK)) {
-                if (stack.getOrCreateNbt().contains(LAST_RANDOM_ELEMENT_KEY)) {
-                    NbtCompound nbt = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY);
-                    ElementEntry.fromNbt(nbt).ifPresent(newStack::addElement);
+        if (!player.world.isClient) {
+            ItemStack stack = getStack();
+            ItemStack material = getMaterial();
+            boolean hasStack = !stack.isEmpty();
+            if (hasStack) {
+                ItemStack newStack = stack.copy();
+                Set<ElementEntry> entries = material.getStoredElementsIfBook();
+                if ((material.isEmpty() || entries.isEmpty()) && !stack.isOf(EWItems.ELEMENT_BOOK)) {
+                    if (stack.getOrCreateNbt().contains(LAST_RANDOM_ELEMENT_KEY)) {
+                        NbtCompound nbt = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY);
+                        ElementEntry.fromNbt(nbt).ifPresent(newStack::addElement);
+                    } else {
+                        newStack.addNewRandomElement();
+                        recordNewElement(newStack.getElements());
+                    }
                 } else {
-                    newStack.addNewRandomElement();
-                    recordNewElement(newStack.getElements());
+                    entries.forEach(newStack::addStoredElementIfBook);
+                }
+                newStack.removeInvalidElements();
+                Set<ElementEntry> newInstances = newStack.getStoredElementsIfBook();
+                Set<ElementEntry> stackInstances = stack.getStoredElementsIfBook();
+                newInstances.removeAll(stackInstances);
+                if (newInstances.isEmpty() || !material.isOf(stack.getItem()) && !material.isOf(Items.DIAMOND) && !material.isOf(EWItems.ELEMENT_BOOK) && !material.isEmpty()) {
+                    this.result.setStack(0, ItemStack.EMPTY);
+                } else {
+                    this.result.setStack(0, newStack);
                 }
             } else {
-                entries.forEach(newStack::addStoredElementIfBook);
-            }
-            newStack.removeInvalidElements();
-            Set<ElementEntry> newInstances = newStack.getStoredElementsIfBook();
-            Set<ElementEntry> stackInstances = stack.getStoredElementsIfBook();
-            newInstances.removeAll(stackInstances);
-            if (newInstances.isEmpty() || !material.isOf(stack.getItem()) && !material.isOf(Items.DIAMOND) && !material.isOf(EWItems.ELEMENT_BOOK) && !material.isEmpty()) {
                 this.result.setStack(0, ItemStack.EMPTY);
-            } else {
-                this.result.setStack(0, newStack);
             }
-        } else {
-            this.result.setStack(0, ItemStack.EMPTY);
         }
+        this.updateToClient();
         this.sendContentUpdates();
     }
 
@@ -237,7 +240,7 @@ public class ElementSmithingTableScreenHandler extends ScreenHandler {
 
     @Override
     public boolean canUse(PlayerEntity player) {
-        return ElementSmithingTableScreenHandler.canUse(this.context, player, EWBlocks.ELEMENT_SMITHING_TABLE);
+        return ElementSmithingScreenHandler.canUse(this.context, player, EWBlocks.ELEMENT_SMITHING_TABLE);
     }
 
     @SuppressWarnings("ConstantValue")

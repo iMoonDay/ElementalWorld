@@ -15,6 +15,16 @@ public class EWEvents {
                 ElementDetectorItem.openScreen(player, player);
             }
         }));
+
+//        LootTableEvents.MODIFY.register((resourceManager, lootManager, id, tableBuilder, source) -> {
+//            LootPool.Builder poolBuilder = LootPool.builder()
+//                    .rolls(ConstantLootNumberProvider.create(1))
+//                    .with(ItemEntry.builder(EWItems.ELEMENT_BOOK)
+//                            .weight(10)
+//                            .apply(ElementRandomlyLootFunction.builder()));
+//
+//            tableBuilder.pool(poolBuilder);
+//        });
     }
 
     private static void registerServer(Identifier channelName, ServerPlayNetworking.PlayChannelHandler channelHandler) {

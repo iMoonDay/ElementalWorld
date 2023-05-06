@@ -1,8 +1,6 @@
 package com.imoonday.elemworld.api;
 
 import com.imoonday.elemworld.init.EWElements;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.text.Text;
@@ -12,30 +10,29 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public record ElementEntry(Element element, int level) {
 
     public static final String NAME_KEY = "Name";
     public static final String LEVEL_KEY = "Level";
+    public static final String[] LEVELS = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
     public static final ElementEntry EMPTY = new ElementEntry(EWElements.EMPTY, 0);
 
     public ElementEntry(@NotNull Element element, int level) {
         this.element = element;
-        this.level = level;
+        this.level = Math.max(level, 0);
     }
 
-    public Text getLevelText() {
-        int level = Math.max(this.level(), 0);
-        String str = level > Element.LEVELS.length - 1 ? "-" + this.level() : Element.LEVELS[level];
-        Formatting formatting = this.element().getFormatting();
-        return formatting == null ? Text.empty() : Text.literal(str).formatted(formatting);
+    public Text getName() {
+        String str = level > LEVELS.length - 1 ? "-" + level : LEVELS[level];
+        Formatting formatting = element.getFormatting();
+        return element.getTranslationName().copy().append(formatting == null ? Text.empty() : Text.literal(str).formatted(formatting));
     }
 
     public float getLevelMultiplier(float multiplier) {
         if (multiplier == 0.0f) return 0.0f;
-        Element element = this.element;
-        int level = this.level;
         float f1 = (float) level / element.getMaxLevel();
         float f2 = (element.getMaxLevel() > 1) ? ((float) (element.getMaxLevel() - level) / (element.getMaxLevel() - 1)) : 1.0f;
         multiplier *= multiplier >= 0 ? f1 : f2;
@@ -63,19 +60,12 @@ public record ElementEntry(Element element, int level) {
         return Optional.empty();
     }
 
-    public static ElementEntry createRandomFor(ItemStack stack, boolean exclude) {
-        Set<Element> excludes = ElementEntry.getElementSet(stack.getElements());
-        Element element = EWElements.EMPTY;
-        Element random = WeightRandom.getRandom(Element.getRegistrySet(), element1 -> (!element1.isIn(excludes) || !exclude) && element1.isSuitableFor(stack), Element::getWeight);
-        if (random != null) element = random;
-        return new ElementEntry(element, element.getRandomLevel());
-    }
-
-    public static ElementEntry createRandomFor(LivingEntity entity) {
-        Element element = EWElements.EMPTY;
-        Element random = WeightRandom.getRandom(Element.getRegistrySet(), element1 -> element1.isSuitableFor(entity), Element::getWeight);
-        if (random != null) element = random;
-        return new ElementEntry(element, element.getRandomLevel());
+    public static ElementEntry createRandom(Predicate<Element> predicate) {
+        Optional<? extends Element> random = WeightRandom.getRandom(Element.getRegistrySet(), predicate, Element::getWeight);
+        if (random.isPresent()) {
+            return random.get().withRandomLevel();
+        }
+        return EMPTY;
     }
 
     @Override

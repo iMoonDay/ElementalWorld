@@ -14,6 +14,9 @@
   "icon": "assets/elemworld/icon.png",
   "environment": "*",
   "entrypoints": {
+    "fabric-datagen": [
+      "com.imoonday.elemworld.EWDataGeneration"
+    ],
     "client": [
       "com.imoonday.elemworld.ElementalWorldClient"
     ],

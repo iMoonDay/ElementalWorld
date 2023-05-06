@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.blocks;
 
-import com.imoonday.elemworld.screens.handler.ElementSmithingTableScreenHandler;
+import com.imoonday.elemworld.screens.handler.ElementSmithingScreenHandler;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -32,7 +32,7 @@ public class ElementSmithingTableBlock extends Block {
 
     @Override
     public NamedScreenHandlerFactory createScreenHandlerFactory(BlockState state, World world, BlockPos pos) {
-        return new SimpleNamedScreenHandlerFactory((syncId, inventory, player) -> new ElementSmithingTableScreenHandler(syncId, inventory, ScreenHandlerContext.create(world, pos)), state.getBlock().getName());
+        return new SimpleNamedScreenHandlerFactory((syncId, inventory, player) -> new ElementSmithingScreenHandler(syncId, inventory, ScreenHandlerContext.create(world, pos)), state.getBlock().getName());
 
     }
 }

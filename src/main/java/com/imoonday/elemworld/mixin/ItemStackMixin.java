@@ -211,9 +211,10 @@ public class ItemStackMixin implements EWItemStack {
             return;
         }
         Set<ElementEntry> elements = stack.getElements();
-        if (elements.size() == 0) {
-            return;
+        if (hasSuitableElement() && elements.size() == 0) {
+            stack.addRandomElements();
         }
+        stack.removeInvalidElements();
         if (player == null) {
             return;
         }
@@ -408,12 +409,12 @@ public class ItemStackMixin implements EWItemStack {
     @Override
     public void addNewRandomElement() {
         ItemStack stack = (ItemStack) (Object) this;
-        stack.addElement(ElementEntry.createRandomFor(stack, true));
+        stack.addElement(ElementEntry.createRandom(element -> !element.isIn(ElementEntry.getElementSet(stack.getElements())) && element.isSuitableFor(stack) || stack.isOf(EWItems.ELEMENT_BOOK) && !element.isInvalid()));
     }
 
     private static boolean addRandomElement(ItemStack stack) {
         for (int i = 0; i < Element.getRegistrySet().size(); i++) {
-            ElementEntry entry = ElementEntry.createRandomFor(stack, false);
+            ElementEntry entry = ElementEntry.createRandom(element1 -> element1.isSuitableFor(stack) || stack.isOf(EWItems.ELEMENT_BOOK) && !element1.isInvalid());
             if (stack.addElement(entry)) {
                 return true;
             } else {

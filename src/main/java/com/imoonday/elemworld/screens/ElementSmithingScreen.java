@@ -3,7 +3,7 @@ package com.imoonday.elemworld.screens;
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.api.ElementEntry;
 import com.imoonday.elemworld.init.EWItems;
-import com.imoonday.elemworld.screens.handler.ElementSmithingTableScreenHandler;
+import com.imoonday.elemworld.screens.handler.ElementSmithingScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -24,13 +24,13 @@ import java.util.Set;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
-public class ElementSmithingTableScreen extends HandledScreen<ElementSmithingTableScreenHandler> {
+public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHandler> {
 
     private static final Identifier TEXTURE = id("textures/gui/modify_elements.png");
     public static final int BUTTON_X = 74;
     public static final int BUTTON_Y = 54;
 
-    public ElementSmithingTableScreen(ElementSmithingTableScreenHandler handler, PlayerInventory inventory, Text title) {
+    public ElementSmithingScreen(ElementSmithingScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
     }
 

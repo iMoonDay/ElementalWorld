@@ -18,6 +18,7 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -30,42 +31,42 @@ public class EWCommands {
     private static final DynamicCommandExceptionType NO_SUCH_SLOT_SOURCE_EXCEPTION = new DynamicCommandExceptionType(slot -> Text.translatable("commands.item.source.no_such_slot", slot));
 
     public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("element").requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(3))
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("element").requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                 .then(literal("entity")
-                        .then(literal("add").then(argument("entity", EntityArgumentType.entity()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
+                        .then(literal("add").then(argument("entity", EntityArgumentType.entities()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
                             entityAdd(context);
                             return 0;
                         })))))
-                        .then(literal("addall").then(argument("entity", EntityArgumentType.entity()).executes(context -> {
+                        .then(literal("addall").then(argument("entity", EntityArgumentType.entities()).executes(context -> {
                             entityAddAll(context);
                             return 0;
                         })))
-                        .then(literal("remove").then(argument("entity", EntityArgumentType.entity()).then(argument("element", ElementArgumentType.element()).executes(context -> {
+                        .then(literal("remove").then(argument("entity", EntityArgumentType.entities()).then(argument("element", ElementArgumentType.element()).executes(context -> {
                             entityRemove(context);
                             return 0;
                         }))))
-                        .then(literal("get").then(argument("entity", EntityArgumentType.entity()).executes(context -> {
+                        .then(literal("get").then(argument("entity", EntityArgumentType.entities()).executes(context -> {
                             entityGet(context);
                             return 0;
                         })))
-                        .then(literal("clear").then(argument("entity", EntityArgumentType.entity()).executes(context -> {
+                        .then(literal("clear").then(argument("entity", EntityArgumentType.entities()).executes(context -> {
                             entityClear(context);
                             return 0;
                         }))))
                 .then(literal("item")
-                        .then(literal("add").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
+                        .then(literal("add").then(argument("entity", EntityArgumentType.entities()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
                             itemAdd(context);
                             return 0;
                         }))))))
-                        .then(literal("addall").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).executes(context -> {
+                        .then(literal("addall").then(argument("entity", EntityArgumentType.entities()).then(argument("slot", ItemSlotArgumentType.itemSlot()).executes(context -> {
                             itemAddAll(context);
                             return 0;
                         }))))
-                        .then(literal("remove").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).executes(context -> {
+                        .then(literal("remove").then(argument("entity", EntityArgumentType.entities()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).executes(context -> {
                             itemRemove(context);
                             return 0;
                         })))))
-                        .then(literal("clear").then(argument("entity", EntityArgumentType.entity()).then(argument("slot", ItemSlotArgumentType.itemSlot()).executes(context -> {
+                        .then(literal("clear").then(argument("entity", EntityArgumentType.entities()).then(argument("slot", ItemSlotArgumentType.itemSlot()).executes(context -> {
                             itemClear(context);
                             return 0;
                         }))))))
@@ -74,113 +75,131 @@ public class EWCommands {
 
     private static void itemClear(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
         int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
-        ItemStack stackInSlot = getStackInSlot(entity, slot);
-        if (source != null && isValidStack(source, stackInSlot)) {
-            stackInSlot.setElements(new HashSet<>(Collections.singleton(ElementEntry.EMPTY)));
-            source.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
+        for (Entity entity : entities) {
+            ItemStack stackInSlot = getStackInSlot(entity, slot);
+            if (source != null && isValidStack(source, stackInSlot)) {
+                stackInSlot.setElements(new HashSet<>(Collections.singleton(ElementEntry.EMPTY)));
+                source.sendFeedback(Text.translatable("text.eleworld.commands.clear.success"), false);
+            }
         }
     }
 
     private static void itemRemove(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
-        Element element = ElementArgumentType.getElement(context, "element");
-        int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
-        ItemStack stackInSlot = getStackInSlot(entity, slot);
-        if (element != null && source != null && isValidStack(source, stackInSlot)) {
-            boolean exist = stackInSlot.hasElement(element);
-            stackInSlot.removeElement(element);
-            source.sendMessage(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"));
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
+        for (Entity entity : entities) {
+            Element element = ElementArgumentType.getElement(context, "element");
+            int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
+            ItemStack stackInSlot = getStackInSlot(entity, slot);
+            if (element != null && source != null && isValidStack(source, stackInSlot)) {
+                boolean exist = stackInSlot.hasElement(element);
+                stackInSlot.removeElement(element);
+                source.sendFeedback(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"), false);
+            }
         }
     }
 
     private static void itemAddAll(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
-        int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
-        ItemStack stackInSlot = getStackInSlot(entity, slot);
-        if (source != null && isValidStack(source, stackInSlot)) {
-            stackInSlot.setElements(new HashSet<>());
-            for (Element element : Element.getRegistrySet()) {
-                stackInSlot.addElement(new ElementEntry(element, element.getMaxLevel()));
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
+        for (Entity entity : entities) {
+            int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
+            ItemStack stackInSlot = getStackInSlot(entity, slot);
+            if (source != null && isValidStack(source, stackInSlot)) {
+                stackInSlot.setElements(new HashSet<>());
+                for (Element element : Element.getRegistrySet()) {
+                    stackInSlot.addElement(new ElementEntry(element, element.getMaxLevel()));
+                }
+                source.sendFeedback(Text.translatable("text.eleworld.commands.add.success"), false);
             }
-            source.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
         }
     }
 
     private static void itemAdd(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
-        Element element = ElementArgumentType.getElement(context, "element");
-        int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
-        ItemStack stackInSlot = getStackInSlot(entity, slot);
-        int level = IntegerArgumentType.getInteger(context, "level");
-        if (element != null && source != null && isValidStack(source, stackInSlot)) {
-            boolean success = stackInSlot.addElement(new ElementEntry(element, level));
-            source.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
-            if (element.isOf(EWElements.EMPTY)) {
-                source.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
+        for (Entity entity : entities) {
+            Element element = ElementArgumentType.getElement(context, "element");
+            int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
+            ItemStack stackInSlot = getStackInSlot(entity, slot);
+            int level = IntegerArgumentType.getInteger(context, "level");
+            if (element != null && source != null && isValidStack(source, stackInSlot)) {
+                boolean success = stackInSlot.addElement(new ElementEntry(element, level));
+                source.sendFeedback(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"), false);
+                if (element.isOf(EWElements.EMPTY)) {
+                    source.sendFeedback(Text.translatable("text.eleworld.commands.add.success.empty"), false);
+                }
             }
         }
     }
 
     private static void entityClear(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
-        if (entity instanceof LivingEntity livingEntity && source != null) {
-            livingEntity.clearElements();
-            source.sendMessage(Text.translatable("text.eleworld.commands.clear.success"));
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
+        for (Entity entity : entities) {
+            if (entity instanceof LivingEntity livingEntity && source != null) {
+                livingEntity.clearElements();
+                source.sendFeedback(Text.translatable("text.eleworld.commands.clear.success"), false);
+            }
         }
     }
 
     private static void entityGet(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
-        if (entity instanceof LivingEntity livingEntity && source != null) {
-            List<Text> texts = Element.getElementsText(livingEntity.getElements(), false, true);
-            if (texts.isEmpty()) {
-                source.sendMessage(Text.translatable("text.eleworld.commands.get.empty"));
-            } else {
-                texts.forEach(source::sendMessage);
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
+        for (Entity entity : entities) {
+            if (entity instanceof LivingEntity livingEntity && source != null) {
+                List<Text> texts = Element.getElementsText(livingEntity.getElements(), false, true);
+                if (texts.isEmpty()) {
+                    source.sendFeedback(Text.translatable("text.eleworld.commands.get.empty"), false);
+                } else {
+                    texts.forEach(message -> source.sendFeedback(message, false));
+                }
             }
         }
     }
 
     private static void entityRemove(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
         Element element = ElementArgumentType.getElement(context, "element");
-        if (entity instanceof LivingEntity livingEntity && element != null && source != null) {
-            boolean exist = livingEntity.hasElement(element);
-            livingEntity.removeElement(element);
-            source.sendMessage(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"));
+        for (Entity entity : entities) {
+            if (entity instanceof LivingEntity livingEntity && element != null && source != null) {
+                boolean exist = livingEntity.hasElement(element);
+                livingEntity.removeElement(element);
+                source.sendFeedback(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"), false);
+            }
         }
     }
 
     private static void entityAddAll(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
-        if (entity instanceof LivingEntity livingEntity && source != null) {
-            livingEntity.clearElements();
-            for (Element element : Element.getRegistrySet()) {
-                livingEntity.addElement(new ElementEntry(element, element.getMaxLevel()));
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
+        for (Entity entity : entities) {
+            if (entity instanceof LivingEntity livingEntity && source != null) {
+                livingEntity.clearElements();
+                for (Element element : Element.getRegistrySet()) {
+                    livingEntity.addElement(new ElementEntry(element, element.getMaxLevel()));
+                }
+                source.sendFeedback(Text.translatable("text.eleworld.commands.add.success"), false);
             }
-            source.sendMessage(Text.translatable("text.eleworld.commands.add.success"));
         }
     }
 
     private static void entityAdd(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
-        Entity entity = EntityArgumentType.getEntity(context, "entity");
+        Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
         Element element = ElementArgumentType.getElement(context, "element");
-        int level = IntegerArgumentType.getInteger(context, "level");
-        if (entity instanceof LivingEntity livingEntity && element != null && source != null) {
-            boolean success = livingEntity.addElement(new ElementEntry(element, level));
-            source.sendMessage(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"));
-            if (element.isOf(EWElements.EMPTY)) {
-                source.sendMessage(Text.translatable("text.eleworld.commands.add.success.empty"));
+        for (Entity entity : entities) {
+            int level = IntegerArgumentType.getInteger(context, "level");
+            if (entity instanceof LivingEntity livingEntity && element != null && source != null) {
+                boolean success = livingEntity.addElement(new ElementEntry(element, level));
+                source.sendFeedback(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"), false);
+                if (element.isOf(EWElements.EMPTY)) {
+                    source.sendFeedback(Text.translatable("text.eleworld.commands.add.success.empty"), false);
+                }
             }
         }
     }

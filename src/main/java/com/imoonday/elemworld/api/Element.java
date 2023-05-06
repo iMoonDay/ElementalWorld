@@ -48,7 +48,6 @@ public abstract class Element {
 
     private static final ConcurrentHashMap<String, ? extends Element> ELEMENTS = new ConcurrentHashMap<>();
     private static volatile boolean frozen = false;
-    public static final String[] LEVELS = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
     private String name = "null";
     protected final int maxLevel;
     protected final int rareLevel;
@@ -103,11 +102,11 @@ public abstract class Element {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
     }
 
-    public static ImmutableMap<String, ? extends Element> getRegistryMap() {
+    public static ImmutableMap<String, Element> getRegistryMap() {
         return ImmutableMap.copyOf(ELEMENTS);
     }
 
-    public static ImmutableSet<? extends Element> getRegistrySet() {
+    public static ImmutableSet<Element> getRegistrySet() {
         ArrayList<? extends Element> elements = new ArrayList<>(ELEMENTS.values());
         return ImmutableSet.copyOf(elements);
     }
@@ -132,6 +131,14 @@ public abstract class Element {
     Element withName(String name) {
         this.name = name;
         return this;
+    }
+
+    public ElementEntry withLevel(int level) {
+        return new ElementEntry(this, level);
+    }
+
+    public ElementEntry withRandomLevel() {
+        return this.withLevel(this.getRandomLevel());
     }
 
     public String getName() {
@@ -211,7 +218,7 @@ public abstract class Element {
         for (int i = 1; i <= this.maxLevel; i++) {
             random.add(i, this.weight * (this.maxLevel - i + 1));
         }
-        return Optional.ofNullable(random.next()).orElse(0);
+        return random.next().orElse(0);
     }
 
     public static List<Text> getElementsText(Set<ElementEntry> elements, boolean prefix, boolean lineBreak) {
@@ -230,7 +237,6 @@ public abstract class Element {
         while (iterator.hasNext()) {
             ElementEntry entry = iterator.next();
             Element element = entry.element();
-            int level = entry.level();
             Text translationName = element.getTranslationName();
             if (translationName == null) {
                 continue;
@@ -245,8 +251,7 @@ public abstract class Element {
             if (!text.equals(Text.empty())) {
                 text.append(" ");
             }
-            Text levelText = new ElementEntry(element, level).getLevelText();
-            text.append(translationName).append(levelText);
+            text.append(element.withLevel(entry.level()).getName());
             if (!iterator.hasNext()) {
                 list.add(text);
             }

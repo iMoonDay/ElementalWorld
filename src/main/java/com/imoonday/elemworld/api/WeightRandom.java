@@ -1,9 +1,9 @@
 package com.imoonday.elemworld.api;
 
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -49,10 +49,7 @@ public class WeightRandom<T> {
      * @param weightFunc 权重函数
      */
     public void addAll(Collection<T> objs, Function<T, Integer> weightFunc) {
-        for (T obj : objs) {
-            Integer weight = weightFunc.apply(obj);
-            add(obj, weight);
-        }
+        addAll(objs, t -> true, weightFunc);
     }
 
     /**
@@ -82,29 +79,24 @@ public class WeightRandom<T> {
      *
      * @return 随机对象
      */
-    @Nullable
-    public T next() {
+    public Optional<T> next() {
         if (this.weightMap.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
         int randomWeight = (int) (this.weightMap.lastKey() * Math.random());
         SortedMap<Integer, T> tailMap = this.weightMap.tailMap(randomWeight, false);
-        return this.weightMap.get(tailMap.firstKey());
+        return Optional.ofNullable(this.weightMap.get(tailMap.firstKey()));
     }
 
     public boolean isEmpty() {
         return this.weightMap.isEmpty();
     }
 
-    @Nullable
-    public static <T> T getRandom(Collection<T> objs, Function<T, Integer> weightFunc) {
-        WeightRandom<T> random = WeightRandom.create();
-        random.addAll(objs, weightFunc);
-        return random.next();
+    public static <T> Optional<T> getRandom(Collection<T> objs, Function<T, Integer> weightFunc) {
+        return getRandom(objs, t -> true, weightFunc);
     }
 
-    @Nullable
-    public static <T> T getRandom(Collection<T> objs, Predicate<T> predicate, Function<T, Integer> weightFunc) {
+    public static <T> Optional<T> getRandom(Collection<T> objs, Predicate<T> predicate, Function<T, Integer> weightFunc) {
         WeightRandom<T> random = WeightRandom.create();
         random.addAll(objs, predicate, weightFunc);
         return random.next();

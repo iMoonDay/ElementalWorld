@@ -43,7 +43,7 @@ public class ElementBookItem extends Item {
         NbtList nbtList = getElementsNbt(stack);
         for (int i = 0; i < nbtList.size(); ++i) {
             NbtCompound nbtCompound = nbtList.getCompound(i);
-            ElementEntry.fromNbt(nbtCompound).ifPresent(e -> tooltip.add(e.element().getTranslationName().copy().append(e.getLevelText())));
+            ElementEntry.fromNbt(nbtCompound).ifPresent(e -> tooltip.add(e.getName()));
         }
     }
 
