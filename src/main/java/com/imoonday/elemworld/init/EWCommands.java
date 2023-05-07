@@ -109,8 +109,8 @@ public class EWCommands {
             ItemStack stackInSlot = getStackInSlot(entity, slot);
             if (source != null && isValidStack(source, stackInSlot)) {
                 stackInSlot.setElements(new HashSet<>());
-                for (Element element : Element.getRegistrySet()) {
-                    stackInSlot.addElement(new ElementEntry(element, element.getMaxLevel()));
+                for (Element element : Element.getRegistrySet(false)) {
+                    stackInSlot.addElement(new ElementEntry(element, element.maxLevel));
                 }
                 source.sendFeedback(Text.translatable("text.eleworld.commands.add.success"), false);
             }
@@ -180,8 +180,8 @@ public class EWCommands {
         for (Entity entity : entities) {
             if (entity instanceof LivingEntity livingEntity && source != null) {
                 livingEntity.clearElements();
-                for (Element element : Element.getRegistrySet()) {
-                    livingEntity.addElement(new ElementEntry(element, element.getMaxLevel()));
+                for (Element element : Element.getRegistrySet(false)) {
+                    livingEntity.addElement(new ElementEntry(element, element.maxLevel));
                 }
                 source.sendFeedback(Text.translatable("text.eleworld.commands.add.success"), false);
             }

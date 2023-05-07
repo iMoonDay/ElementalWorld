@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "elemworld:block/element_smithing_table_bottom",
+    "east": "elemworld:block/element_smithing_table_side",
+    "north": "elemworld:block/element_smithing_table_front",
+    "particle": "elemworld:block/element_smithing_table_front",
+    "south": "elemworld:block/element_smithing_table_front",
+    "up": "elemworld:block/element_smithing_table_top",
+    "west": "elemworld:block/element_smithing_table_side"
+  }
+}

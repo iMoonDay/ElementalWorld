@@ -3,6 +3,7 @@ package com.imoonday.elemworld.elements;
 import com.imoonday.elemworld.api.Element;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.random.Random;
 
@@ -12,17 +13,17 @@ public class TimeElement extends Element {
     }
 
     @Override
-    public boolean immuneOnDeath(LivingEntity entity){
+    public boolean immuneOnDeath(LivingEntity entity) {
         if (entity.getImmuneCooldown() <= 0) {
             entity.setImmuneCooldown(5 * 60 * 20);
-            entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
+            entity.world.playSound(null, entity.getBlockPos(), SoundEvents.ITEM_TOTEM_USE, SoundCategory.VOICE);
             return true;
         }
         return super.immuneOnDeath(entity);
     }
 
     @Override
-    public void afterInjury (LivingEntity entity, DamageSource source, float amount){
+    public void afterInjury(LivingEntity entity, DamageSource source, float amount) {
         if (entity.getImmuneCooldown() != 0) {
             return;
         }

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "1": {
+      "tag": "elemworld:advanced_element_fragments"
+    },
+    "2": {
+      "item": "elemworld:base_element_fragment"
+    }
+  },
+  "pattern": [
+    "111",
+    "121",
+    "111"
+  ],
+  "result": {
+    "count": 2,
+    "item": "elemworld:advanced_element_fragment"
+  },
+  "show_notification": true
+}

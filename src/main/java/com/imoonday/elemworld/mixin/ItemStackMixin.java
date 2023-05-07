@@ -187,7 +187,7 @@ public class ItemStackMixin implements EWItemStack {
     @Override
     public boolean hasSuitableElement() {
         ItemStack stack = (ItemStack) (Object) this;
-        return Element.getRegistrySet().stream().anyMatch(element -> element.isSuitableFor(stack));
+        return Element.getRegistrySet(false).stream().anyMatch(element -> element.isSuitableFor(stack));
     }
 
     @Inject(method = "inventoryTick", at = @At("TAIL"))
@@ -413,12 +413,12 @@ public class ItemStackMixin implements EWItemStack {
     }
 
     private static boolean addRandomElement(ItemStack stack) {
-        for (int i = 0; i < Element.getRegistrySet().size(); i++) {
+        for (int i = 0; i < Element.getRegistrySet(true).size(); i++) {
             ElementEntry entry = ElementEntry.createRandom(element1 -> element1.isSuitableFor(stack) || stack.isOf(EWItems.ELEMENT_BOOK) && !element1.isInvalid());
             if (stack.addElement(entry)) {
                 return true;
             } else {
-                int size = Element.getSizeOf(element -> element.getRareLevel() == entry.element().getRareLevel());
+                int size = Element.getSizeOf(element -> element.rareLevel == entry.element().rareLevel);
                 if (stack.getElements().size() >= size) {
                     return false;
                 }

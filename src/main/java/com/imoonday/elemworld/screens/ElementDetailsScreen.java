@@ -55,6 +55,11 @@ public class ElementDetailsScreen extends HandledScreen<ElementDetailsScreenHand
             Text text = Text.literal(strings[i] + " × " + String.format("%.2f", multipliers[i])).formatted(formattings[i], Formatting.BOLD);
             textRenderer.draw(matrices, text, x + 44, y + 18 + (i + 1) * 12, Color.WHITE.getRGB());
         }
+        int i = player.getImmuneCooldown() / 20;
+        if (i > 0) {
+            String text = i + "s";
+            textRenderer.draw(matrices, text, x + 16 - (float) textRenderer.getWidth(text) / 2, y + 44, Color.GREEN.getRGB());
+        }
     }
 
     @Override

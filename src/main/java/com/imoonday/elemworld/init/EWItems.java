@@ -5,41 +5,60 @@ import com.imoonday.elemworld.items.ElementDetectorItem;
 import com.imoonday.elemworld.items.ElementFragmentItem;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.minecraft.data.client.Model;
+import net.minecraft.data.client.Models;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+
+import java.util.HashMap;
 
 import static com.imoonday.elemworld.ElementalWorld.LOGGER;
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWItems {
 
-    public static final Item ELEMENT_DETECTOR = register("element_detector", new ElementDetectorItem());
+    public static final HashMap<Item, Model> MODELS = new HashMap<>();
+
+    public static final Item ELEMENT_DETECTOR = register("element_detector", new ElementDetectorItem(), Models.HANDHELD);
     public static final Item ELEMENT_STICK = register("element_stick");
     public static final Item BASE_ELEMENT_FRAGMENT = register("base_element_fragment", new ElementFragmentItem(1));
     public static final Item ADVANCED_ELEMENT_FRAGMENT = register("advanced_element_fragment", new ElementFragmentItem(2));
     public static final Item RARE_ELEMENT_FRAGMENT = register("rare_element_fragment", new ElementFragmentItem(3));
     public static final Item ELEMENT_INGOT = register("element_ingot");
-    public static final Item ELEMENT_BOOK = registerOnly("element_book", new ElementBookItem());
+    public static final Item ELEMENT_BOOK = registerItem("element_book", new ElementBookItem());
 
     public static void register() {
         LOGGER.info("Loading Items");
     }
 
-    public static <T extends Item> T register(String id, T item) {
+    public static <T extends Item> T register(String id, T item, Model model) {
         ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(item.getDefaultStack()));
-        return registerOnly(id, item);
+        return registerItem(id, item, model);
     }
 
-    public static <T extends Item> T registerOnly(String id, T item) {
+    public static <T extends Item> T register(String id, T item) {
+        return register(id, item, Models.GENERATED);
+    }
+
+    public static <T extends Item> T registerItem(String id, T item, Model model) {
+        MODELS.put(item, model);
         return Registry.register(Registries.ITEM, id(id), item);
     }
 
-    private static Item register(String id) {
-        return register(id, new Item(new FabricItemSettings()));
+    public static <T extends Item> T registerItem(String id, T item) {
+        return registerItem(id, item, Models.GENERATED);
     }
 
-    private static Item register(String id, int count) {
-        return register(id, new Item(new FabricItemSettings().maxCount(count)));
+    private static Item register(String id, Model model) {
+        return register(id, new Item(new FabricItemSettings()), model);
+    }
+
+    private static Item register(String id) {
+        return register(id, Models.GENERATED);
+    }
+
+    private static Item register(String id, int count, Model model) {
+        return register(id, new Item(new FabricItemSettings().maxCount(count)), model);
     }
 }

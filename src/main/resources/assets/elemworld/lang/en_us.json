@@ -100,6 +100,7 @@
   "item.minecraft.lingering_potion.effect.dizzy": "Lingering Potion of Dizziness",
   "item.minecraft.tipped_arrow.effect.dizzy": "Arrow of Dizziness",
   "block.elemworld.element_smithing_table": "Element Smithing Table",
+  "gamerule.keepElements": "Keep elements on death",
   "group.elemworld.name": "Elemental World",
   "text.eleworld.modify_elements_screen.no_new": "No new elements",
   "text.eleworld.modify_elements_screen.new": "Added %d elements",

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "1": {
+      "tag": "elemworld:element_fragments"
+    }
+  },
+  "pattern": [
+    "1",
+    "1"
+  ],
+  "result": {
+    "count": 4,
+    "item": "elemworld:element_stick"
+  },
+  "show_notification": true
+}

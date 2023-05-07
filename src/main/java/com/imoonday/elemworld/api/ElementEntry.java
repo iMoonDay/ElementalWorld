@@ -33,8 +33,13 @@ public record ElementEntry(Element element, int level) {
 
     public float getLevelMultiplier(float multiplier) {
         if (multiplier == 0.0f) return 0.0f;
-        float f1 = (float) level / element.getMaxLevel();
-        float f2 = (element.getMaxLevel() > 1) ? ((float) (element.getMaxLevel() - level) / (element.getMaxLevel() - 1)) : 1.0f;
+        float f1 = (float) level / element.maxLevel;
+        float f2;
+        if ((element.maxLevel > 1)) {
+            f2 = ((float) (element.maxLevel - level) / (element.maxLevel - 1));
+        } else {
+            f2 = 1.0f;
+        }
         multiplier *= multiplier >= 0 ? f1 : f2;
         return multiplier;
     }
@@ -50,10 +55,7 @@ public record ElementEntry(Element element, int level) {
         if (nbt.contains(NAME_KEY, NbtElement.STRING_TYPE)) {
             String name = nbt.getString(NAME_KEY);
             Element element = Element.getRegistryMap().get(name);
-            if (element == null) {
-                return Optional.empty();
-            }
-            if (nbt.contains(LEVEL_KEY, NbtElement.INT_TYPE)) {
+            if (element != null && nbt.contains(LEVEL_KEY, NbtElement.INT_TYPE)) {
                 return Optional.of(new ElementEntry(element, nbt.getInt(LEVEL_KEY)));
             }
         }
@@ -61,11 +63,7 @@ public record ElementEntry(Element element, int level) {
     }
 
     public static ElementEntry createRandom(Predicate<Element> predicate) {
-        Optional<? extends Element> random = WeightRandom.getRandom(Element.getRegistrySet(), predicate, Element::getWeight);
-        if (random.isPresent()) {
-            return random.get().withRandomLevel();
-        }
-        return EMPTY;
+        return WeightRandom.getRandom(Element.getRegistrySet(true), predicate, Element::getWeight).orElse(EWElements.EMPTY).withRandomLevel();
     }
 
     @Override

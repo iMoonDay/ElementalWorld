@@ -100,6 +100,7 @@
   "item.minecraft.lingering_potion.effect.dizzy": "滞留型晕眩药水",
   "item.minecraft.tipped_arrow.effect.dizzy": "晕眩之箭",
   "block.elemworld.element_smithing_table": "元素锻造台",
+  "gamerule.keepElements": "死亡时保留元素",
   "group.elemworld.name": "元素世界",
   "text.eleworld.modify_elements_screen.no_new": "无新元素",
   "text.eleworld.modify_elements_screen.new": "新增 %d 个元素",

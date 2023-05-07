@@ -1,6 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "elemworld:item/thunder_element_fragment"
-  }
-}

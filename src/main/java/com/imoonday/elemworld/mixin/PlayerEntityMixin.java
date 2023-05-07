@@ -3,6 +3,7 @@ package com.imoonday.elemworld.mixin;
 import com.imoonday.elemworld.api.ElementEntry;
 import com.imoonday.elemworld.init.EWItems;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -48,5 +49,10 @@ public class PlayerEntityMixin extends LivingEntityMixin {
     @Redirect(method = "interact", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;interact(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;)Lnet/minecraft/util/ActionResult;"))
     public ActionResult interact(Entity entry, PlayerEntity player, Hand hand) {
         return player.getStackInHand(hand).isOf(EWItems.ELEMENT_DETECTOR) ? ActionResult.PASS : entry.interact(player, hand);
+    }
+
+    @Inject(method = "onDeath",at = @At("TAIL"))
+    public void onDeath(DamageSource damageSource, CallbackInfo ci){
+
     }
 }

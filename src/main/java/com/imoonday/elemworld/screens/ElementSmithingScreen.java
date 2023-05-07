@@ -113,7 +113,7 @@ public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHa
         ItemStack material = this.handler.getMaterial();
         ItemStack stack = this.handler.getStack();
         Text tooltip = null;
-        if (stack.getElements().size() >= Element.getRegistryMap().size() - 1 && !stack.isEmpty()) {
+        if (stack.getElements().size() >= Element.getRegistrySet(false).size() && !stack.isEmpty()) {
             tooltip = Text.translatable("text.eleworld.modify_elements_screen.full");
         } else if (player.experienceLevel < 1 && !stack.isEmpty() && material.isOf(Items.DIAMOND) && !player.isCreative()) {
             tooltip = Text.translatable("text.eleworld.modify_elements_screen.not_enough_level");

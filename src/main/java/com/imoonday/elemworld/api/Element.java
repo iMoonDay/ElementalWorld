@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.block.BlockState;
+import net.minecraft.data.client.Models;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.*;
@@ -49,8 +50,8 @@ public abstract class Element {
     private static final ConcurrentHashMap<String, ? extends Element> ELEMENTS = new ConcurrentHashMap<>();
     private static volatile boolean frozen = false;
     private String name = "null";
-    protected final int maxLevel;
-    protected final int rareLevel;
+    public final int maxLevel;
+    public final int rareLevel;
     protected final int weight;
     protected final float miningSpeedMultiplier;
     protected final float damageMultiplier;
@@ -59,11 +60,6 @@ public abstract class Element {
 
     public Element(int maxLevel, int rareLevel, int weight) {
         this(maxLevel, rareLevel, weight, 0.0f, 0.0f, 0.0f, 0.0f);
-    }
-
-    public Element(Element element) {
-        this(element.maxLevel, element.rareLevel, element.weight, element.miningSpeedMultiplier, element.damageMultiplier, element.maxHealthMultiplier, element.durabilityMultiplier);
-        this.name = element.name;
     }
 
     public Element(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
@@ -77,27 +73,19 @@ public abstract class Element {
     }
 
     public static void register() {
-        List<ElementEntry> sortedElements = getSortedElements(getRegistrySet().stream().map(element1 -> new ElementEntry(element1, element1.getMaxLevel())).collect(Collectors.toSet()));
+        List<ElementEntry> sortedElements = getSortedElements(getRegistrySet(false).stream().map(element1 -> new ElementEntry(element1, element1.maxLevel)).collect(Collectors.toSet()));
         for (ElementEntry entry : sortedElements) {
             Element element = entry.element();
-            if (element.isInvalid()) {
-                continue;
-            }
             if (element.hasEffect()) {
-                Identifier id = id(element.getName());
+                Identifier id = id(element.name);
                 ElementEffect effect = Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
                 Registry.register(Registries.POTION, id, new ElementPotion(element));
             }
             if (element.hasFragmentItem()) {
-                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element));
+                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element), Models.GENERATED);
             }
         }
-        for (ElementEntry entry : sortedElements) {
-            if (entry.element().isInvalid()) {
-                continue;
-            }
-            ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(ElementBookItem.fromElement(entry)));
-        }
+        sortedElements.forEach(entry -> ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(ElementBookItem.fromElement(entry))));
         ServerLifecycleEvents.SERVER_STARTED.register(server -> frozen = true);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
     }
@@ -106,8 +94,11 @@ public abstract class Element {
         return ImmutableMap.copyOf(ELEMENTS);
     }
 
-    public static ImmutableSet<Element> getRegistrySet() {
+    public static ImmutableSet<Element> getRegistrySet(boolean containsEmpty) {
         ArrayList<? extends Element> elements = new ArrayList<>(ELEMENTS.values());
+        if (!containsEmpty) {
+            elements.removeIf(element -> element == null || element.isInvalid());
+        }
         return ImmutableSet.copyOf(elements);
     }
 
@@ -145,14 +136,6 @@ public abstract class Element {
         return name;
     }
 
-    public int getRareLevel() {
-        return rareLevel;
-    }
-
-    public int getMaxLevel() {
-        return maxLevel;
-    }
-
     public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
         return miningSpeedMultiplier;
     }
@@ -182,15 +165,11 @@ public abstract class Element {
     }
 
     public UUID getUuid(int slot) {
-        return UUID.nameUUIDFromBytes((this.getName() + " " + slot).getBytes(StandardCharsets.UTF_8));
+        return UUID.nameUUIDFromBytes((this.name + " " + slot).getBytes(StandardCharsets.UTF_8));
     }
 
     public static Optional<Element> byName(String name) {
-        Element element = getRegistryMap().get(name);
-        if (element == null) {
-            return Optional.empty();
-        }
-        return Optional.of(element);
+        return Optional.ofNullable(getRegistryMap().get(name));
     }
 
     @Override
@@ -293,7 +272,7 @@ public abstract class Element {
     }
 
     public String getTranslationKey() {
-        return "element.elemworld." + this.getName();
+        return "element.elemworld." + name;
     }
 
     public Color getColor() {
@@ -469,7 +448,7 @@ public abstract class Element {
     }
 
     public boolean hasEffect() {
-        return true;
+        return !this.isInvalid();
     }
 
     public boolean conflictsWith(Element element) {
@@ -481,7 +460,7 @@ public abstract class Element {
     }
 
     public boolean hasFragmentItem() {
-        return true;
+        return !this.isInvalid();
     }
 
     public Item getFragmentItem() {
@@ -493,7 +472,7 @@ public abstract class Element {
     }
 
     public Potion getElementPotion() {
-        return Registries.POTION.get(id(this.getName()));
+        return Registries.POTION.get(id(name));
     }
 
     public int getPotionDuration() {

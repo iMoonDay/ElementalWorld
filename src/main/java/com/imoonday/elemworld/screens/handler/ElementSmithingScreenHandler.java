@@ -116,7 +116,7 @@ public class ElementSmithingScreenHandler extends ScreenHandler {
         if (getStack().isEmpty() || getStack().isOf(EWItems.ELEMENT_BOOK)) {
             return true;
         }
-        return getStack().getStoredElementsIfBook().size() >= Element.getRegistryMap().size() - 1;
+        return getStack().getStoredElementsIfBook().size() >= Element.getRegistrySet(false).size();
     }
 
     public int getRequiredLevel() {
@@ -133,7 +133,7 @@ public class ElementSmithingScreenHandler extends ScreenHandler {
             if (entry.element().isInvalid()) {
                 continue;
             }
-            float i = entry.element().getRareLevel() * entries.size() * ((float) entry.level() / entry.element().getMaxLevel());
+            float i = entry.element().rareLevel * entries.size() * ((float) entry.level() / entry.element().maxLevel);
             sum += i;
         }
         int randomCost = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY).getInt(RANDOM_COST_KEY);
@@ -227,7 +227,7 @@ public class ElementSmithingScreenHandler extends ScreenHandler {
         ElementEntry entry;
         entry = entries.size() == 1 ? entries.iterator().next() : ElementEntry.EMPTY;
         NbtCompound nbt = entry.toNbt();
-        int between = entry.element().getRandomLevel() * 3;
+        int between = entry.element().rareLevel * 3;
         nbt.putInt(RANDOM_COST_KEY, Random.create().nextBetween(-between, between));
         getStack().getOrCreateNbt().put(LAST_RANDOM_ELEMENT_KEY, nbt);
     }
