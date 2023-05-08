@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "1": {
+      "item": "elemworld:element_stick"
+    },
+    "2": {
+      "item": "elemworld:element_ingot"
+    }
+  },
+  "pattern": [
+    "222",
+    " 1 ",
+    " 1 "
+  ],
+  "result": {
+    "item": "elemworld:element_pickaxe"
+  },
+  "show_notification": true
+}

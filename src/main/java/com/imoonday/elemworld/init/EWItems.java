@@ -1,8 +1,6 @@
 package com.imoonday.elemworld.init;
 
-import com.imoonday.elemworld.items.ElementBookItem;
-import com.imoonday.elemworld.items.ElementDetectorItem;
-import com.imoonday.elemworld.items.ElementFragmentItem;
+import com.imoonday.elemworld.items.*;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.data.client.Model;
@@ -10,6 +8,7 @@ import net.minecraft.data.client.Models;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 
@@ -28,12 +27,19 @@ public class EWItems {
     public static final Item ELEMENT_INGOT = register("element_ingot");
     public static final Item ELEMENT_BOOK = registerItem("element_book", new ElementBookItem());
 
+    public static final Item ELEMENT_SWORD = register("element_sword", new ElementSwordItem(3, -2.4f), Models.HANDHELD);
+    public static final Item ELEMENT_PICKAXE = register("element_pickaxe", ElementToolItem.createPickaxe(1, -2.8f), Models.HANDHELD);
+    public static final Item ELEMENT_AXE = register("element_axe", ElementToolItem.createAxe(5.5f, -3.0f), Models.HANDHELD);
+    public static final Item ELEMENT_SHOVEL = register("element_shovel", ElementToolItem.createShovel(1.5f, -3.0f), Models.HANDHELD);
+    public static final Item ELEMENT_HOE = register("element_hoe", ElementToolItem.createHoe(-2, -0.5f), Models.HANDHELD);
+    public static final Item ELEMENT_BOW = register("element_bow", new ElementBowItem(), null);
+
     public static void register() {
         LOGGER.info("Loading Items");
     }
 
-    public static <T extends Item> T register(String id, T item, Model model) {
-        ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(item.getDefaultStack()));
+    public static <T extends Item> T register(String id, T item, @Nullable Model model) {
+        ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(item));
         return registerItem(id, item, model);
     }
 
@@ -41,8 +47,10 @@ public class EWItems {
         return register(id, item, Models.GENERATED);
     }
 
-    public static <T extends Item> T registerItem(String id, T item, Model model) {
-        MODELS.put(item, model);
+    public static <T extends Item> T registerItem(String id, T item, @Nullable Model model) {
+        if (model != null) {
+            MODELS.put(item, model);
+        }
         return Registry.register(Registries.ITEM, id(id), item);
     }
 
@@ -50,7 +58,7 @@ public class EWItems {
         return registerItem(id, item, Models.GENERATED);
     }
 
-    private static Item register(String id, Model model) {
+    private static Item register(String id, @Nullable Model model) {
         return register(id, new Item(new FabricItemSettings()), model);
     }
 
@@ -58,7 +66,7 @@ public class EWItems {
         return register(id, Models.GENERATED);
     }
 
-    private static Item register(String id, int count, Model model) {
+    private static Item register(String id, int count, @Nullable Model model) {
         return register(id, new Item(new FabricItemSettings().maxCount(count)), model);
     }
 }

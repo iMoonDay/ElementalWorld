@@ -19,8 +19,10 @@
     "TridentEntityInvoker"
   ],
   "client": [
+    "AbstractClientPlayerEntityMixin",
     "ClientPlayerEntityMixin",
     "ClientPlayerInteractionManagerMixin",
+    "HeldItemRendererMixin",
     "InGameHudMixin"
   ],
   "injectors": {

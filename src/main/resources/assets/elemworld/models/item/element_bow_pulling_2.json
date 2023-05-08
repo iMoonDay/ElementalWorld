@@ -1,0 +1,6 @@
+{
+    "parent": "elemworld:item/element_bow",
+    "textures": {
+        "layer0": "elemworld:item/element_bow_pulling_2"
+    }
+}

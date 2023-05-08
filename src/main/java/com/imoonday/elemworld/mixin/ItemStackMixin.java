@@ -210,12 +210,12 @@ public class ItemStackMixin implements EWItemStack {
         if (list == null) {
             return;
         }
+        if (player == null) {
+            return;
+        }
         Set<ElementEntry> elements = stack.getElements();
         if (hasSuitableElement() && elements.size() == 0) {
-            stack.addRandomElements();
-        }
-        stack.removeInvalidElements();
-        if (player == null) {
+            list.add(1, Text.literal("暂未生成元素").formatted(Formatting.GRAY));
             return;
         }
         List<Text> texts = Element.getElementsText(elements, false, elements.size() > 5);

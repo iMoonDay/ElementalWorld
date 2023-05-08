@@ -16,6 +16,7 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider;
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder;
 import net.minecraft.data.server.recipe.VanillaRecipeProvider;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.recipe.book.RecipeCategory;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
@@ -55,6 +56,12 @@ public class EWDataGeneration implements DataGeneratorEntrypoint {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ADVANCED_ELEMENT_FRAGMENT, 2).input('1', ADVANCED_ELEMENT_FRAGMENTS).input('2', BASE_ELEMENT_FRAGMENT).pattern("111").pattern("121").pattern("111").criterion(hasItem(BASE_ELEMENT_FRAGMENT), VanillaRecipeProvider.conditionsFromItem(BASE_ELEMENT_FRAGMENT)).offerTo(exporter);
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RARE_ELEMENT_FRAGMENT, 2).input('1', RARE_ELEMENT_FRAGMENTS).input('2', ADVANCED_ELEMENT_FRAGMENT).pattern("111").pattern("121").pattern("111").criterion(hasItem(ADVANCED_ELEMENT_FRAGMENT), VanillaRecipeProvider.conditionsFromItem(ADVANCED_ELEMENT_FRAGMENT)).offerTo(exporter);
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ELEMENT_STICK, 4).input('1', ELEMENT_FRAGMENTS).pattern("1").pattern("1").criterion("has_element_fragments", VanillaRecipeProvider.conditionsFromTag(ELEMENT_FRAGMENTS)).offerTo(exporter);
+            ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, ELEMENT_SWORD).input('1', ELEMENT_STICK).input('2', ELEMENT_INGOT).pattern("2").pattern("2").pattern("1").criterion(hasItem(ELEMENT_INGOT), VanillaRecipeProvider.conditionsFromItem(ELEMENT_INGOT)).offerTo(exporter);
+            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ELEMENT_PICKAXE).input('1', ELEMENT_STICK).input('2', ELEMENT_INGOT).pattern("222").pattern(" 1 ").pattern(" 1 ").criterion(hasItem(ELEMENT_INGOT), VanillaRecipeProvider.conditionsFromItem(ELEMENT_INGOT)).offerTo(exporter);
+            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ELEMENT_AXE).input('1', ELEMENT_STICK).input('2', ELEMENT_INGOT).pattern("22").pattern("21").pattern(" 1").criterion(hasItem(ELEMENT_INGOT), VanillaRecipeProvider.conditionsFromItem(ELEMENT_INGOT)).offerTo(exporter);
+            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ELEMENT_SHOVEL).input('1', ELEMENT_STICK).input('2', ELEMENT_INGOT).pattern("2").pattern("1").pattern("1").criterion(hasItem(ELEMENT_INGOT), VanillaRecipeProvider.conditionsFromItem(ELEMENT_INGOT)).offerTo(exporter);
+            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ELEMENT_HOE).input('1', ELEMENT_STICK).input('2', ELEMENT_INGOT).pattern("22").pattern(" 1").pattern(" 1").criterion(hasItem(ELEMENT_INGOT), VanillaRecipeProvider.conditionsFromItem(ELEMENT_INGOT)).offerTo(exporter);
+            ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, ELEMENT_BOW).input('1', ELEMENT_STICK).input('2', Items.STRING).pattern(" 12").pattern("1 2").pattern(" 12").criterion(hasItem(ELEMENT_STICK), VanillaRecipeProvider.conditionsFromItem(ELEMENT_STICK)).offerTo(exporter);
         }
     }
 
@@ -83,6 +90,11 @@ public class EWDataGeneration implements DataGeneratorEntrypoint {
             elements.stream().filter(element -> element.rareLevel == 2).forEach(element -> getOrCreateTagBuilder(ADVANCED_ELEMENT_FRAGMENTS).add(element.getFragmentItem()));
             elements.stream().filter(element -> element.rareLevel == 3).forEach(element -> getOrCreateTagBuilder(RARE_ELEMENT_FRAGMENTS).add(element.getFragmentItem()));
             elements.forEach(element -> getOrCreateTagBuilder(ELEMENT_FRAGMENTS).add(element.getFragmentItem()));
+            getOrCreateTagBuilder(ItemTags.SWORDS).add(ELEMENT_SWORD);
+            getOrCreateTagBuilder(ItemTags.PICKAXES).add(ELEMENT_PICKAXE);
+            getOrCreateTagBuilder(ItemTags.AXES).add(ELEMENT_AXE);
+            getOrCreateTagBuilder(ItemTags.SHOVELS).add(ELEMENT_SHOVEL);
+            getOrCreateTagBuilder(ItemTags.HOES).add(ELEMENT_HOE);
         }
     }
 

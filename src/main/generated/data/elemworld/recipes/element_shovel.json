@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "1": {
+      "item": "elemworld:element_stick"
+    },
+    "2": {
+      "item": "elemworld:element_ingot"
+    }
+  },
+  "pattern": [
+    "2",
+    "1",
+    "1"
+  ],
+  "result": {
+    "item": "elemworld:element_shovel"
+  },
+  "show_notification": true
+}

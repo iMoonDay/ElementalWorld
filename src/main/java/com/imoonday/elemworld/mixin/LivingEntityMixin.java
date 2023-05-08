@@ -1,9 +1,6 @@
 package com.imoonday.elemworld.mixin;
 
-import com.imoonday.elemworld.api.EWLivingEntity;
-import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.api.ElementEntry;
-import com.imoonday.elemworld.api.WeightRandom;
+import com.imoonday.elemworld.api.*;
 import com.imoonday.elemworld.init.EWElements;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketComponent;
@@ -35,11 +32,13 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -71,7 +70,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         if (!element.isSuitableFor(entity)) {
             return false;
         }
-        if (this.elements.stream().anyMatch(instance1 -> instance1.element().isOf(element))) {
+        if (this.elements.stream().anyMatch(entry1 -> entry1.element().isOf(element))) {
             return false;
         }
         this.elements.add(entry);
@@ -164,12 +163,19 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     @Inject(method = "tick", at = @At("TAIL"))
     public void tick(CallbackInfo ci) {
-        elementTick();
-        checkElements();
+        LivingEntity entity = (LivingEntity) (Object) this;
+        addPersistentStatusEffects();
+        addEffect();
         cooldownTick();
+        if (!entity.world.isClient) {
+            onElementChanged();
+            addRandomElementsIfEmpty();
+            removeEmptyElement();
+            addRandomElementsToStackIfEmpty();
+        }
     }
 
-    private void elementTick() {
+    private void addPersistentStatusEffects() {
         LivingEntity entity = (LivingEntity) (Object) this;
         List<ElementEntry> list = entity.getAllElements(false);
         for (ElementEntry entry : list) {
@@ -186,27 +192,24 @@ public class LivingEntityMixin implements EWLivingEntity {
                 entity.addStatusEffect(new StatusEffectInstance(key, 2, value, false, false, false));
             }
         }
-        for (Element element : Element.getRegistrySet(false)) {
-            if (entity instanceof PlayerEntity player && player.isSpectator()) {
-                break;
-            }
-            if (element.shouldAddEffect(entity)) {
-                element.addEffect(entity, null);
-            }
-        }
-        if (!entity.world.isClient) {
-            checkElementChange();
-        }
     }
 
-    private void checkElementChange() {
+    private void addEffect() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        Element.getRegistrySet(false)
+                .stream().takeWhile(element -> !(entity instanceof PlayerEntity player) || !player.isSpectator())
+                .filter(element -> element.shouldAddEffect(entity))
+                .forEach(element -> element.addEffect(entity, null));
+    }
+
+    private void onElementChanged() {
         LivingEntity entity = (LivingEntity) (Object) this;
         List<ItemStack> newStacks = Arrays.asList(entity.getEquippedStack(EquipmentSlot.HEAD), entity.getEquippedStack(EquipmentSlot.CHEST), entity.getEquippedStack(EquipmentSlot.LEGS), entity.getEquippedStack(EquipmentSlot.FEET));
         List<ItemStack> oldStacks = this.oldStacks;
         if (oldStacks.size() == newStacks.size()) {
             for (int i = 0; i < newStacks.size(); i++) {
-                ItemStack newStack = newStacks.get(i);
-                ItemStack oldStack = oldStacks.get(i);
+                ItemStack newStack = newStacks.get(i).copy();
+                ItemStack oldStack = oldStacks.get(i).copy();
                 if (ItemStack.areEqual(oldStack, newStack)) {
                     continue;
                 }
@@ -264,60 +267,54 @@ public class LivingEntityMixin implements EWLivingEntity {
         return dist * 20;
     }
 
-    private void checkElements() {
-        LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity.world.isClient) {
-            return;
-        }
+    private void addRandomElementsIfEmpty() {
         if (hasSuitableElement() && this.elements.isEmpty()) {
             addRandomElements();
         }
+    }
+
+    private void removeEmptyElement() {
         if (this.elements.size() > 1) {
             this.elements.remove(ElementEntry.EMPTY);
         }
+    }
+
+    private void addRandomElementsToStackIfEmpty() {
+        LivingEntity entity = (LivingEntity) (Object) this;
         ArrayList<ItemStack> stacks = new ArrayList<>();
         for (ItemStack stack : entity.getArmorItems()) {
             stacks.add(stack);
         }
         stacks.add(entity.getMainHandStack());
         stacks.add(entity.getOffHandStack());
-        for (ItemStack stack : stacks) {
-            if (stack.hasSuitableElement() && stack.getElements().size() == 0) {
-                stack.addRandomElements();
-            }
-        }
+        stacks.stream().filter(stack -> stack.hasSuitableElement() && stack.getElements().size() == 0)
+                .forEach(EWItemStack::addRandomElements);
     }
 
     public boolean hasSuitableElement() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        return Element.getRegistrySet(false).stream().anyMatch(element -> element.isSuitableFor(entity));
+        return Element.getRegistrySet(false)
+                .stream().anyMatch(element -> element.isSuitableFor(entity));
     }
 
     @Inject(method = "writeCustomDataToNbt", at = @At("HEAD"))
     public void writeCustomDataToNbt(NbtCompound nbt, CallbackInfo ci) {
-        NbtList list = new NbtList();
-        for (ElementEntry entry : this.elements) {
-            NbtCompound nbtCompound = entry.toNbt();
-            list.add(nbtCompound);
-        }
-        nbt.put(ELEMENTS_KEY, list);
+        nbt.put(ELEMENTS_KEY, getNbtList());
         nbt.putInt(HEAL_TICK_KEY, this.healTick);
         nbt.putInt(IMMUNE_COOLDOWN_KEY, getImmuneCooldown());
+    }
+
+    @NotNull
+    private NbtList getNbtList() {
+        NbtList list = new NbtList();
+        this.elements.stream().map(ElementEntry::toNbt).forEach(list::add);
+        return list;
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
     public void readCustomDataFromNbt(NbtCompound nbt, CallbackInfo ci) {
         if (nbt.contains(ELEMENTS_KEY, NbtElement.LIST_TYPE)) {
-            Set<ElementEntry> entries = new HashSet<>();
-            for (NbtElement nbtElement : nbt.getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE)) {
-                NbtCompound nbtCompound = (NbtCompound) nbtElement;
-                Optional<ElementEntry> element = ElementEntry.fromNbt(nbtCompound);
-                if (element.isEmpty()) {
-                    continue;
-                }
-                entries.add(element.get());
-            }
-            this.elements = entries;
+            this.elements = getElementsFrom(nbt);
         }
         if (nbt.contains(HEAL_TICK_KEY, NbtElement.INT_TYPE)) {
             this.healTick = nbt.getInt(HEAL_TICK_KEY);
@@ -327,8 +324,22 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
     }
 
+    @NotNull
+    private static Set<ElementEntry> getElementsFrom(NbtCompound nbt) {
+        Set<ElementEntry> entries = new HashSet<>();
+        for (NbtElement nbtElement : nbt.getList(ELEMENTS_KEY, NbtElement.COMPOUND_TYPE)) {
+            NbtCompound nbtCompound = (NbtCompound) nbtElement;
+            Optional<ElementEntry> element = ElementEntry.fromNbt(nbtCompound);
+            if (element.isEmpty()) {
+                continue;
+            }
+            entries.add(element.get());
+        }
+        return entries;
+    }
+
     @Inject(method = "damage", at = @At("HEAD"))
-    public void record(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    public void getHealth(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
         this.health = entity.getHealth();
     }
@@ -341,38 +352,59 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
     }
 
-    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;applyDamage(Lnet/minecraft/entity/damage/DamageSource;F)V", shift = At.Shift.AFTER))
+    @Inject(method = "damage", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     public void afterInjury(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
         amount = health - entity.getHealth();
-        if (amount <= 0) {
+        if (!cir.getReturnValue() || amount <= 0) {
             return;
         }
-        Entity attacker = source.getAttacker();
-        for (ElementEntry entry : entity.getAllElements(false)) {
-            if (entry == null || entry.element().isInvalid()) {
-                continue;
-            }
-            entry.element().afterInjury(entity, source, amount);
+        afterInjury(source, amount);
+        addEffect(source, amount);
+        postHit(source, amount);
+        resetHealTick();
+        displayDamage(source, amount);
+    }
+
+    private static void displayDamage(DamageSource source, float amount) {
+        if (source.getAttacker() instanceof ServerPlayerEntity player) {
+            player.sendMessage(Text.literal("本次伤害: " + String.format("%.2f", amount)), true);
         }
+    }
+
+    private void addEffect(DamageSource source, float amount) {
+        LivingEntity entity = (LivingEntity) (Object) this;
         for (Element element : Element.getRegistrySet(false)) {
             if (element.shouldAddEffectAfterInjury(entity, source, amount)) {
                 element.addEffect(entity, source.getAttacker());
             }
         }
-        if (attacker instanceof LivingEntity living && !source.isIndirect()) {
+    }
+
+    private void postHit(DamageSource source, float amount) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (source.getAttacker() instanceof LivingEntity living && !source.isIndirect()) {
             for (ElementEntry entry : living.getMainHandStack().getElements()) {
-                if (entry == null || entry.element().isInvalid()) {
-                    continue;
+                if (entry != null && !entry.element().isInvalid()) {
+                    entry.element().postHit(entity, living, amount);
                 }
-                entry.element().postHit(entity, living, amount);
             }
         }
+    }
+
+    private void afterInjury(DamageSource source, float amount) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        for (ElementEntry entry : entity.getAllElements(false)) {
+            if (entry != null && !entry.element().isInvalid()) {
+                entry.element().afterInjury(entity, source, amount);
+            }
+        }
+    }
+
+    private void resetHealTick() {
+        LivingEntity entity = (LivingEntity) (Object) this;
         if (this.healTick > 0 && !entity.getSteppingBlockState().isOf(Blocks.GRASS_BLOCK)) {
             this.healTick = 0;
-        }
-        if (attacker instanceof ServerPlayerEntity player) {
-            player.sendMessage(Text.literal("本次伤害: " + amount), true);
         }
     }
 
@@ -424,9 +456,8 @@ public class LivingEntityMixin implements EWLivingEntity {
             }
         }
         Map<Predicate<LivingEntity>, Float> map = new HashMap<>();
-        for (Element element : Element.getRegistrySet(false)) {
-            element.getDamageMultiplier(map);
-        }
+        Element.getRegistrySet(false)
+                .forEach(element -> element.getDamageMultiplier(map));
         for (Map.Entry<Predicate<LivingEntity>, Float> entry : map.entrySet()) {
             if (entry.getKey().test(target)) {
                 multiplier += entry.getValue();
