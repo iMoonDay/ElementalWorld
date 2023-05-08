@@ -67,7 +67,8 @@ public class DarknessElement extends Element {
     }
 
     @Override
-    public void getPersistentEffects(Map<StatusEffect, Integer> effects) {
+    public Map<StatusEffect, Integer> getPersistentEffects(Map<StatusEffect, Integer> effects) {
         effects.put(SPEED, 0);
+        return effects;
     }
 }

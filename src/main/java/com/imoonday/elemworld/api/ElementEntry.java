@@ -1,6 +1,8 @@
 package com.imoonday.elemworld.api;
 
 import com.imoonday.elemworld.init.EWElements;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.text.Text;
@@ -10,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -62,8 +65,8 @@ public record ElementEntry(Element element, int level) {
         return Optional.empty();
     }
 
-    public static ElementEntry createRandom(Predicate<Element> predicate) {
-        return WeightRandom.getRandom(Element.getRegistrySet(true), predicate, Element::getWeight).orElse(EWElements.EMPTY).withRandomLevel();
+    public static ElementEntry createRandom(Predicate<Element> predicate, Function<Element, Integer> weightFunc) {
+        return WeightRandom.getRandom(Element.getRegistrySet(true), predicate, weightFunc).orElse(EWElements.EMPTY).withRandomLevel();
     }
 
     @Override

@@ -43,8 +43,9 @@ public class WindElement extends Element {
     }
 
     @Override
-    public void getPersistentEffects(Map<StatusEffect, Integer> effects) {
+    public Map<StatusEffect, Integer> getPersistentEffects(Map<StatusEffect, Integer> effects) {
         effects.put(JUMP_BOOST, 0);
         effects.put(SPEED, 0);
+        return effects;
     }
 }

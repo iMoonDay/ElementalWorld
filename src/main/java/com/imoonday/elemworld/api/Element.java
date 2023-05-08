@@ -32,6 +32,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -156,12 +157,40 @@ public abstract class Element {
         return weight;
     }
 
+    public int getWeight(ItemStack stack) {
+        return (int) (getWeight() * getWeightMultiplier(stack.getElements()));
+    }
+
+    public int getWeight(LivingEntity entity) {
+        return (int) (getWeight() * getWeightMultiplier(entity.getElements()));
+    }
+
+    /**
+     * Element 检测是否包含元素
+     * <p>Float 包含检测的元素时本元素的权重乘数
+     */
+    public Map<Element, Float> getWeightMultiplier(Map<Element, Float> map) {
+        return map;
+    }
+
+    private float getWeightMultiplier(Set<ElementEntry> entries) {
+        float multiplier = 1.0f;
+        Map<Element, Float> map = getWeightMultiplier(new HashMap<>());
+        for (ElementEntry entry : entries) {
+            Element element = entry.element();
+            if (map.containsKey(element)) {
+                multiplier = multiplier * Math.max(map.get(element), 0);
+            }
+        }
+        return multiplier;
+    }
+
     public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         return 1.0f;
     }
 
-    public void getPersistentEffects(Map<StatusEffect, Integer> effects) {
-
+    public Map<StatusEffect, Integer> getPersistentEffects(Map<StatusEffect, Integer> effects) {
+        return effects;
     }
 
     public UUID getUuid(int slot) {
@@ -394,8 +423,7 @@ public abstract class Element {
             return;
         }
         AttributeContainer attributes = entity.getAttributes();
-        Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
-        this.getAttributeModifiers(map, slot);
+        Map<EntityAttribute, EntityAttributeModifier> map = getAttributeModifiers(new HashMap<>(), slot);
         float multiplier = this.getMaxHealthMultiplier(entity.world, entity);
         if (multiplier != 0.0f) {
             map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, new ElementEntry(this, level).getLevelMultiplier(multiplier), EntityAttributeModifier.Operation.MULTIPLY_BASE));
@@ -418,8 +446,7 @@ public abstract class Element {
             return;
         }
         AttributeContainer attributes = entity.getAttributes();
-        Map<EntityAttribute, EntityAttributeModifier> map = new HashMap<>();
-        this.getAttributeModifiers(map, slot);
+        Map<EntityAttribute, EntityAttributeModifier> map = getAttributeModifiers(new HashMap<>(), slot);
         float multiplier = this.getMaxHealthMultiplier(entity.world, entity);
         if (multiplier != 0.0f) {
             map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, new ElementEntry(this, level).getLevelMultiplier(multiplier), EntityAttributeModifier.Operation.MULTIPLY_BASE));
@@ -443,8 +470,8 @@ public abstract class Element {
         return entity.isAlive() && entity.getElements().stream().noneMatch(this::conflictsWith);
     }
 
-    public void getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
-
+    public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
+        return map;
     }
 
     public boolean hasEffect() {

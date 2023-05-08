@@ -184,8 +184,7 @@ public class LivingEntityMixin implements EWLivingEntity {
                 continue;
             }
             element.tick(entity);
-            Map<StatusEffect, Integer> effects = new HashMap<>();
-            element.getPersistentEffects(effects);
+            Map<StatusEffect, Integer> effects = element.getPersistentEffects(new HashMap<>());
             for (Map.Entry<StatusEffect, Integer> effectEntry : effects.entrySet()) {
                 StatusEffect key = effectEntry.getKey();
                 Integer value = effectEntry.getValue();
@@ -532,7 +531,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         boolean success;
         do {
-            success = addElement(ElementEntry.createRandom(element -> element.isSuitableFor(entity)));
+            success = addElement(ElementEntry.createRandom(element -> element.isSuitableFor(entity), element -> element.getWeight(entity)));
         } while (!success && this.elements.size() < Element.getRegistrySet(true).size());
     }
 

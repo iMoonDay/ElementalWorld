@@ -2,16 +2,19 @@ package com.imoonday.elemworld.elements;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWEffects;
+import com.imoonday.elemworld.init.EWElements;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.RemoveEntityStatusEffectS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static com.imoonday.elemworld.init.EWElements.EARTH;
 import static com.imoonday.elemworld.init.EWElements.WATER;
@@ -82,5 +85,11 @@ public class FireElement extends Element {
                 player.networkHandler.sendPacket(new RemoveEntityStatusEffectS2CPacket(player.getId(), EWEffects.FREEZE));
             }
         }
+    }
+
+    @Override
+    public Map<Element, Float> getWeightMultiplier(Map<Element, Float> map) {
+        map.put(WATER, 0.5f);
+        return map;
     }
 }

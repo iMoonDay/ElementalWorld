@@ -33,7 +33,8 @@ public class RockElement extends Element {
     }
 
     @Override
-    public void getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
+    public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
         map.put(EntityAttributes.GENERIC_ARMOR, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 2, EntityAttributeModifier.Operation.ADDITION));
+        return map;
     }
 }
