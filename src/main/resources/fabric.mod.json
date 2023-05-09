@@ -15,7 +15,7 @@
   "environment": "*",
   "entrypoints": {
     "fabric-datagen": [
-      "com.imoonday.elemworld.EWDataGeneration"
+      "com.imoonday.elemworld.ElementalWorldData"
     ],
     "client": [
       "com.imoonday.elemworld.ElementalWorldClient"

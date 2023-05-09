@@ -1,8 +1,8 @@
 package com.imoonday.elemworld;
 
 import com.google.common.collect.ImmutableSet;
+import com.imoonday.elemworld.api.EWRegister;
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.init.EWBlocks;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -28,9 +28,9 @@ import java.util.function.Consumer;
 
 import static com.imoonday.elemworld.init.EWBlocks.ELEMENT_SMITHING_TABLE;
 import static com.imoonday.elemworld.init.EWItems.*;
-import static com.imoonday.elemworld.tags.EWTags.*;
+import static com.imoonday.elemworld.init.EWTags.*;
 
-public class EWDataGeneration implements DataGeneratorEntrypoint {
+public class ElementalWorldData implements DataGeneratorEntrypoint {
 
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {
@@ -106,7 +106,7 @@ public class EWDataGeneration implements DataGeneratorEntrypoint {
 
         @Override
         public void generate() {
-            EWBlocks.DROPS.forEach((block, consumer) -> consumer.accept(this));
+            EWRegister.BLOCK_DROPS.forEach((block, consumer) -> consumer.accept(this));
         }
     }
 
@@ -123,7 +123,7 @@ public class EWDataGeneration implements DataGeneratorEntrypoint {
 
         @Override
         public void generateItemModels(ItemModelGenerator itemModelGenerator) {
-            MODELS.forEach(itemModelGenerator::register);
+            EWRegister.ITEM_MODELS.forEach(itemModelGenerator::register);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.imoonday.elemworld.tags;
+package com.imoonday.elemworld.init;
 
 import net.minecraft.item.Item;
 import net.minecraft.registry.RegistryKeys;

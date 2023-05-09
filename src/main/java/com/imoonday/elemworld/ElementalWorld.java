@@ -24,5 +24,6 @@ public class ElementalWorld implements ModInitializer {
         EWPotions.register();
         EWEvents.register();
         EWGameRules.register();
+        EWBiomes.register();
     }
 }

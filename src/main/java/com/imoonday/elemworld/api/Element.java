@@ -4,13 +4,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItemGroups;
-import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.items.ElementBookItem;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.block.BlockState;
-import net.minecraft.data.client.Models;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.*;
@@ -32,7 +30,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -83,7 +80,7 @@ public abstract class Element {
                 Registry.register(Registries.POTION, id, new ElementPotion(element));
             }
             if (element.hasFragmentItem()) {
-                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element), Models.GENERATED);
+                EWRegister.register(element.getFragmentId(), new ElementFragmentItem(element));
             }
         }
         sortedElements.forEach(entry -> ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(ElementBookItem.fromElement(entry))));

@@ -3,6 +3,8 @@ package com.imoonday.elemworld.init;
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.elements.*;
 
+import static com.imoonday.elemworld.ElementalWorld.LOGGER;
+
 public class EWElements {
 
     public static final Element EMPTY = Element.register("empty", new Element(0, 0, 50){});
@@ -23,7 +25,6 @@ public class EWElements {
     public static final Element SOUND = Element.register("sound", new SoundElement(1, 3, 5, 0.75f, 0.75f, 0.25f, 0.0f));
 
     public static void register() {
-
+        LOGGER.info("Loading Elements");
     }
-
 }

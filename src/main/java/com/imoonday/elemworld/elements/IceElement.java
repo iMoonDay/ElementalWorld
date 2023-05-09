@@ -25,10 +25,9 @@ public class IceElement extends Element {
     @Override
     public void applyUpdateEffect(LivingEntity entity, int amplifier) {
         if (entity.isIn(WATER)) {
-            if (entity.hasStatusEffect(EWEffects.FREEZE)) {
-                return;
+            if (!entity.hasStatusEffect(EWEffects.FREEZE)) {
+                entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, 1, 0, false, false, false));
             }
-            entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, 1, 0, false, false, false));
         } else {
             entity.decelerate(0.5);
         }

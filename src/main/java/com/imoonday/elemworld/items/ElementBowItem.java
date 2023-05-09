@@ -95,9 +95,9 @@ public class ElementBowItem extends BowItem {
         playerEntity.incrementStat(Stats.USED.getOrCreateStat(this));
     }
 
-    protected ItemStack addPotion(ItemStack stack, ItemStack arrow) {
+    protected ItemStack addPotion(ItemStack bow, ItemStack arrow) {
         if (arrow.isOf(Items.ARROW)) {
-            Optional<ElementEntry> optional = stack.getElements().stream().findAny();
+            Optional<ElementEntry> optional = bow.getElements().stream().findAny();
             if (optional.isPresent()) {
                 arrow = new ItemStack(Items.TIPPED_ARROW);
                 PotionUtil.setPotion(arrow, optional.get().element().getElementPotion());
