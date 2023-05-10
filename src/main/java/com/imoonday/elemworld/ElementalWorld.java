@@ -1,8 +1,10 @@
 package com.imoonday.elemworld;
 
+import com.imoonday.elemworld.api.EWRegistry;
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.*;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +17,6 @@ public class ElementalWorld implements ModInitializer {
     @Override
     public void onInitialize() {
         EWElements.register();
-        Element.register();
         EWCommands.register();
         EWItemGroups.register();
         EWItems.register();
@@ -25,5 +26,6 @@ public class ElementalWorld implements ModInitializer {
         EWEvents.register();
         EWGameRules.register();
         EWBiomes.register();
+        Element.register();
     }
 }

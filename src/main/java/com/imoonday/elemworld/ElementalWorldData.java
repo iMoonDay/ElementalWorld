@@ -1,8 +1,8 @@
 package com.imoonday.elemworld;
 
 import com.google.common.collect.ImmutableSet;
-import com.imoonday.elemworld.api.EWRegister;
 import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.init.EWBlocks;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -106,7 +106,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
 
         @Override
         public void generate() {
-            EWRegister.BLOCK_DROPS.forEach((block, consumer) -> consumer.accept(this));
+            EWBlocks.BLOCK_DROPS.forEach((block, consumer) -> consumer.accept(this));
         }
     }
 
@@ -123,7 +123,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
 
         @Override
         public void generateItemModels(ItemModelGenerator itemModelGenerator) {
-            EWRegister.ITEM_MODELS.forEach(itemModelGenerator::register);
+            ITEM_MODELS.forEach(itemModelGenerator::register);
         }
     }
 }

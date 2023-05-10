@@ -4,10 +4,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItemGroups;
+import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.items.ElementBookItem;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -71,16 +73,18 @@ public abstract class Element {
     }
 
     public static void register() {
+        FabricLoader.getInstance().getEntrypoints("elemworld", EWRegistry.class)
+                .forEach(registry -> EWRegistry.getRegisterElements(registry).forEach(Element::register));
         List<ElementEntry> sortedElements = getSortedElements(getRegistrySet(false).stream().map(element1 -> new ElementEntry(element1, element1.maxLevel)).collect(Collectors.toSet()));
         for (ElementEntry entry : sortedElements) {
             Element element = entry.element();
             if (element.hasEffect()) {
                 Identifier id = id(element.name);
-                ElementEffect effect = Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
+                Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
                 Registry.register(Registries.POTION, id, new ElementPotion(element));
             }
             if (element.hasFragmentItem()) {
-                EWRegister.register(element.getFragmentId(), new ElementFragmentItem(element));
+                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element));
             }
         }
         sortedElements.forEach(entry -> ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(ElementBookItem.fromElement(entry))));
@@ -104,12 +108,15 @@ public abstract class Element {
         return ELEMENTS.values().stream().filter(predicate).collect(Collectors.toSet()).size();
     }
 
+    /**
+     * Please implement {@link EWRegistry} through the class of the entry point "elemworld" and add elements to map of {@link EWRegistry#registerElements(Map)}
+     */
     public static <T extends Element> T register(String name, T element) {
         if (frozen) throw new IllegalStateException("Registry is already frozen");
         if (ELEMENTS.containsKey(name)) throw new IllegalStateException("The name is already registered");
-        Element value = element.withName(name);
-        ELEMENTS.put(name, cast(value));
-        return cast(value);
+        Element namedElement = element.withName(name);
+        ELEMENTS.putIfAbsent(name, cast(namedElement));
+        return cast(namedElement);
     }
 
     @SuppressWarnings("unchecked")
