@@ -19,6 +19,6 @@ public class InGameHudMixin {
         if (gui == null) {
             gui = new ElementRendererGui();
         }
-        gui.onRenderGameOverlayPost(stack, f);
+        gui.onRenderGameOverlayPost(stack);
     }
 }

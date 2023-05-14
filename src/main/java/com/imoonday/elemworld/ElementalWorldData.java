@@ -1,36 +1,45 @@
 package com.imoonday.elemworld;
 
-import com.google.common.collect.ImmutableSet;
-import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.init.EWBlocks;
+import com.imoonday.elemworld.api.Translation;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
+import net.fabricmc.fabric.api.datagen.v1.provider.*;
 import net.minecraft.block.Block;
 import net.minecraft.data.client.*;
 import net.minecraft.data.server.recipe.RecipeJsonProvider;
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder;
 import net.minecraft.data.server.recipe.VanillaRecipeProvider;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.Items;
 import net.minecraft.recipe.book.RecipeCategory;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.stat.StatType;
+import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import static com.imoonday.elemworld.init.EWBlocks.ELEMENT_SMITHING_TABLE;
+import static com.imoonday.elemworld.init.EWBlocks.*;
 import static com.imoonday.elemworld.init.EWItems.*;
 import static com.imoonday.elemworld.init.EWTags.*;
 
 public class ElementalWorldData implements DataGeneratorEntrypoint {
+
+    public static final Set<Translation<?>> TRANSLATIONS = new HashSet<>();
 
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {
@@ -40,6 +49,9 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
         pack.addProvider(ItemTag::new);
         pack.addProvider(Recipe::new);
         pack.addProvider(Model::new);
+        HashSet<String> languageCodes = new HashSet<>();
+        TRANSLATIONS.forEach(translation -> languageCodes.addAll(translation.getLanguageCodes()));
+        languageCodes.forEach(languageCode -> pack.addProvider((FabricDataGenerator.Pack.Factory<Language>) output -> new Language(output, languageCode)));
     }
 
     private static class Recipe extends FabricRecipeProvider {
@@ -62,6 +74,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ELEMENT_SHOVEL).input('1', ELEMENT_STICK).input('2', ELEMENT_INGOT).pattern("2").pattern("1").pattern("1").criterion(hasItem(ELEMENT_INGOT), VanillaRecipeProvider.conditionsFromItem(ELEMENT_INGOT)).offerTo(exporter);
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ELEMENT_HOE).input('1', ELEMENT_STICK).input('2', ELEMENT_INGOT).pattern("22").pattern(" 1").pattern(" 1").criterion(hasItem(ELEMENT_INGOT), VanillaRecipeProvider.conditionsFromItem(ELEMENT_INGOT)).offerTo(exporter);
             ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, ELEMENT_BOW).input('1', ELEMENT_STICK).input('2', Items.STRING).pattern(" 12").pattern("1 2").pattern(" 12").criterion(hasItem(ELEMENT_STICK), VanillaRecipeProvider.conditionsFromItem(ELEMENT_STICK)).offerTo(exporter);
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ELEMENT_INGOT).input('1', Items.IRON_INGOT).input('2', ELEMENT_FRAGMENTS).pattern(" 2 ").pattern("212").pattern(" 2 ").criterion("has_element_fragments", VanillaRecipeProvider.conditionsFromTag(ELEMENT_FRAGMENTS)).offerTo(exporter);
         }
     }
 
@@ -73,7 +86,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
 
         @Override
         protected void configure(RegistryWrapper.WrapperLookup arg) {
-            getOrCreateTagBuilder(BlockTags.AXE_MINEABLE).add(ELEMENT_SMITHING_TABLE);
+            BLOCK_TAGS.forEach((block, tagKeys) -> tagKeys.forEach(tagKey -> getOrCreateTagBuilder(tagKey).add(block)));
         }
     }
 
@@ -85,16 +98,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
 
         @Override
         protected void configure(RegistryWrapper.WrapperLookup arg) {
-            ImmutableSet<Element> elements = Element.getRegistrySet(false);
-            elements.stream().filter(element -> element.rareLevel == 1).forEach(element -> getOrCreateTagBuilder(BASE_ELEMENT_FRAGMENTS).add(element.getFragmentItem()));
-            elements.stream().filter(element -> element.rareLevel == 2).forEach(element -> getOrCreateTagBuilder(ADVANCED_ELEMENT_FRAGMENTS).add(element.getFragmentItem()));
-            elements.stream().filter(element -> element.rareLevel == 3).forEach(element -> getOrCreateTagBuilder(RARE_ELEMENT_FRAGMENTS).add(element.getFragmentItem()));
-            elements.forEach(element -> getOrCreateTagBuilder(ELEMENT_FRAGMENTS).add(element.getFragmentItem()));
-            getOrCreateTagBuilder(ItemTags.SWORDS).add(ELEMENT_SWORD);
-            getOrCreateTagBuilder(ItemTags.PICKAXES).add(ELEMENT_PICKAXE);
-            getOrCreateTagBuilder(ItemTags.AXES).add(ELEMENT_AXE);
-            getOrCreateTagBuilder(ItemTags.SHOVELS).add(ELEMENT_SHOVEL);
-            getOrCreateTagBuilder(ItemTags.HOES).add(ELEMENT_HOE);
+            ITEM_TAGS.forEach((item, tagKeys) -> tagKeys.forEach(itemTagKey -> getOrCreateTagBuilder(itemTagKey).add(item)));
         }
     }
 
@@ -106,7 +110,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
 
         @Override
         public void generate() {
-            EWBlocks.BLOCK_DROPS.forEach((block, consumer) -> consumer.accept(this));
+            BLOCK_DROPS.forEach((block, consumer) -> consumer.accept(this));
         }
     }
 
@@ -124,6 +128,95 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
         @Override
         public void generateItemModels(ItemModelGenerator itemModelGenerator) {
             ITEM_MODELS.forEach(itemModelGenerator::register);
+        }
+    }
+
+    private static class Language extends FabricLanguageProvider {
+
+        private final String languageCode;
+
+        protected Language(FabricDataOutput dataOutput, String languageCode) {
+            super(dataOutput, languageCode);
+            this.languageCode = languageCode;
+        }
+
+        @Override
+        public void generateTranslations(TranslationBuilder translationBuilder) {
+            for (Translation<?> translation : TRANSLATIONS) {
+                String content = translation.getContent(languageCode);
+                if (content != null) {
+                    Object instance = translation.getInstance();
+                    if (instance instanceof Item item) {
+                        translationBuilder.add(item, content);
+                    } else if (instance instanceof Block block) {
+                        translationBuilder.add(block, content);
+                    } else if (instance instanceof StatusEffect statusEffect) {
+                        translationBuilder.add(statusEffect, content);
+                    } else if (instance instanceof EntityType<?> entityType) {
+                        translationBuilder.add(entityType, content);
+                    } else if (instance instanceof Enchantment enchantment) {
+                        translationBuilder.add(enchantment, content);
+                    } else if (instance instanceof String translationKey) {
+                        translationBuilder.add(translationKey, content);
+                    } else if (instance instanceof ItemGroup itemGroup) {
+                        translationBuilder.add(itemGroup, content);
+                    } else if (instance instanceof EntityAttribute entityAttribute) {
+                        translationBuilder.add(entityAttribute, content);
+                    } else if (instance instanceof StatType<?> statType) {
+                        translationBuilder.add(statType, content);
+                    } else if (instance instanceof Identifier identifier) {
+                        translationBuilder.add(identifier, content);
+                    } else {
+                        throw new IllegalStateException("Unsupported Type: " + instance);
+                    }
+                }
+            }
+
+            try {
+                Path existingFilePath = dataOutput.getModContainer().findPath("assets/elemworld/lang/" + languageCode + ".json").get();
+                translationBuilder.add(existingFilePath);
+            } catch (NoSuchElementException e) {
+                System.out.println("No language files found!");
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to add existing language file!", e);
+            }
+        }
+    }
+
+    public static <T> Optional<Translation<?>> getTranslation(T t) {
+        return TRANSLATIONS.stream().filter(translation -> translation.getInstance() == t).findFirst();
+    }
+
+    public static <T> void addTranslation(T t, String en_us, @Nullable String zh_cn) {
+        if (en_us != null) {
+            Translation<T> translation = new Translation<>(t, en_us);
+            if (zh_cn != null) {
+                translation.add("zh_cn", zh_cn);
+            }
+            TRANSLATIONS.add(translation);
+        }
+    }
+
+    public static <T> void addCustomTranslation(T t, String languageCode, String content) {
+        if (languageCode != null) {
+            Translation<T> translation = new Translation<>(t, null);
+            if (content != null) {
+                translation.add(languageCode, content);
+            }
+            TRANSLATIONS.add(translation);
+        }
+    }
+
+    public static <T> void addExistingTranslationTo(T t, String languageCode, String content) {
+        if (languageCode != null) {
+            for (Translation<?> translation : TRANSLATIONS) {
+                if (translation.getInstance() == t) {
+                    if (content != null) {
+                        translation.add(languageCode, content);
+                    }
+                    break;
+                }
+            }
         }
     }
 }

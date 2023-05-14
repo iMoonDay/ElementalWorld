@@ -2,6 +2,7 @@ package com.imoonday.elemworld.api;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.imoonday.elemworld.ElementalWorldData;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItemGroups;
 import com.imoonday.elemworld.init.EWItems;
@@ -25,6 +26,7 @@ import net.minecraft.item.ItemUsageContext;
 import net.minecraft.potion.Potion;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -43,6 +45,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
+import static com.imoonday.elemworld.init.EWTags.*;
 
 @SuppressWarnings("unused")
 public abstract class Element {
@@ -57,6 +60,7 @@ public abstract class Element {
     protected final float damageMultiplier;
     protected final float maxHealthMultiplier;
     protected final float durabilityMultiplier;
+    private final Translation<Element> translation;
 
     public Element(int maxLevel, int rareLevel, int weight) {
         this(maxLevel, rareLevel, weight, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -70,6 +74,7 @@ public abstract class Element {
         this.damageMultiplier = damageMultiplier;
         this.maxHealthMultiplier = maxHealthMultiplier;
         this.durabilityMultiplier = durabilityMultiplier;
+        this.translation = new Translation<>(this, null);
     }
 
     public static void register() {
@@ -82,11 +87,20 @@ public abstract class Element {
                 Identifier id = id(element.name);
                 Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
                 Registry.register(Registries.POTION, id, new ElementPotion(element));
+                String en_us = element.getTranslation().getContent();
+                String zh_cn = element.getTranslation().getContent("zh_cn");
+                ElementalWorldData.addTranslation(element.getTranslationKey() + ".potion", "Potion of " + en_us + " Element", zh_cn + "元素药水");
+                ElementalWorldData.addTranslation(element.getTranslationKey() + ".splash_potion", "Splash Potion of " + en_us + " Element", "喷溅型" + zh_cn + "元素药水");
+                ElementalWorldData.addTranslation(element.getTranslationKey() + ".lingering_potion", "Lingering Potion of " + en_us + " Element", "滞留型" + zh_cn + "元素药水");
+                ElementalWorldData.addTranslation(element.getTranslationKey() + ".tipped_arrow", "Arrow of " + en_us + " Element", zh_cn + "元素之箭");
             }
             if (element.hasFragmentItem()) {
-                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element));
+                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element), element.translation.getContent(), element.translation.getContent("zh_cn"), ELEMENT_FRAGMENTS, element.getFragmentTagKey());
             }
         }
+        ElementalWorldData.addTranslation("element.elemworld.invalid", "Invalid element: %s", "无效的元素: %s");
+        ElementalWorldData.addTranslation("element.elemworld.name.prefix", "[Elements]", "[元素]");
+        ElementalWorldData.addTranslation("element.elemworld.name.fragment", "%s Element fragment", "%s元素碎片");
         sortedElements.forEach(entry -> ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(ElementBookItem.fromElement(entry))));
         ServerLifecycleEvents.SERVER_STARTED.register(server -> frozen = true);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
@@ -111,12 +125,17 @@ public abstract class Element {
     /**
      * Please implement {@link EWRegistry} through the class of the entry point "elemworld" and add elements to map of {@link EWRegistry#registerElements(Map)}
      */
-    public static <T extends Element> T register(String name, T element) {
+    public static <T extends Element> T register(String name, T element, String en_us, String zh_cn) {
         if (frozen) throw new IllegalStateException("Registry is already frozen");
         if (ELEMENTS.containsKey(name)) throw new IllegalStateException("The name is already registered");
-        Element namedElement = element.withName(name);
-        ELEMENTS.putIfAbsent(name, cast(namedElement));
-        return cast(namedElement);
+        Element finalElement = element.withName(name).addTranslation("en_us", en_us).addTranslation("zh_cn", zh_cn);
+        ElementalWorldData.addTranslation(element.getTranslationKey(), en_us, zh_cn);
+        ELEMENTS.putIfAbsent(name, cast(finalElement));
+        return cast(finalElement);
+    }
+
+    private static void register(String name, Translation<Element> translation) {
+        register(name, translation.getInstance(), null, null);
     }
 
     @SuppressWarnings("unchecked")
@@ -126,6 +145,13 @@ public abstract class Element {
 
     Element withName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public Element addTranslation(String languageCode, String content) {
+        if (languageCode != null && content != null) {
+            this.translation.add(languageCode, content);
+        }
         return this;
     }
 
@@ -167,6 +193,20 @@ public abstract class Element {
 
     public int getWeight(LivingEntity entity) {
         return (int) (getWeight() * getWeightMultiplier(entity.getElements()));
+    }
+
+    public Translation<Element> getTranslation() {
+        return translation;
+    }
+
+    @Nullable
+    public TagKey<Item> getFragmentTagKey() {
+        return switch (rareLevel) {
+            case 1 -> BASE_ELEMENT_FRAGMENTS;
+            case 2 -> ADVANCED_ELEMENT_FRAGMENTS;
+            case 3 -> RARE_ELEMENT_FRAGMENTS;
+            default -> null;
+        };
     }
 
     /**
@@ -334,8 +374,8 @@ public abstract class Element {
         return 5;
     }
 
-    public float getEffectChance() {
-        return 0.5f;
+    public float getEffectChance(ItemStack stack) {
+        return stack.isIn(ELEMENT_TOOLS_AND_WEAPONS) ? 0.75f : 0.5f;
     }
 
     public boolean isInvalid() {

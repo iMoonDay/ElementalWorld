@@ -2,6 +2,7 @@ package com.imoonday.elemworld.elements;
 
 import com.imoonday.elemworld.api.Element;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.EntityStatuses;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
@@ -26,7 +27,7 @@ public class SpaceElement extends Element {
     }
 
     @Override
-    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity){
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         if (source.isIndirect() || source.isIn(IS_DROWNING) || source.isIn(IS_EXPLOSION)) {
             if (source.isOf(DamageTypes.DROWN)) {
                 BlockPos pos = BlockPos.ofFloored(entity.getEyePos());
@@ -45,16 +46,16 @@ public class SpaceElement extends Element {
     }
 
     @Override
-    public boolean immuneOnDeath(LivingEntity entity){
+    public boolean immuneOnDeath(LivingEntity entity) {
         if (entity.getRandom().nextFloat() < 0.25f) {
             randomTeleport(entity);
-            entity.playSound(SoundEvents.ITEM_TOTEM_USE, 1.0f, 1.0f);
+            entity.world.sendEntityStatus(entity, EntityStatuses.USE_TOTEM_OF_UNDYING);
             return true;
         }
         return super.immuneOnDeath(entity);
     }
 
-    private static void randomTeleport (LivingEntity entity){
+    private static void randomTeleport(LivingEntity entity) {
         World world = entity.world;
         if (!world.isClient) {
             double d = entity.getX();

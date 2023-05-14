@@ -8,10 +8,10 @@ public interface EWRegistry {
     /**
      * @param map String -> Name
      */
-    void registerElements(Map<String, Element> map);
+    void registerElements(Map<String, Translation<Element>> map);
 
-    static Map<String, Element> getRegisterElements(EWRegistry registry) {
-        Map<String, Element> map = new HashMap<>();
+    static Map<String, Translation<Element>> getRegisterElements(EWRegistry registry) {
+        Map<String, Translation<Element>> map = new HashMap<>();
         registry.registerElements(map);
         return map;
     }

@@ -1,39 +1,45 @@
 package com.imoonday.elemworld.gui;
 
+import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.api.ElementEntry;
+import com.imoonday.elemworld.init.EWItems;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+
+import java.util.List;
 
 public class ElementRendererGui {
 
     private final MinecraftClient mc;
-    private static boolean visible;
-    private final TextRenderer fontRenderer;
+    private final ClientPlayerEntity player;
 
     public ElementRendererGui() {
         mc = MinecraftClient.getInstance();
-        fontRenderer = mc.textRenderer;
-        visible = true;
+        player = mc.player;
     }
 
-    public static void toggleVisibility() {
-        visible = !visible;
-    }
-
-    public void onRenderGameOverlayPost(MatrixStack stack, float partialTicks) {
-        if (!visible || mc.options.debugEnabled || mc.options.hudHidden) {
+    public void onRenderGameOverlayPost(MatrixStack stack) {
+        if (mc.options.debugEnabled || mc.options.hudHidden) {
             return;
         }
-        ClientPlayerEntity player = mc.player;
-        if (player == null) {
+        if (player == null || !player.isHolding(EWItems.ELEMENT_DETECTOR)) {
             return;
         }
-//        Set<ElementInstance> elements = player.getElements();
-//        List<Text> texts = Element.getElementsText(elements, false, true);
-//        for (int i = 0; i < texts.size(); i++) {
-//            Text text = texts.get(i);
-//            fontRenderer.draw(stack, text, 2, 2 + i * 10, Color.WHITE.getRGB());
-//        }
+        if (!(mc.targetedEntity instanceof LivingEntity living)) {
+            return;
+        }
+        List<ElementEntry> sortedEntries = Element.getSortedElements(living.getElements());
+        for (int i = 0; i < sortedEntries.size(); i++) {
+            if (i > 15) break;
+            ElementEntry entry = sortedEntries.get(i);
+            Item item = entry.element().getFragmentItem();
+            int y = mc.getWindow().getScaledHeight() / 2 + 8;
+            int x = mc.getWindow().getScaledWidth() / 2 - 8 + 16 * i - (sortedEntries.size() - 1) * 16 / 2;
+            mc.getItemRenderer().renderInGui(stack, new ItemStack(item), x, y);
+        }
     }
 }

@@ -59,13 +59,13 @@ public class ElementBowItem extends BowItem {
         if ((double) (f = BowItem.getPullProgress(i = this.getMaxUseTime(stack) - remainingUseTicks)) < 0.1) {
             return;
         }
-        itemStack = addPotion(stack, itemStack);
-        boolean bl3 = bl2 = bl && itemStack.isOf(Items.ARROW);
+        ItemStack arrow = addPotion(stack, itemStack);
+        boolean bl3 = bl2 = bl && arrow.isOf(Items.ARROW);
         if (!world.isClient) {
             int k;
             int j;
-            ArrowItem arrowItem = (ArrowItem) (itemStack.getItem() instanceof ArrowItem ? itemStack.getItem() : Items.ARROW);
-            PersistentProjectileEntity persistentProjectileEntity = arrowItem.createArrow(world, itemStack, playerEntity);
+            ArrowItem arrowItem = (ArrowItem) (arrow.getItem() instanceof ArrowItem ? arrow.getItem() : Items.ARROW);
+            PersistentProjectileEntity persistentProjectileEntity = arrowItem.createArrow(world, arrow, playerEntity);
             persistentProjectileEntity.setVelocity(playerEntity, playerEntity.getPitch(), playerEntity.getYaw(), 0.0f, f * 3.0f, 1.0f);
             if (f == 1.0f) {
                 persistentProjectileEntity.setCritical(true);
@@ -80,7 +80,7 @@ public class ElementBowItem extends BowItem {
                 persistentProjectileEntity.setOnFireFor(100);
             }
             stack.damage(1, playerEntity, p -> p.sendToolBreakStatus(playerEntity.getActiveHand()));
-            if (bl2 || playerEntity.getAbilities().creativeMode && (itemStack.isOf(Items.SPECTRAL_ARROW) || itemStack.isOf(Items.TIPPED_ARROW))) {
+            if (itemStack.isOf(Items.ARROW) && arrow.isOf(Items.TIPPED_ARROW) || bl2 || playerEntity.getAbilities().creativeMode && (arrow.isOf(Items.SPECTRAL_ARROW) || arrow.isOf(Items.TIPPED_ARROW))) {
                 persistentProjectileEntity.pickupType = PersistentProjectileEntity.PickupPermission.CREATIVE_ONLY;
             }
             world.spawnEntity(persistentProjectileEntity);
@@ -101,7 +101,6 @@ public class ElementBowItem extends BowItem {
             if (optional.isPresent()) {
                 arrow = new ItemStack(Items.TIPPED_ARROW);
                 PotionUtil.setPotion(arrow, optional.get().element().getElementPotion());
-                PotionUtil.setCustomPotionEffects(arrow, optional.get().element().getElementPotion().getEffects());
             }
         }
         return arrow;

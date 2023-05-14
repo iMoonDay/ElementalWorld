@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "1": {
+      "item": "minecraft:iron_ingot"
+    },
+    "2": {
+      "tag": "elemworld:element_fragments"
+    }
+  },
+  "pattern": [
+    " 2 ",
+    "212",
+    " 2 "
+  ],
+  "result": {
+    "item": "elemworld:element_ingot"
+  },
+  "show_notification": true
+}

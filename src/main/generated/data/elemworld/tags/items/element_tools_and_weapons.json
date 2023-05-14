@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "elemworld:element_sword",
+    "elemworld:element_pickaxe",
+    "elemworld:element_axe",
+    "elemworld:element_hoe",
+    "elemworld:element_shovel"
+  ]
+}

@@ -1,8 +1,10 @@
 package com.imoonday.elemworld.init;
 
+import com.imoonday.elemworld.ElementalWorldData;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.potion.Potion;
 import net.minecraft.recipe.BrewingRecipeRegistry;
 import net.minecraft.registry.Registries;
@@ -31,6 +33,14 @@ public class EWPotions {
 
     public static Potion registerPotion(String id, StatusEffect effect) {
         Potion potion = new Potion(new StatusEffectInstance(effect, DEFAULT_DURATION));
+        ElementalWorldData.getTranslation(effect).ifPresent(translation -> {
+            String en_us = translation.getContent();
+            String zh_cn = translation.getContent("zh_cn");
+            ElementalWorldData.addTranslation(Items.POTION.getTranslationKey() + "." + id, "Potion of " + en_us, zh_cn + "药水");
+            ElementalWorldData.addTranslation(Items.SPLASH_POTION.getTranslationKey() + "." + id, "Splash Potion of " + en_us, "喷溅型" + zh_cn + "药水");
+            ElementalWorldData.addTranslation(Items.LINGERING_POTION.getTranslationKey() + "." + id, "Lingering Potion of " + en_us, "滞留型" + zh_cn + "药水");
+            ElementalWorldData.addTranslation(Items.TIPPED_ARROW.getTranslationKey() + "." + id, "Arrow of " + en_us, zh_cn + "之箭");
+        });
         return Registry.register(Registries.POTION, id(id), potion);
     }
 }

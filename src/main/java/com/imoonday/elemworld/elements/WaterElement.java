@@ -2,8 +2,10 @@ package com.imoonday.elemworld.elements;
 
 import com.imoonday.elemworld.api.Element;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -51,5 +53,10 @@ public class WaterElement extends Element {
     @Override
     public boolean shouldAddEffect(LivingEntity entity) {
         return entity.isWet();
+    }
+
+    @Override
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
+        return source.isIn(DamageTypeTags.IS_DROWNING) ? 0.5f : super.getDamageProtectionMultiplier(source, entity);
     }
 }

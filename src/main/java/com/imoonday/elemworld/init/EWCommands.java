@@ -81,7 +81,7 @@ public class EWCommands {
             ItemStack stackInSlot = getStackInSlot(entity, slot);
             if (source != null && isValidStack(source, stackInSlot)) {
                 stackInSlot.setElements(new HashSet<>(Collections.singleton(ElementEntry.EMPTY)));
-                source.sendFeedback(Text.translatable("text.eleworld.commands.clear.success"), false);
+                source.sendFeedback(Text.translatable("content.eleworld.commands.clear.success"), false);
             }
         }
     }
@@ -96,7 +96,7 @@ public class EWCommands {
             if (element != null && source != null && isValidStack(source, stackInSlot)) {
                 boolean exist = stackInSlot.hasElement(element);
                 stackInSlot.removeElement(element);
-                source.sendFeedback(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"), false);
+                source.sendFeedback(Text.translatable(exist ? "content.eleworld.commands.remove.success" : "content.eleworld.commands.remove.fail"), false);
             }
         }
     }
@@ -112,7 +112,7 @@ public class EWCommands {
                 for (Element element : Element.getRegistrySet(false)) {
                     stackInSlot.addElement(new ElementEntry(element, element.maxLevel));
                 }
-                source.sendFeedback(Text.translatable("text.eleworld.commands.add.success"), false);
+                source.sendFeedback(Text.translatable("content.eleworld.commands.add.success"), false);
             }
         }
     }
@@ -127,9 +127,9 @@ public class EWCommands {
             int level = IntegerArgumentType.getInteger(context, "level");
             if (element != null && source != null && isValidStack(source, stackInSlot)) {
                 boolean success = stackInSlot.addElement(new ElementEntry(element, level));
-                source.sendFeedback(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"), false);
+                source.sendFeedback(Text.translatable(success ? "content.eleworld.commands.add.success" : "content.eleworld.commands.add.fail"), false);
                 if (element.isOf(EWElements.EMPTY)) {
-                    source.sendFeedback(Text.translatable("text.eleworld.commands.add.success.empty"), false);
+                    source.sendFeedback(Text.translatable("content.eleworld.commands.add.success.empty"), false);
                 }
             }
         }
@@ -141,7 +141,7 @@ public class EWCommands {
         for (Entity entity : entities) {
             if (entity instanceof LivingEntity livingEntity && source != null) {
                 livingEntity.clearElements();
-                source.sendFeedback(Text.translatable("text.eleworld.commands.clear.success"), false);
+                source.sendFeedback(Text.translatable("content.eleworld.commands.clear.success"), false);
             }
         }
     }
@@ -153,7 +153,7 @@ public class EWCommands {
             if (entity instanceof LivingEntity livingEntity && source != null) {
                 List<Text> texts = Element.getElementsText(livingEntity.getElements(), false, true);
                 if (texts.isEmpty()) {
-                    source.sendFeedback(Text.translatable("text.eleworld.commands.get.empty"), false);
+                    source.sendFeedback(Text.translatable("content.eleworld.commands.get.empty"), false);
                 } else {
                     texts.forEach(message -> source.sendFeedback(message, false));
                 }
@@ -169,7 +169,7 @@ public class EWCommands {
             if (entity instanceof LivingEntity livingEntity && element != null && source != null) {
                 boolean exist = livingEntity.hasElement(element);
                 livingEntity.removeElement(element);
-                source.sendFeedback(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"), false);
+                source.sendFeedback(Text.translatable(exist ? "content.eleworld.commands.remove.success" : "content.eleworld.commands.remove.fail"), false);
             }
         }
     }
@@ -183,7 +183,7 @@ public class EWCommands {
                 for (Element element : Element.getRegistrySet(false)) {
                     livingEntity.addElement(new ElementEntry(element, element.maxLevel));
                 }
-                source.sendFeedback(Text.translatable("text.eleworld.commands.add.success"), false);
+                source.sendFeedback(Text.translatable("content.eleworld.commands.add.success"), false);
             }
         }
     }
@@ -196,9 +196,9 @@ public class EWCommands {
             int level = IntegerArgumentType.getInteger(context, "level");
             if (entity instanceof LivingEntity livingEntity && element != null && source != null) {
                 boolean success = livingEntity.addElement(new ElementEntry(element, level));
-                source.sendFeedback(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"), false);
+                source.sendFeedback(Text.translatable(success ? "content.eleworld.commands.add.success" : "content.eleworld.commands.add.fail"), false);
                 if (element.isOf(EWElements.EMPTY)) {
-                    source.sendFeedback(Text.translatable("text.eleworld.commands.add.success.empty"), false);
+                    source.sendFeedback(Text.translatable("content.eleworld.commands.add.success.empty"), false);
                 }
             }
         }
@@ -206,11 +206,11 @@ public class EWCommands {
 
     private static boolean isValidStack(ServerCommandSource source, ItemStack stackInSlot) {
         if (stackInSlot.isEmpty()) {
-            source.sendError(Text.translatable("text.eleworld.commands.item.invalid").formatted(Formatting.RED));
+            source.sendError(Text.translatable("content.eleworld.commands.item.invalid").formatted(Formatting.RED));
             return false;
         }
         if (!stackInSlot.isDamageable()) {
-            source.sendError(Text.translatable("text.eleworld.commands.item.unsupport").formatted(Formatting.RED));
+            source.sendError(Text.translatable("content.eleworld.commands.item.unsupport").formatted(Formatting.RED));
             return false;
         }
         return true;

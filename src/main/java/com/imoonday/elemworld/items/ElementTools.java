@@ -6,7 +6,7 @@ import net.fabricmc.yarn.constants.MiningLevels;
 import net.minecraft.item.*;
 import net.minecraft.recipe.Ingredient;
 
-public class ElementToolItem {
+public class ElementTools {
 
     public static final ElementToolMaterial ELEMENT_MATERIAL = new ElementToolMaterial();
 
@@ -29,28 +29,28 @@ public class ElementToolItem {
     public static class ElementPickaxeItem extends PickaxeItem {
 
         private ElementPickaxeItem(int attackDamage, float attackSpeed) {
-            super(ElementToolItem.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
+            super(ElementTools.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
         }
     }
 
     public static class ElementAxeItem extends AxeItem {
 
         private ElementAxeItem(float attackDamage, float attackSpeed) {
-            super(ElementToolItem.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
+            super(ElementTools.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
         }
     }
 
     public static class ElementShovelItem extends ShovelItem {
 
         private ElementShovelItem(float attackDamage, float attackSpeed) {
-            super(ElementToolItem.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
+            super(ElementTools.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
         }
     }
 
     public static class ElementHoeItem extends HoeItem {
 
         private ElementHoeItem(int attackDamage, float attackSpeed) {
-            super(ElementToolItem.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
+            super(ElementTools.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
         }
     }
 

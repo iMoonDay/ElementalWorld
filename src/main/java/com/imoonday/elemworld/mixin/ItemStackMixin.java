@@ -10,6 +10,8 @@ import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Equipment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.nbt.NbtCompound;
@@ -96,6 +98,16 @@ public class ItemStackMixin implements EWItemStack {
     }
 
     @Override
+    public boolean hasElement() {
+        ItemStack stack = (ItemStack) (Object) this;
+        Set<ElementEntry> entries = stack.getElements();
+        if (entries.size() == 1) {
+            return !entries.stream().findFirst().get().element().isInvalid();
+        }
+        return entries.size() > 0;
+    }
+
+    @Override
     public boolean addElement(ElementEntry entry) {
         Element element = entry.element();
         ItemStack stack = (ItemStack) (Object) this;
@@ -178,10 +190,9 @@ public class ItemStackMixin implements EWItemStack {
             return;
         }
         ItemStack stack = (ItemStack) (Object) this;
-        if (!hasSuitableElement()) {
-            return;
+        if (stack.hasSuitableElement()) {
+            stack.addRandomElements();
         }
-        stack.addRandomElements();
     }
 
     @Override
@@ -237,7 +248,7 @@ public class ItemStackMixin implements EWItemStack {
         if (damage != 1.0f) {
             list.add(index++, Text.literal("×" + String.format("%.2f", damage) + " 攻击伤害").formatted(Formatting.DARK_GREEN));
         }
-        if (maxHealth != 1.0f) {
+        if (maxHealth != 1.0f && (stack.getItem() instanceof Equipment || stack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof Equipment)) {
             list.add(index++, Text.literal("×" + String.format("%.2f", maxHealth) + " 生命上限").formatted(Formatting.BLUE));
         }
         if (mine != 1.0f) {
@@ -324,7 +335,7 @@ public class ItemStackMixin implements EWItemStack {
             if (element == null || element.isInvalid()) {
                 continue;
             }
-            if (attacker.getRandom().nextFloat() < element.getEffectChance()) {
+            if (attacker.getRandom().nextFloat() < element.getEffectChance(stack)) {
                 element.addEffect(target, attacker);
             }
         }

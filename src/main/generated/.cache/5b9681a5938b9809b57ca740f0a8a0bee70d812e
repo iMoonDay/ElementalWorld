@@ -1,6 +1,8 @@
-// 1.19.4	2023-05-08T18:50:49.7832488	Elemental World/Recipes
+// 1.19.4	2023-05-15T01:41:53.3482967	Elemental World/Recipes
+2de55287c0d57d04c8b3d8bc81e99d9df91deda7 data\elemworld\recipes\element_ingot.json
 94acdc4d219b84a76e1a67debef6ec8a1ab6445f data\elemworld\recipes\element_pickaxe.json
 b2385ee7ecc403c21966fd1a81e6d4be5a6b1d58 data\elemworld\recipes\element_smithing_table.json
+c7eb9efc60a36d81f33241be18319f04df12edb5 data\elemworld\advancements\recipes\misc\element_ingot.json
 0781c081cfee7246bca2e5c160c169f0c71fe506 data\elemworld\advancements\recipes\misc\advanced_element_fragment.json
 5408ddfd8a1c1966fe421c82ec56e541f0c9b0df data\elemworld\recipes\element_detector.json
 c738b839b70a4e8bb44c3c7ccaf12898c3ecf108 data\elemworld\advancements\recipes\tools\element_pickaxe.json

@@ -30,6 +30,10 @@ public interface EWItemStack {
     }
 
 
+    default boolean hasElement() {
+        return false;
+    }
+
     default boolean addElement(ElementEntry entry) {
         return false;
     }

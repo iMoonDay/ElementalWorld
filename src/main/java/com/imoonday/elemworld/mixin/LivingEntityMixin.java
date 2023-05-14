@@ -21,6 +21,7 @@ import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.TridentEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -51,13 +52,15 @@ public class LivingEntityMixin implements EWLivingEntity {
     private static final String IMMUNE_COOLDOWN_KEY = "ImmuneCooldown";
     private final List<ItemStack> oldStacks = new ArrayList<>();
     private static final TrackedData<Integer> IMMUNE_COOLDOWN = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<ItemStack> ELEMENTS = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.ITEM_STACK);
     protected Set<ElementEntry> elements = new HashSet<>();
     private int healTick = 0;
     private float health;
 
     @Override
     public Set<ElementEntry> getElements() {
-        return elements;
+        LivingEntity entity = (LivingEntity) (Object) this;
+        return entity.getDataTracker().get(ELEMENTS).getElements();
     }
 
     @Override
@@ -122,6 +125,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     public void initDataTracker(CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
         entity.getDataTracker().startTracking(IMMUNE_COOLDOWN, 0);
+        entity.getDataTracker().startTracking(ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(elements));
     }
 
     @Override
@@ -168,6 +172,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         addEffect();
         cooldownTick();
         if (!entity.world.isClient) {
+            entity.getDataTracker().set(ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(elements));
             onElementChanged();
             addRandomElementsIfEmpty();
             removeEmptyElement();
@@ -274,7 +279,7 @@ public class LivingEntityMixin implements EWLivingEntity {
 
     private void removeEmptyElement() {
         if (this.elements.size() > 1) {
-            this.elements.remove(ElementEntry.EMPTY);
+            this.elements.removeIf(entry -> entry.element().isInvalid());
         }
     }
 
@@ -343,11 +348,12 @@ public class LivingEntityMixin implements EWLivingEntity {
         this.health = entity.getHealth();
     }
 
-    @Inject(method = "tryUseTotem", at = @At("RETURN"))
+    @Inject(method = "tryUseTotem", at = @At("RETURN"), cancellable = true)
     public void tryImmune(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
         if (!cir.getReturnValueZ() && !source.isIn(DamageTypeTags.BYPASSES_INVULNERABILITY) && entity.getAllElements(false).stream().filter(entry -> entry != null && !entry.element().isInvalid()).anyMatch(entry -> entry.element().immuneOnDeath(entity))) {
             entity.setHealth(health);
+            cir.setReturnValue(true);
         }
     }
 

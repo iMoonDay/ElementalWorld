@@ -1,42 +1,61 @@
 package com.imoonday.elemworld.init;
 
 import com.imoonday.elemworld.blocks.ElementSmithingTableBlock;
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.block.Block;
+import net.minecraft.data.client.Model;
 import net.minecraft.data.server.loottable.BlockLootTableGenerator;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemConvertible;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.registry.tag.TagKey;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import static com.imoonday.elemworld.ElementalWorld.LOGGER;
+import static com.imoonday.elemworld.ElementalWorldData.addTranslation;
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWBlocks {
 
-    public static final Block ELEMENT_SMITHING_TABLE = register("element_smithing_table", new ElementSmithingTableBlock());
     public static final HashMap<Block, Consumer<BlockLootTableGenerator>> BLOCK_DROPS = new HashMap<>();
+    public static final HashMap<Block, List<TagKey<Block>>> BLOCK_TAGS = new HashMap<>();
+
+    public static final Block ELEMENT_SMITHING_TABLE = register("element_smithing_table", new ElementSmithingTableBlock(), "Element Smithing Table", "元素锻造台", BlockTags.AXE_MINEABLE);
 
     public static void register() {
         LOGGER.info("Loading Blocks");
     }
 
-    public static Block register(String id, Block block) {
-        EWItems.register(id, (Item) new BlockItem(block, new Item.Settings()));
-        return registerBlock(id, block, generator -> generator.addDrop(block));
+    @SafeVarargs
+    public static <T extends Block> T register(String id, T block, String en_us, String zh_cn, TagKey<Block>... tags) {
+        EWItems.register(id, new BlockItem(block, new FabricItemSettings()), (Model) null, null, null);
+        return registerBlock(id, block, generator -> generator.addDrop(block), en_us, zh_cn, tags);
     }
 
-    public static Block register(String id, Block block, ItemConvertible... drops) {
-        EWItems.register(id, (Item) new BlockItem(block, new Item.Settings()));
-        return registerBlock(id, block, generator -> Arrays.stream(drops).toList().forEach(itemConvertible -> generator.addDrop(block, itemConvertible)));
+    @SafeVarargs
+    public static <T extends Block> T register(String id, T block, ItemConvertible[] drops, String en_us, String zh_cn, TagKey<Block>... tags) {
+        EWItems.register(id, new BlockItem(block, new FabricItemSettings()), (Model) null, null, null);
+        return registerBlock(id, block, generator -> Arrays.stream(drops).forEach(itemConvertible -> generator.addDrop(block, itemConvertible)), en_us, zh_cn, tags);
     }
 
-    public static Block registerBlock(String id, Block block, Consumer<BlockLootTableGenerator> addDrop) {
+    @SafeVarargs
+    public static <T extends Block> T registerBlock(String id, T block, Consumer<BlockLootTableGenerator> addDrop, String en_us, String zh_cn, TagKey<Block>... tags) {
         BLOCK_DROPS.put(block, addDrop);
+        if (tags != null && tags.length > 0) {
+            List<TagKey<Block>> list = Arrays.asList(tags);
+            list.removeIf(Objects::isNull);
+            if (list.size() > 0) {
+                BLOCK_TAGS.put(block, list);
+            }
+        }
+        addTranslation(block, en_us, zh_cn);
         return Registry.register(Registries.BLOCK, id(id), block);
     }
 }

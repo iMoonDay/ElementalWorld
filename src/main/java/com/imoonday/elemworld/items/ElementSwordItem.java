@@ -5,6 +5,6 @@ import net.minecraft.item.SwordItem;
 
 public class ElementSwordItem extends SwordItem {
     public ElementSwordItem(int attackDamage, float attackSpeed) {
-        super(ElementToolItem.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
+        super(ElementTools.ELEMENT_MATERIAL, attackDamage, attackSpeed, new FabricItemSettings());
     }
 }

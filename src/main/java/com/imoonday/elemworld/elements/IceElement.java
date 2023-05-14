@@ -2,6 +2,7 @@ package com.imoonday.elemworld.elements;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWEffects;
+import com.imoonday.elemworld.init.EWElements;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
@@ -58,7 +59,7 @@ public class IceElement extends Element {
 
     @Override
     public void getDamageMultiplier(Map<Predicate<LivingEntity>, Float> map) {
-        map.put(living -> living.hasStatusEffect(EWEffects.FREEZE), 1.5f);
+        map.put(living -> living.hasStatusEffect(EWEffects.FREEZE) && !living.hasElement(EWElements.ICE), 1.5f);
     }
 
     @Override

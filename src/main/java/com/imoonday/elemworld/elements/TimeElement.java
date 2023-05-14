@@ -1,10 +1,9 @@
 package com.imoonday.elemworld.elements;
 
 import com.imoonday.elemworld.api.Element;
+import net.minecraft.entity.EntityStatuses;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.random.Random;
 
 public class TimeElement extends Element {
@@ -16,7 +15,7 @@ public class TimeElement extends Element {
     public boolean immuneOnDeath(LivingEntity entity) {
         if (entity.getImmuneCooldown() <= 0) {
             entity.setImmuneCooldown(5 * 60 * 20);
-            entity.world.playSound(null, entity.getBlockPos(), SoundEvents.ITEM_TOTEM_USE, SoundCategory.VOICE);
+            entity.world.sendEntityStatus(entity, EntityStatuses.USE_TOTEM_OF_UNDYING);
             return true;
         }
         return super.immuneOnDeath(entity);
