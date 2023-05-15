@@ -1,7 +1,6 @@
 package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.api.ElementEntry;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -19,11 +18,11 @@ public class PlayerInventoryMixin {
     public void getBlockBreakingSpeed(BlockState block, CallbackInfoReturnable<Float> cir) {
         PlayerInventory inventory = (PlayerInventory) (Object) this;
         PlayerEntity player = inventory.player;
-        Set<ElementEntry> entries = inventory.main.get(inventory.selectedSlot).getElements();
+        Set<Element.Entry> entries = inventory.main.get(inventory.selectedSlot).getElements();
         float multiplier = 1.0f;
-        for (ElementEntry entry : entries) {
+        for (Element.Entry entry : entries) {
             Element element = entry.element();
-            if (element == null || element.isInvalid()) {
+            if (element.isInvalid()) {
                 continue;
             }
             float f = element.getMiningSpeedMultiplier(player.world, player, block);

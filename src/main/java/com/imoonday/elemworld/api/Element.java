@@ -7,11 +7,19 @@ import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItemGroups;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.items.ElementBookItem;
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
+import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.*;
@@ -23,10 +31,13 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.potion.Potion;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -34,13 +45,17 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -80,8 +95,8 @@ public abstract class Element {
     public static void register() {
         FabricLoader.getInstance().getEntrypoints("elemworld", EWRegistry.class)
                 .forEach(registry -> EWRegistry.getRegisterElements(registry).forEach(Element::register));
-        List<ElementEntry> sortedElements = getSortedElements(getRegistrySet(false).stream().map(element1 -> new ElementEntry(element1, element1.maxLevel)).collect(Collectors.toSet()));
-        for (ElementEntry entry : sortedElements) {
+        List<Entry> sortedElements = getSortedElements(getRegistrySet(false).stream().map(element1 -> new Entry(element1, element1.maxLevel)).collect(Collectors.toSet()));
+        for (Entry entry : sortedElements) {
             Element element = entry.element();
             if (element.hasEffect()) {
                 Identifier id = id(element.name);
@@ -155,11 +170,11 @@ public abstract class Element {
         return this;
     }
 
-    public ElementEntry withLevel(int level) {
-        return new ElementEntry(this, level);
+    public Entry withLevel(int level) {
+        return new Entry(this, level);
     }
 
-    public ElementEntry withRandomLevel() {
+    public Entry withRandomLevel() {
         return this.withLevel(this.getRandomLevel());
     }
 
@@ -217,10 +232,10 @@ public abstract class Element {
         return map;
     }
 
-    private float getWeightMultiplier(Set<ElementEntry> entries) {
+    private float getWeightMultiplier(Set<Entry> entries) {
         float multiplier = 1.0f;
         Map<Element, Float> map = getWeightMultiplier(new HashMap<>());
-        for (ElementEntry entry : entries) {
+        for (Entry entry : entries) {
             Element element = entry.element();
             if (map.containsKey(element)) {
                 multiplier = multiplier * Math.max(map.get(element), 0);
@@ -273,21 +288,21 @@ public abstract class Element {
         return random.next().orElse(0);
     }
 
-    public static List<Text> getElementsText(Set<ElementEntry> elements, boolean prefix, boolean lineBreak) {
+    public static List<MutableText> getElementsText(Set<Entry> elements, boolean prefix, boolean lineBreak) {
         if (elements.size() == 0) {
             return new ArrayList<>();
         }
         if (elements.size() == 1 && elements.iterator().next().element().isInvalid()) {
             return new ArrayList<>();
         }
-        List<ElementEntry> sortedElements = getSortedElements(elements);
+        List<Entry> sortedElements = getSortedElements(elements);
         MutableText text;
-        List<Text> list = new ArrayList<>();
+        List<MutableText> list = new ArrayList<>();
         text = prefix ? Text.translatable("element.elemworld.name.prefix").formatted(Formatting.WHITE) : Text.empty();
         int lastLevel = -1;
-        Iterator<ElementEntry> iterator = sortedElements.iterator();
+        Iterator<Entry> iterator = sortedElements.iterator();
         while (iterator.hasNext()) {
-            ElementEntry entry = iterator.next();
+            Entry entry = iterator.next();
             Element element = entry.element();
             Text translationName = element.getTranslationName();
             if (translationName == null) {
@@ -311,11 +326,11 @@ public abstract class Element {
         return list;
     }
 
-    public static List<ElementEntry> getSortedElements(Set<ElementEntry> elements) {
-        List<ElementEntry> list = new ArrayList<>(elements);
-        Comparator<ElementEntry> rareLevel = Comparator.comparingInt(o -> o.element().rareLevel);
-        Comparator<ElementEntry> level = Comparator.comparingInt(ElementEntry::level);
-        Comparator<ElementEntry> name = Comparator.comparing(o -> o.element().name);
+    public static List<Entry> getSortedElements(Set<Entry> elements) {
+        List<Entry> list = new ArrayList<>(elements);
+        Comparator<Entry> rareLevel = Comparator.comparingInt(o -> o.element().rareLevel);
+        Comparator<Entry> level = Comparator.comparingInt(Entry::level);
+        Comparator<Entry> name = Comparator.comparing(o -> o.element().name);
         list.sort(rareLevel.thenComparing(level).thenComparing(name));
         return list;
     }
@@ -348,15 +363,7 @@ public abstract class Element {
         return "element.elemworld." + name;
     }
 
-    public Color getColor() {
-        return switch (this.rareLevel) {
-            case 0 -> Color.BLACK;
-            case 1 -> Color.WHITE;
-            case 2 -> Color.CYAN;
-            case 3 -> Color.ORANGE;
-            default -> Color.GRAY;
-        };
-    }
+    public abstract Color getColor();
 
     public StatusEffect getEffect() {
         return Registries.STATUS_EFFECT.get(id(name));
@@ -469,8 +476,8 @@ public abstract class Element {
         AttributeContainer attributes = entity.getAttributes();
         Map<EntityAttribute, EntityAttributeModifier> map = getAttributeModifiers(new HashMap<>(), slot);
         float multiplier = this.getMaxHealthMultiplier(entity.world, entity);
-        if (multiplier != 0.0f) {
-            map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, new ElementEntry(this, level).getLevelMultiplier(multiplier), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        if (multiplier != 0.0f && slot != 4 && slot != 5) {
+            map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, new Entry(this, level).getLevelMultiplier(multiplier), EntityAttributeModifier.Operation.MULTIPLY_BASE));
         }
         for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
             EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
@@ -478,7 +485,7 @@ public abstract class Element {
             EntityAttributeModifier entityAttributeModifier = entry.getValue();
             float percent = entity.getHealth() / entity.getMaxHealth();
             entityAttributeInstance.removeModifier(entityAttributeModifier);
-            entityAttributeInstance.addPersistentModifier(new EntityAttributeModifier(entityAttributeModifier.getId(), this.getTranslationKey() + " " + slot, entityAttributeModifier.getValue() * new ElementEntry(this, level).getLevelMultiplier(1.0f), entityAttributeModifier.getOperation()));
+            entityAttributeInstance.addPersistentModifier(new EntityAttributeModifier(entityAttributeModifier.getId(), this.getTranslationKey() + " " + slot, entityAttributeModifier.getValue() * new Entry(this, level).getLevelMultiplier(1.0f), entityAttributeModifier.getOperation()));
             if (entry.getKey().equals(EntityAttributes.GENERIC_MAX_HEALTH)) {
                 entity.setHealth(entity.getMaxHealth() * percent);
             }
@@ -492,8 +499,8 @@ public abstract class Element {
         AttributeContainer attributes = entity.getAttributes();
         Map<EntityAttribute, EntityAttributeModifier> map = getAttributeModifiers(new HashMap<>(), slot);
         float multiplier = this.getMaxHealthMultiplier(entity.world, entity);
-        if (multiplier != 0.0f) {
-            map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, new ElementEntry(this, level).getLevelMultiplier(multiplier), EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        if (multiplier != 0.0f && slot != 4 && slot != 5) {
+            map.put(EntityAttributes.GENERIC_MAX_HEALTH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, new Entry(this, level).getLevelMultiplier(multiplier), EntityAttributeModifier.Operation.MULTIPLY_BASE));
         }
         for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : map.entrySet()) {
             EntityAttributeInstance entityAttributeInstance = attributes.getCustomInstance(entry.getKey());
@@ -514,6 +521,10 @@ public abstract class Element {
         return entity.isAlive() && entity.getElements().stream().noneMatch(this::conflictsWith);
     }
 
+    /**
+     * @param slot -1:Self 0:Head 1:Chest 2:Legs 3:Feet 4:Mainhand; 5:Offhand
+     *             <p>Please check if it works on hand
+     */
     public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
         return map;
     }
@@ -526,7 +537,7 @@ public abstract class Element {
         return false;
     }
 
-    private boolean conflictsWith(ElementEntry entry) {
+    private boolean conflictsWith(Entry entry) {
         return this.conflictsWith(entry.element());
     }
 
@@ -628,6 +639,104 @@ public abstract class Element {
         @Override
         public Text getName(ItemStack stack) {
             return this.getName();
+        }
+    }
+
+    public record Entry(@NotNull Element element, int level) {
+
+        public static final String NAME_KEY = "Name";
+        public static final String LEVEL_KEY = "Level";
+        public static final String[] LEVELS = {"", "-I", "-II", "-III", "-IV", "-V", "-VI", "-VII", "-VIII", "-IX", "-X"};
+        public static final Entry EMPTY = new Entry(EWElements.EMPTY, 0);
+
+        public Entry(@NotNull Element element, int level) {
+            this.element = element;
+            this.level = Math.max(level, 0);
+        }
+
+        public Text getName() {
+            String str = level > LEVELS.length - 1 ? "-" + level : LEVELS[level];
+            Formatting formatting = element.getFormatting();
+            return element.getTranslationName().copy().append(formatting == null ? Text.empty() : Text.literal(str).formatted(formatting));
+        }
+
+        public float getLevelMultiplier(float multiplier) {
+            if (multiplier == 0.0f) return 0.0f;
+            float f1 = (float) level / element.maxLevel;
+            float f2;
+            if ((element.maxLevel > 1)) {
+                f2 = ((float) (element.maxLevel - level) / (element.maxLevel - 1));
+            } else {
+                f2 = 1.0f;
+            }
+            multiplier *= multiplier >= 0 ? f1 : f2;
+            return multiplier;
+        }
+
+        public NbtCompound toNbt() {
+            NbtCompound nbt = new NbtCompound();
+            nbt.putString(NAME_KEY, element.getName());
+            nbt.putInt(LEVEL_KEY, level);
+            return nbt;
+        }
+
+        public static Optional<Entry> fromNbt(NbtCompound nbt) {
+            if (nbt.contains(NAME_KEY, NbtElement.STRING_TYPE)) {
+                String name = nbt.getString(NAME_KEY);
+                Element element = getRegistryMap().get(name);
+                if (element != null && nbt.contains(LEVEL_KEY, NbtElement.INT_TYPE)) {
+                    return Optional.of(new Entry(element, nbt.getInt(LEVEL_KEY)));
+                }
+            }
+            return Optional.empty();
+        }
+
+        public static Entry createRandom(Predicate<Element> predicate, Function<Element, Integer> weightFunc) {
+            return WeightRandom.getRandom(getRegistrySet(true), predicate, weightFunc).orElse(EWElements.EMPTY).withRandomLevel();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Entry entry)) return false;
+            return level == entry.level && Objects.equals(element, entry.element);
+        }
+
+        public static Set<Element> getElementSet(Set<Entry> entries) {
+            return entries.stream().map(Entry::element).collect(Collectors.toSet());
+        }
+
+        public boolean isElementEqual(Entry entry) {
+            return this.element.isOf(entry.element);
+        }
+    }
+
+    public static class ElementArgumentType implements ArgumentType<Element> {
+
+        public static final DynamicCommandExceptionType INVALID_ELEMENT_EXCEPTION = new DynamicCommandExceptionType(element -> Text.translatable("element.elemworld.invalid", element));
+
+        @Contract(value = " -> new", pure = true)
+        public static @NotNull Element.ElementArgumentType element() {
+            return new ElementArgumentType();
+        }
+
+        public static Element getElement(@NotNull CommandContext<ServerCommandSource> context, String id) {
+            return context.getArgument(id, Element.class);
+        }
+
+        @Override
+        public Element parse(@NotNull StringReader reader) throws CommandSyntaxException {
+            String string = reader.readUnquotedString();
+            Optional<Element> element = byName(string);
+            if (element.isEmpty()) {
+                throw INVALID_ELEMENT_EXCEPTION.create(string);
+            }
+            return element.get();
+        }
+
+        @Override
+        public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
+            return CommandSource.suggestMatching(getRegistryMap().keySet(), builder);
         }
     }
 }

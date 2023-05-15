@@ -8,6 +8,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.world.World;
 
+import java.awt.*;
 import java.util.List;
 
 import static net.minecraft.entity.damage.DamageTypes.SONIC_BOOM;
@@ -45,6 +46,11 @@ public class SoundElement extends Element {
     @Override
     public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity){
         return source.isOf(SONIC_BOOM) ? 0.2f : 1.0f;
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.PINK;
     }
 
     @Override

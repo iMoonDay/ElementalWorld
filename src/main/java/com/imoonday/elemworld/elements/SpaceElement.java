@@ -1,9 +1,12 @@
 package com.imoonday.elemworld.elements;
 
 import com.imoonday.elemworld.api.Element;
+import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityStatuses;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.passive.FoxEntity;
@@ -17,6 +20,9 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
+
+import java.awt.*;
+import java.util.Map;
 
 import static net.minecraft.registry.tag.DamageTypeTags.IS_DROWNING;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_EXPLOSION;
@@ -43,6 +49,11 @@ public class SpaceElement extends Element {
         } else {
             return entity.getRandom().nextFloat() < 0.25f ? 0.2f : 1.0f;
         }
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.BLUE;
     }
 
     @Override
@@ -77,5 +88,12 @@ public class SpaceElement extends Element {
                 break;
             }
         }
+    }
+
+    @Override
+    public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
+        map.put(ReachEntityAttributes.REACH, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 3, EntityAttributeModifier.Operation.ADDITION));
+        map.put(ReachEntityAttributes.ATTACK_RANGE, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 3, EntityAttributeModifier.Operation.ADDITION));
+        return map;
     }
 }

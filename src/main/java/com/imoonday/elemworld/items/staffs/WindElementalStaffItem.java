@@ -2,9 +2,9 @@ package com.imoonday.elemworld.items.staffs;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.WindElementalEnergyBallEntity;
+import com.imoonday.elemworld.entities.energy_balls.WindElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
-import net.minecraft.entity.Entity;
+import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
@@ -18,18 +18,9 @@ public class WindElementalStaffItem extends AbstractElementalStaffItem {
     }
 
     @Override
-    protected int getMinUseTime() {
-        return 10;
-    }
-
-    @Override
     protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
         int power = getPower(useTicks);
-        for (Entity entity : world.getOtherEntities(user, user.getBoundingBox().expand(power * 2), entity -> entity instanceof LivingEntity living && living.isAlive())) {
-            LivingEntity living = (LivingEntity) entity;
-            living.setVelocity(0, 0.5 * power, 0);
-            getElement().addEffect(living, user);
-        }
+        forEachLivingEntity(world, user, power * 2, entity -> entity.setVelocity(0, 0.5 * power, 0));
     }
 
     @Override
@@ -38,13 +29,8 @@ public class WindElementalStaffItem extends AbstractElementalStaffItem {
     }
 
     @Override
-    public AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, int useTicks) {
-        return new WindElementalEnergyBallEntity(user, getPower(useTicks));
-    }
-
-    @Override
-    public int getPower(int useTicks) {
-        return Math.min(useTicks / 10, 5);
+    public AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks) {
+        return new WindElementalEnergyBallEntity(user, stack, getPower(useTicks));
     }
 
     @Override

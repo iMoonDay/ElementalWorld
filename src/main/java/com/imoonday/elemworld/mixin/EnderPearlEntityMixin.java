@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.mixin;
 
-import com.imoonday.elemworld.api.ElementEntry;
+import com.imoonday.elemworld.api.Element;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.item.ItemStack;
@@ -22,7 +22,7 @@ public class EnderPearlEntityMixin {
         EnderPearlEntity pearl = (EnderPearlEntity) (Object) this;
         if (entity instanceof ServerPlayerEntity player) {
             for (ItemStack armorItem : player.getArmorItems()) {
-                for (ElementEntry entry : armorItem.getElements()) {
+                for (Element.Entry entry : armorItem.getElements()) {
                     if (entry.element().isOf(SPACE)) {
                         pearl.discard();
                         ci.cancel();

@@ -1,8 +1,6 @@
 package com.imoonday.elemworld.init;
 
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.api.ElementArgumentType;
-import com.imoonday.elemworld.api.ElementEntry;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -15,6 +13,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -33,7 +32,7 @@ public class EWCommands {
     public static void register() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("element").requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2))
                 .then(literal("entity")
-                        .then(literal("add").then(argument("entity", EntityArgumentType.entities()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
+                        .then(literal("add").then(argument("entity", EntityArgumentType.entities()).then(argument("element", Element.ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
                             entityAdd(context);
                             return 0;
                         })))))
@@ -41,7 +40,7 @@ public class EWCommands {
                             entityAddAll(context);
                             return 0;
                         })))
-                        .then(literal("remove").then(argument("entity", EntityArgumentType.entities()).then(argument("element", ElementArgumentType.element()).executes(context -> {
+                        .then(literal("remove").then(argument("entity", EntityArgumentType.entities()).then(argument("element", Element.ElementArgumentType.element()).executes(context -> {
                             entityRemove(context);
                             return 0;
                         }))))
@@ -54,7 +53,7 @@ public class EWCommands {
                             return 0;
                         }))))
                 .then(literal("item")
-                        .then(literal("add").then(argument("entity", EntityArgumentType.entities()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
+                        .then(literal("add").then(argument("entity", EntityArgumentType.entities()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", Element.ElementArgumentType.element()).then(argument("level", IntegerArgumentType.integer(0)).executes(context -> {
                             itemAdd(context);
                             return 0;
                         }))))))
@@ -62,7 +61,7 @@ public class EWCommands {
                             itemAddAll(context);
                             return 0;
                         }))))
-                        .then(literal("remove").then(argument("entity", EntityArgumentType.entities()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", ElementArgumentType.element()).executes(context -> {
+                        .then(literal("remove").then(argument("entity", EntityArgumentType.entities()).then(argument("slot", ItemSlotArgumentType.itemSlot()).then(argument("element", Element.ElementArgumentType.element()).executes(context -> {
                             itemRemove(context);
                             return 0;
                         })))))
@@ -80,8 +79,8 @@ public class EWCommands {
         for (Entity entity : entities) {
             ItemStack stackInSlot = getStackInSlot(entity, slot);
             if (source != null && isValidStack(source, stackInSlot)) {
-                stackInSlot.setElements(new HashSet<>(Collections.singleton(ElementEntry.EMPTY)));
-                source.sendFeedback(Text.translatable("content.eleworld.commands.clear.success"), false);
+                stackInSlot.setElements(new HashSet<>(Collections.singleton(Element.Entry.EMPTY)));
+                source.sendFeedback(Text.translatable("text.eleworld.commands.clear.success"), false);
             }
         }
     }
@@ -90,13 +89,13 @@ public class EWCommands {
         ServerCommandSource source = context.getSource();
         Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
         for (Entity entity : entities) {
-            Element element = ElementArgumentType.getElement(context, "element");
+            Element element = Element.ElementArgumentType.getElement(context, "element");
             int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
             ItemStack stackInSlot = getStackInSlot(entity, slot);
             if (element != null && source != null && isValidStack(source, stackInSlot)) {
                 boolean exist = stackInSlot.hasElement(element);
                 stackInSlot.removeElement(element);
-                source.sendFeedback(Text.translatable(exist ? "content.eleworld.commands.remove.success" : "content.eleworld.commands.remove.fail"), false);
+                source.sendFeedback(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"), false);
             }
         }
     }
@@ -110,9 +109,9 @@ public class EWCommands {
             if (source != null && isValidStack(source, stackInSlot)) {
                 stackInSlot.setElements(new HashSet<>());
                 for (Element element : Element.getRegistrySet(false)) {
-                    stackInSlot.addElement(new ElementEntry(element, element.maxLevel));
+                    stackInSlot.addElement(new Element.Entry(element, element.maxLevel));
                 }
-                source.sendFeedback(Text.translatable("content.eleworld.commands.add.success"), false);
+                source.sendFeedback(Text.translatable("text.eleworld.commands.add.success"), false);
             }
         }
     }
@@ -121,15 +120,15 @@ public class EWCommands {
         ServerCommandSource source = context.getSource();
         Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
         for (Entity entity : entities) {
-            Element element = ElementArgumentType.getElement(context, "element");
+            Element element = Element.ElementArgumentType.getElement(context, "element");
             int slot = ItemSlotArgumentType.getItemSlot(context, "slot");
             ItemStack stackInSlot = getStackInSlot(entity, slot);
             int level = IntegerArgumentType.getInteger(context, "level");
             if (element != null && source != null && isValidStack(source, stackInSlot)) {
-                boolean success = stackInSlot.addElement(new ElementEntry(element, level));
-                source.sendFeedback(Text.translatable(success ? "content.eleworld.commands.add.success" : "content.eleworld.commands.add.fail"), false);
+                boolean success = stackInSlot.addElement(new Element.Entry(element, level));
+                source.sendFeedback(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"), false);
                 if (element.isOf(EWElements.EMPTY)) {
-                    source.sendFeedback(Text.translatable("content.eleworld.commands.add.success.empty"), false);
+                    source.sendFeedback(Text.translatable("text.eleworld.commands.add.success.empty"), false);
                 }
             }
         }
@@ -141,7 +140,7 @@ public class EWCommands {
         for (Entity entity : entities) {
             if (entity instanceof LivingEntity livingEntity && source != null) {
                 livingEntity.clearElements();
-                source.sendFeedback(Text.translatable("content.eleworld.commands.clear.success"), false);
+                source.sendFeedback(Text.translatable("text.eleworld.commands.clear.success"), false);
             }
         }
     }
@@ -151,9 +150,9 @@ public class EWCommands {
         Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
         for (Entity entity : entities) {
             if (entity instanceof LivingEntity livingEntity && source != null) {
-                List<Text> texts = Element.getElementsText(livingEntity.getElements(), false, true);
+                List<MutableText> texts = Element.getElementsText(livingEntity.getElements(), false, true);
                 if (texts.isEmpty()) {
-                    source.sendFeedback(Text.translatable("content.eleworld.commands.get.empty"), false);
+                    source.sendFeedback(Text.translatable("text.eleworld.commands.get.empty"), false);
                 } else {
                     texts.forEach(message -> source.sendFeedback(message, false));
                 }
@@ -164,12 +163,12 @@ public class EWCommands {
     private static void entityRemove(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
         Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
-        Element element = ElementArgumentType.getElement(context, "element");
+        Element element = Element.ElementArgumentType.getElement(context, "element");
         for (Entity entity : entities) {
             if (entity instanceof LivingEntity livingEntity && element != null && source != null) {
                 boolean exist = livingEntity.hasElement(element);
                 livingEntity.removeElement(element);
-                source.sendFeedback(Text.translatable(exist ? "content.eleworld.commands.remove.success" : "content.eleworld.commands.remove.fail"), false);
+                source.sendFeedback(Text.translatable(exist ? "text.eleworld.commands.remove.success" : "text.eleworld.commands.remove.fail"), false);
             }
         }
     }
@@ -181,9 +180,9 @@ public class EWCommands {
             if (entity instanceof LivingEntity livingEntity && source != null) {
                 livingEntity.clearElements();
                 for (Element element : Element.getRegistrySet(false)) {
-                    livingEntity.addElement(new ElementEntry(element, element.maxLevel));
+                    livingEntity.addElement(new Element.Entry(element, element.maxLevel));
                 }
-                source.sendFeedback(Text.translatable("content.eleworld.commands.add.success"), false);
+                source.sendFeedback(Text.translatable("text.eleworld.commands.add.success"), false);
             }
         }
     }
@@ -191,14 +190,14 @@ public class EWCommands {
     private static void entityAdd(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerCommandSource source = context.getSource();
         Collection<? extends Entity> entities = EntityArgumentType.getEntities(context, "entity");
-        Element element = ElementArgumentType.getElement(context, "element");
+        Element element = Element.ElementArgumentType.getElement(context, "element");
         for (Entity entity : entities) {
             int level = IntegerArgumentType.getInteger(context, "level");
             if (entity instanceof LivingEntity livingEntity && element != null && source != null) {
-                boolean success = livingEntity.addElement(new ElementEntry(element, level));
-                source.sendFeedback(Text.translatable(success ? "content.eleworld.commands.add.success" : "content.eleworld.commands.add.fail"), false);
+                boolean success = livingEntity.addElement(new Element.Entry(element, level));
+                source.sendFeedback(Text.translatable(success ? "text.eleworld.commands.add.success" : "text.eleworld.commands.add.fail"), false);
                 if (element.isOf(EWElements.EMPTY)) {
-                    source.sendFeedback(Text.translatable("content.eleworld.commands.add.success.empty"), false);
+                    source.sendFeedback(Text.translatable("text.eleworld.commands.add.success.empty"), false);
                 }
             }
         }
@@ -206,11 +205,11 @@ public class EWCommands {
 
     private static boolean isValidStack(ServerCommandSource source, ItemStack stackInSlot) {
         if (stackInSlot.isEmpty()) {
-            source.sendError(Text.translatable("content.eleworld.commands.item.invalid").formatted(Formatting.RED));
+            source.sendError(Text.translatable("text.eleworld.commands.item.invalid").formatted(Formatting.RED));
             return false;
         }
         if (!stackInSlot.isDamageable()) {
-            source.sendError(Text.translatable("content.eleworld.commands.item.unsupport").formatted(Formatting.RED));
+            source.sendError(Text.translatable("text.eleworld.commands.item.unsupport").formatted(Formatting.RED));
             return false;
         }
         return true;

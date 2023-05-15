@@ -8,6 +8,8 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.tag.BlockTags;
 
+import java.awt.*;
+
 import static net.minecraft.registry.tag.DamageTypeTags.IS_FALL;
 
 public class GrassElement extends Element {
@@ -19,6 +21,11 @@ public class GrassElement extends Element {
     public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         BlockState state = entity.getSteppingBlockState();
         return source.isIn(IS_FALL) && (state.isOf(Blocks.GRASS_BLOCK) || state.isIn(BlockTags.LEAVES)) ? 0.2f : 1.0f;
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.GREEN;
     }
 
     @Override

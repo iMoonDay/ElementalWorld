@@ -2,9 +2,10 @@ package com.imoonday.elemworld.init;
 
 import com.imoonday.elemworld.ElementalWorldData;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.FireElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.IceElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.WindElementalEnergyBallEntity;
+import com.imoonday.elemworld.entities.energy_balls.FireElementalEnergyBallEntity;
+import com.imoonday.elemworld.entities.energy_balls.GoldElementalEnergyBallEntity;
+import com.imoonday.elemworld.entities.energy_balls.IceElementalEnergyBallEntity;
+import com.imoonday.elemworld.entities.energy_balls.WindElementalEnergyBallEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityDimensions;
@@ -25,6 +26,7 @@ public class EWEntities {
     public static final EntityType<WindElementalEnergyBallEntity> WIND_ELEMENTAL_ENERGY_BALL = registerEnergyBall("wind_elemental_energy_ball", WindElementalEnergyBallEntity::new, "Wind Elemental Energy Ball", "风元素能量球");
     public static final EntityType<FireElementalEnergyBallEntity> FIRE_ELEMENTAL_ENERGY_BALL = registerEnergyBall("fire_elemental_energy_ball", FireElementalEnergyBallEntity::new, "Fire Elemental Energy Ball", "火元素能量球");
     public static final EntityType<IceElementalEnergyBallEntity> ICE_ELEMENTAL_ENERGY_BALL = registerEnergyBall("ice_elemental_energy_ball", IceElementalEnergyBallEntity::new, "Ice Elemental Energy Ball", "冰元素能量球");
+    public static final EntityType<GoldElementalEnergyBallEntity> GOLD_ELEMENTAL_ENERGY_BALL = registerEnergyBall("gold_elemental_energy_ball", GoldElementalEnergyBallEntity::new, "Gold Elemental Energy Ball", "金元素能量球");
 
     public static void register() {
     }

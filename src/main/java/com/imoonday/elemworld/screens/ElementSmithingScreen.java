@@ -1,7 +1,6 @@
 package com.imoonday.elemworld.screens;
 
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.api.ElementEntry;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.screens.handler.ElementSmithingScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -14,6 +13,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -79,8 +79,8 @@ public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHa
             textRenderer.drawWithShadow(matrices, tooltip, x + 8 + 2, y + 21, Color.RED.getRGB());
         }
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null && (!this.handler.getStack().isOf(EWItems.ELEMENT_BOOK) || !this.handler.getMaterial().isEmpty())) {
-            Set<ElementEntry> elements = this.handler.getNewElements();
-            List<Text> texts = Element.getElementsText(elements, false, false);
+            Set<Element.Entry> elements = this.handler.getNewElements();
+            List<MutableText> texts = Element.getElementsText(elements, false, false);
             Text text = texts.isEmpty() ? Text.translatable("content.eleworld.modify_elements_screen.no_new") : texts.get(0);
             if (elements.size() > 5) {
                 text = Text.translatable("content.eleworld.modify_elements_screen.new", elements.size());

@@ -10,6 +10,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.world.World;
 
+import java.awt.*;
 import java.util.Map;
 
 import static net.minecraft.entity.damage.DamageTypes.IN_WALL;
@@ -33,8 +34,15 @@ public class RockElement extends Element {
     }
 
     @Override
+    public Color getColor() {
+        return Color.GRAY;
+    }
+
+    @Override
     public Map<EntityAttribute, EntityAttributeModifier> getAttributeModifiers(Map<EntityAttribute, EntityAttributeModifier> map, int slot) {
-        map.put(EntityAttributes.GENERIC_ARMOR, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 2, EntityAttributeModifier.Operation.ADDITION));
+        if (slot != 4 && slot != 5) {
+            map.put(EntityAttributes.GENERIC_ARMOR, new EntityAttributeModifier(this.getUuid(slot), this::getTranslationKey, 2, EntityAttributeModifier.Operation.ADDITION));
+        }
         return map;
     }
 }

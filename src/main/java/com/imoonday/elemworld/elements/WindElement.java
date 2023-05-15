@@ -8,6 +8,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
+import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
@@ -47,5 +48,10 @@ public class WindElement extends Element {
         effects.put(JUMP_BOOST, 0);
         effects.put(SPEED, 0);
         return effects;
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.GREEN;
     }
 }

@@ -12,9 +12,16 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 
+import java.awt.*;
+
 public class GoldElement extends Element {
     public GoldElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
         super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.ORANGE;
     }
 
     @Override

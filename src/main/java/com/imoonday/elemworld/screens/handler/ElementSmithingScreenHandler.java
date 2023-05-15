@@ -1,7 +1,6 @@
 package com.imoonday.elemworld.screens.handler;
 
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.api.ElementEntry;
 import com.imoonday.elemworld.init.EWBlocks;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.init.EWScreens;
@@ -127,9 +126,9 @@ public class ElementSmithingScreenHandler extends ScreenHandler {
         if (!stack.hasNbt()) {
             return 0;
         }
-        Set<ElementEntry> entries = stack.getStoredElementsIfBook();
+        Set<Element.Entry> entries = stack.getStoredElementsIfBook();
         float sum = 0;
-        for (ElementEntry entry : entries) {
+        for (Element.Entry entry : entries) {
             if (entry.element().isInvalid()) {
                 continue;
             }
@@ -140,9 +139,9 @@ public class ElementSmithingScreenHandler extends ScreenHandler {
         return Math.max((int) sum + randomCost, 1);
     }
 
-    public Set<ElementEntry> getNewElements() {
-        Set<ElementEntry> entries = new HashSet<>(this.result.getStack(0).getStoredElementsIfBook());
-        for (ElementEntry instance1 : getStack().getStoredElementsIfBook()) {
+    public Set<Element.Entry> getNewElements() {
+        Set<Element.Entry> entries = new HashSet<>(this.result.getStack(0).getStoredElementsIfBook());
+        for (Element.Entry instance1 : getStack().getStoredElementsIfBook()) {
             entries.removeIf(entry -> entry.element().isOf(instance1.element()));
         }
         return entries;
@@ -191,11 +190,11 @@ public class ElementSmithingScreenHandler extends ScreenHandler {
             boolean hasStack = !stack.isEmpty();
             if (hasStack) {
                 ItemStack newStack = stack.copy();
-                Set<ElementEntry> entries = material.getStoredElementsIfBook();
+                Set<Element.Entry> entries = material.getStoredElementsIfBook();
                 if ((material.isEmpty() || entries.isEmpty()) && !stack.isOf(EWItems.ELEMENT_BOOK)) {
                     if (stack.getOrCreateNbt().contains(LAST_RANDOM_ELEMENT_KEY)) {
                         NbtCompound nbt = stack.getOrCreateNbt().getCompound(LAST_RANDOM_ELEMENT_KEY);
-                        ElementEntry.fromNbt(nbt).ifPresent(newStack::addElement);
+                        Element.Entry.fromNbt(nbt).ifPresent(newStack::addElement);
                     } else {
                         newStack.addNewRandomElement();
                         recordNewElement(newStack.getElements());
@@ -204,8 +203,8 @@ public class ElementSmithingScreenHandler extends ScreenHandler {
                     entries.forEach(newStack::addStoredElementIfBook);
                 }
                 newStack.removeInvalidElements();
-                Set<ElementEntry> newInstances = newStack.getStoredElementsIfBook();
-                Set<ElementEntry> stackInstances = stack.getStoredElementsIfBook();
+                Set<Element.Entry> newInstances = newStack.getStoredElementsIfBook();
+                Set<Element.Entry> stackInstances = stack.getStoredElementsIfBook();
                 newInstances.removeAll(stackInstances);
                 if (newInstances.isEmpty() || !material.isOf(stack.getItem()) && !material.isOf(Items.DIAMOND) && !material.isOf(EWItems.ELEMENT_BOOK) && !material.isEmpty()) {
                     this.result.setStack(0, ItemStack.EMPTY);
@@ -220,12 +219,12 @@ public class ElementSmithingScreenHandler extends ScreenHandler {
         this.sendContentUpdates();
     }
 
-    public void recordNewElement(Set<ElementEntry> entries) {
-        for (ElementEntry entry : getStack().getStoredElementsIfBook()) {
+    public void recordNewElement(Set<Element.Entry> entries) {
+        for (Element.Entry entry : getStack().getStoredElementsIfBook()) {
             entries.remove(entry);
         }
-        ElementEntry entry;
-        entry = entries.size() == 1 ? entries.iterator().next() : ElementEntry.EMPTY;
+        Element.Entry entry;
+        entry = entries.size() == 1 ? entries.iterator().next() : Element.Entry.EMPTY;
         NbtCompound nbt = entry.toNbt();
         int between = entry.element().rareLevel * 3;
         nbt.putInt(RANDOM_COST_KEY, Random.create().nextBetween(-between, between));

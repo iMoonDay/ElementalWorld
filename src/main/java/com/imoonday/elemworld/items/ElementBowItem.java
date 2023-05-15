@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.items;
 
-import com.imoonday.elemworld.api.ElementEntry;
+import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWItems;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.client.item.ModelPredicateProviderRegistry;
@@ -97,7 +97,7 @@ public class ElementBowItem extends BowItem {
 
     protected ItemStack addPotion(ItemStack bow, ItemStack arrow) {
         if (arrow.isOf(Items.ARROW)) {
-            Optional<ElementEntry> optional = bow.getElements().stream().findAny();
+            Optional<Element.Entry> optional = bow.getElements().stream().findAny();
             if (optional.isPresent()) {
                 arrow = new ItemStack(Items.TIPPED_ARROW);
                 PotionUtil.setPotion(arrow, optional.get().element().getElementPotion());

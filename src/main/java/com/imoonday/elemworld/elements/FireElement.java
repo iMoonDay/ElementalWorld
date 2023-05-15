@@ -13,6 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -99,5 +100,10 @@ public class FireElement extends Element {
             return 0.5f;
         }
         return super.getDamageProtectionMultiplier(source, entity);
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.RED;
     }
 }

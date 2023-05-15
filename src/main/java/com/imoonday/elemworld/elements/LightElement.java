@@ -13,6 +13,7 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.Map;
 
 import static net.minecraft.entity.effect.StatusEffects.NIGHT_VISION;
@@ -79,5 +80,10 @@ public class LightElement extends Element {
         effects.put(SPEED, 0);
         effects.put(NIGHT_VISION, 0);
         return effects;
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.WHITE;
     }
 }

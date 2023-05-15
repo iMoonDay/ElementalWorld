@@ -1,9 +1,7 @@
 package com.imoonday.elemworld.init;
 
 import com.imoonday.elemworld.items.*;
-import com.imoonday.elemworld.items.staffs.FireElementalStaffItem;
-import com.imoonday.elemworld.items.staffs.IceElementalStaffItem;
-import com.imoonday.elemworld.items.staffs.WindElementalStaffItem;
+import com.imoonday.elemworld.items.staffs.*;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.data.client.Model;
@@ -45,6 +43,8 @@ public class EWItems {
     public static final Item WIND_ELEMENTAL_STAFF = register("wind_elemental_staff", new WindElementalStaffItem(), Models.HANDHELD, "Wind Elemental Staff", "风元素法杖");
     public static final Item FIRE_ELEMENTAL_STAFF = register("fire_elemental_staff", new FireElementalStaffItem(), Models.HANDHELD, "Fire Elemental Staff", "火元素法杖");
     public static final Item ICE_ELEMENTAL_STAFF = register("ice_elemental_staff", new IceElementalStaffItem(), Models.HANDHELD, "Ice Elemental Staff", "冰元素法杖");
+    public static final Item GOLD_ELEMENTAL_STAFF = register("gold_elemental_staff", new GoldElementalStaffItem(), Models.HANDHELD, "Gold Elemental Staff", "金元素法杖");
+    public static final Item EARTH_ELEMENTAL_STAFF = register("earth_elemental_staff", new EarthElementalStaffItem(), Models.HANDHELD, "Earth Elemental Staff", "土元素法杖");
 
     public static void register() {
         LOGGER.info("Loading Items");

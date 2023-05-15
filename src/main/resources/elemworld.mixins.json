@@ -15,13 +15,11 @@
     "PlayerEntityMixin",
     "PlayerInventoryMixin",
     "ServerPlayerEntityMixin",
-    "ServerPlayerInteractionManagerMixin",
     "TridentEntityInvoker"
   ],
   "client": [
     "AbstractClientPlayerEntityMixin",
     "ClientPlayerEntityMixin",
-    "ClientPlayerInteractionManagerMixin",
     "HeldItemRendererMixin",
     "InGameHudMixin"
   ],

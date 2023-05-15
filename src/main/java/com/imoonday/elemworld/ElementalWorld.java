@@ -21,10 +21,10 @@ public class ElementalWorld implements ModInitializer {
         EWBlocks.register();
         EWEntities.register();
         EWEffects.register();
-        EWPotions.register();
         EWEvents.register();
         EWGameRules.register();
         Element.register();
+        EWPotions.register();
         EWTranslations.register();
     }
 }

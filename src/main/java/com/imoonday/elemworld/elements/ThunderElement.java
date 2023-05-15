@@ -10,6 +10,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.ExplosionBehavior;
 
+import java.awt.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +26,11 @@ public class ThunderElement extends Element {
     @Override
     public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         return source.isIn(IS_LIGHTNING) ? 0.2f : 1.0f;
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.MAGENTA;
     }
 
     @Override

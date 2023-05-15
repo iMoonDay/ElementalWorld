@@ -1,7 +1,6 @@
 package com.imoonday.elemworld.gui;
 
 import com.imoonday.elemworld.api.Element;
-import com.imoonday.elemworld.api.ElementEntry;
 import com.imoonday.elemworld.init.EWItems;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -32,10 +31,10 @@ public class ElementRendererGui {
         if (!(mc.targetedEntity instanceof LivingEntity living)) {
             return;
         }
-        List<ElementEntry> sortedEntries = Element.getSortedElements(living.getElements());
+        List<Element.Entry> sortedEntries = Element.getSortedElements(living.getElements());
         for (int i = 0; i < sortedEntries.size(); i++) {
             if (i > 15) break;
-            ElementEntry entry = sortedEntries.get(i);
+            Element.Entry entry = sortedEntries.get(i);
             Item item = entry.element().getFragmentItem();
             int y = mc.getWindow().getScaledHeight() / 2 + 8;
             int x = mc.getWindow().getScaledWidth() / 2 - 8 + 16 * i - (sortedEntries.size() - 1) * 16 / 2;

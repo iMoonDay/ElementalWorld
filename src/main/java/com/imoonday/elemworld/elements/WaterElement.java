@@ -11,6 +11,8 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.world.World;
 
+import java.awt.*;
+
 import static com.imoonday.elemworld.init.EWElements.EARTH;
 import static com.imoonday.elemworld.init.EWElements.FIRE;
 
@@ -58,5 +60,10 @@ public class WaterElement extends Element {
     @Override
     public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         return source.isIn(DamageTypeTags.IS_DROWNING) ? 0.5f : super.getDamageProtectionMultiplier(source, entity);
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.CYAN;
     }
 }

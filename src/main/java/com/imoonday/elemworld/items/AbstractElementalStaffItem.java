@@ -1,8 +1,9 @@
-package com.imoonday.elemworld.items.staffs;
+package com.imoonday.elemworld.items;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -14,6 +15,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
 import net.minecraft.world.World;
+
+import java.util.function.Consumer;
 
 public abstract class AbstractElementalStaffItem extends Item {
 
@@ -30,7 +33,7 @@ public abstract class AbstractElementalStaffItem extends Item {
         int amount;
         SoundEvent soundEvent;
         boolean success = true;
-        AbstractElementalEnergyBallEntity energyBallEntity = getEnergyBallEntity(user, useTicks);
+        AbstractElementalEnergyBallEntity energyBallEntity = getEnergyBallEntity(user, stack, useTicks);
         if (user.isSneaking() || energyBallEntity == null) {
             onUsing(stack, world, user, useTicks);
             amount = 1;
@@ -48,11 +51,15 @@ public abstract class AbstractElementalStaffItem extends Item {
 
     public abstract Element getElement();
 
-    public abstract int getPower(int useTicks);
+    public int getPower(int useTicks) {
+        return Math.min(useTicks / 10, 5);
+    }
 
-    public abstract AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, int useTicks);
+    public abstract AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks);
 
-    protected abstract int getMinUseTime();
+    protected int getMinUseTime() {
+        return 10;
+    }
 
     protected abstract void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks);
 
@@ -66,6 +73,14 @@ public abstract class AbstractElementalStaffItem extends Item {
         }
         user.setCurrentHand(hand);
         return TypedActionResult.consume(itemStack);
+    }
+
+    protected void forEachLivingEntity(World world, LivingEntity user, double range, Consumer<LivingEntity> livingEntityConsumer) {
+        for (Entity entity : world.getOtherEntities(user, user.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && living.isAlive())) {
+            LivingEntity living = (LivingEntity) entity;
+            livingEntityConsumer.accept(living);
+            getElement().addEffect(living, user);
+        }
     }
 
     @Override

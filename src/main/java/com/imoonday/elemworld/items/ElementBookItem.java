@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.items;
 
-import com.imoonday.elemworld.api.ElementEntry;
+import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWItems;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.client.item.TooltipContext;
@@ -43,7 +43,7 @@ public class ElementBookItem extends Item {
         NbtList nbtList = getElementsNbt(stack);
         for (int i = 0; i < nbtList.size(); ++i) {
             NbtCompound nbtCompound = nbtList.getCompound(i);
-            ElementEntry.fromNbt(nbtCompound).ifPresent(e -> tooltip.add(e.getName()));
+            Element.Entry.fromNbt(nbtCompound).ifPresent(e -> tooltip.add(e.getName()));
         }
     }
 
@@ -55,27 +55,27 @@ public class ElementBookItem extends Item {
         return stack.getOrCreateNbt().getList(STORED_ELEMENTS_KEY, NbtElement.COMPOUND_TYPE);
     }
 
-    public static Set<ElementEntry> getElements(ItemStack stack) {
-        Set<ElementEntry> entries = new HashSet<>();
+    public static Set<Element.Entry> getElements(ItemStack stack) {
+        Set<Element.Entry> entries = new HashSet<>();
         NbtList nbtList = getElementsNbt(stack);
         for (int i = 0; i < nbtList.size(); ++i) {
             NbtCompound nbtCompound = nbtList.getCompound(i);
-            ElementEntry.fromNbt(nbtCompound).ifPresent(entries::add);
+            Element.Entry.fromNbt(nbtCompound).ifPresent(entries::add);
         }
         return entries;
     }
 
-    public static boolean addElement(ItemStack stack, ElementEntry entry) {
+    public static boolean addElement(ItemStack stack, Element.Entry entry) {
         NbtList nbtList = getElementsNbt(stack);
         boolean noneMatch = true;
         for (int i = 0; i < nbtList.size(); ++i) {
             NbtCompound nbtCompound = nbtList.getCompound(i);
-            Optional<ElementEntry> optional = ElementEntry.fromNbt(nbtCompound);
+            Optional<Element.Entry> optional = Element.Entry.fromNbt(nbtCompound);
             if (optional.isEmpty() || !optional.get().isElementEqual(entry)) {
                 continue;
             }
             if (optional.get().level() < entry.level()) {
-                nbtCompound.putInt(ElementEntry.LEVEL_KEY, entry.level());
+                nbtCompound.putInt(Element.Entry.LEVEL_KEY, entry.level());
             } else {
                 return false;
             }
@@ -89,9 +89,17 @@ public class ElementBookItem extends Item {
         return true;
     }
 
-    public static ItemStack fromElement(ElementEntry entry) {
+    public static ItemStack fromElement(Element.Entry entry) {
         ItemStack stack = new ItemStack(EWItems.ELEMENT_BOOK);
         addElement(stack, entry);
+        return stack;
+    }
+
+    public static ItemStack fromElements(Element.Entry... entries) {
+        ItemStack stack = new ItemStack(EWItems.ELEMENT_BOOK);
+        for (Element.Entry entry : entries) {
+            addElement(stack, entry);
+        }
         return stack;
     }
 }

@@ -2,40 +2,42 @@ package com.imoonday.elemworld.items.staffs;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.energy_balls.IceElementalEnergyBallEntity;
-import com.imoonday.elemworld.init.EWEffects;
+import com.imoonday.elemworld.entities.energy_balls.GoldElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
-public class IceElementalStaffItem extends AbstractElementalStaffItem {
-    public IceElementalStaffItem() {
+public class GoldElementalStaffItem extends AbstractElementalStaffItem {
+    public GoldElementalStaffItem() {
         super(128);
     }
 
     @Override
     protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
         int power = getPower(useTicks);
-        forEachLivingEntity(world, user, power * 2, entity -> entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, power * 20 + 1)));
+        forEachLivingEntity(world, user, power * 2, entity -> {
+            Vec3d vec3d = entity.getPos().subtract(user.getPos()).normalize().multiply(power);
+            entity.setVelocity(vec3d.x, 0.5 + 0.1 * power, vec3d.z);
+        });
     }
 
     @Override
     public Element getElement() {
-        return EWElements.ICE;
+        return EWElements.GOLD;
     }
 
     @Override
     public AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks) {
-        return new IceElementalEnergyBallEntity(user, stack, getPower(useTicks));
+        return new GoldElementalEnergyBallEntity(user, stack, getPower(useTicks));
     }
 
     @Override
     protected SoundEvent getSoundEvent() {
-        return SoundEvents.BLOCK_GLASS_BREAK;
+        return SoundEvents.BLOCK_ANVIL_PLACE;
     }
 }

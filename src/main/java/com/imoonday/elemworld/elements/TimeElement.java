@@ -6,9 +6,16 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.util.math.random.Random;
 
+import java.awt.*;
+
 public class TimeElement extends Element {
     public TimeElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
         super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
+    }
+
+    @Override
+    public Color getColor() {
+        return Color.YELLOW;
     }
 
     @Override

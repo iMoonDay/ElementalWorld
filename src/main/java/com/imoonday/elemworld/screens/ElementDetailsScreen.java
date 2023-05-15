@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.screens;
 
-import com.imoonday.elemworld.api.ElementEntry;
+import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.screens.handler.ElementDetailsScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -41,7 +41,7 @@ public class ElementDetailsScreen extends HandledScreen<ElementDetailsScreenHand
             ItemStack stack = this.handler.getSlot(i).getStack();
             multipliers[0] += stack.getDamageMultiplier(player) - 1;
             multipliers[1] += stack.getMaxHealthMultiplier(player) - 1;
-            Set<ElementEntry> entries = stack.getElements();
+            Set<Element.Entry> entries = stack.getElements();
             int size = entries.size();
             if (size == 1 && entries.iterator().next().element().isInvalid()) {
                 continue;

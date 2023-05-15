@@ -32,11 +32,11 @@ public class ElementRandomlyLootFunction extends ConditionalLootFunction {
 
     @Override
     public ItemStack process(ItemStack stack, LootContext context) {
-        boolean success = ElementBookItem.addElement(stack, ElementEntry.createRandom(element -> !element.isInvalid(), Element::getWeight));
+        boolean success = ElementBookItem.addElement(stack, Element.Entry.createRandom(element -> !element.isInvalid(), Element::getWeight));
         Random random = Random.create();
         float chance = 0.25f;
         while (random.nextFloat() < chance && success) {
-            success = ElementBookItem.addElement(stack, ElementEntry.createRandom(element -> !element.isInvalid(), Element::getWeight));
+            success = ElementBookItem.addElement(stack, Element.Entry.createRandom(element -> !element.isInvalid(), Element::getWeight));
             chance *= 0.5f;
         }
         return stack;

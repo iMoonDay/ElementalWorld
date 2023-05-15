@@ -8,13 +8,18 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -24,26 +29,36 @@ import net.minecraft.world.World;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
+
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity {
 
-    protected boolean collided;
+    private ItemStack staffStack = ItemStack.EMPTY;
+    protected boolean collided = false;
     protected int power;
 
     protected AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> entityType, World world) {
         super(entityType, world);
     }
 
-    public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, int power) {
+    public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack, int power) {
+        this(type, owner, staffStack, power, 0.5f + power * 0.2f);
+    }
+
+    public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack, int power, float speed) {
         this(type, owner.world);
+        this.staffStack = staffStack;
         this.refreshPositionAndAngles(owner.getX(), owner.getEyeY(), owner.getZ(), owner.getYaw(), owner.getPitch());
         this.refreshPosition();
         this.setOwner(owner);
+        this.staffStack = staffStack.copy();
         this.setNoGravity(true);
         this.power = Math.max(power, 1);
-        this.setVelocity(owner, owner.getPitch(), owner.getYaw(), 0f, 0.5f + this.power * 0.2f, 1.0f);
-        this.collided = false;
+        this.setVelocity(owner, owner.getPitch(), owner.getYaw(), 0f, speed, 1.0f);
     }
 
     @Override
@@ -109,6 +124,9 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
     protected void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putInt("Power", this.power);
+        if (this.staffStack != null) {
+            nbt.put("StaffStack", this.staffStack.writeNbt(new NbtCompound()));
+        }
     }
 
     @Override
@@ -117,6 +135,48 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
         if (nbt.contains("Power", NbtElement.INT_TYPE)) {
             this.power = nbt.getInt("Power");
         }
+        if (nbt.contains("StaffStack", NbtElement.COMPOUND_TYPE)) {
+            this.staffStack = ItemStack.fromNbt(nbt.getCompound("StaffStack"));
+        }
+    }
+
+    protected void forEachLivingEntity(double range, float damage, Consumer<LivingEntity> livingEntityConsumer) {
+        Entity owner = getOwner();
+        List<Entity> entities = world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && living.isAlive());
+        if (entities.isEmpty()) {
+            spawnAreaEffectCloudEntity(this, 3.0f, 10);
+        } else {
+            for (Entity entity : entities) {
+                LivingEntity livingEntity = (LivingEntity) entity;
+                float amount = damage * this.getStaffStack().getDamageMultiplier(livingEntity);
+                if (amount > 0) {
+                    livingEntity.damage(Objects.requireNonNullElse(owner, this).getDamageSources().magic(), amount);
+                }
+                livingEntityConsumer.accept(livingEntity);
+                spawnAreaEffectCloudEntity(livingEntity, 0.5f * power, power * 2);
+            }
+        }
+        this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY(), this.getZ(), 1.0, 0, 0);
+        this.world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.VOICE);
+    }
+
+    private void spawnAreaEffectCloudEntity(Entity entity, float radius, int waitTime) {
+        if (!this.world.isClient) {
+            AreaEffectCloudEntity areaEffectCloudEntity = new AreaEffectCloudEntity(this.world, entity.getX(), entity.getY(), entity.getZ());
+            if (getOwner() instanceof LivingEntity living) {
+                areaEffectCloudEntity.setOwner(living);
+            }
+            areaEffectCloudEntity.setRadius(radius);
+            areaEffectCloudEntity.setRadiusOnUse(-0.5f);
+            areaEffectCloudEntity.setWaitTime(waitTime);
+            areaEffectCloudEntity.setRadiusGrowth(-areaEffectCloudEntity.getRadius() / (float) areaEffectCloudEntity.getDuration());
+            areaEffectCloudEntity.setPotion(this.getElement().getElementPotion());
+            this.world.spawnEntity(areaEffectCloudEntity);
+        }
+    }
+
+    protected ItemStack getStaffStack() {
+        return staffStack.copy();
     }
 
     public static class EnergyBallEntityRenderer<T extends AbstractElementalEnergyBallEntity> extends EntityRenderer<T> {

@@ -7,8 +7,7 @@ import static com.imoonday.elemworld.ElementalWorld.LOGGER;
 
 public class EWElements {
 
-    public static final Element EMPTY = Element.register("empty", new Element(0, 0, 50) {
-    }, null, null);
+    public static final Element EMPTY = Element.register("empty", new EmptyElement(50), null, null);
     public static final Element GOLD = Element.register("gold", new GoldElement(3, 1, 40, 0.25f, 0.25f, 0.0f, -0.25f), "Gold", "金");
     public static final Element WOOD = Element.register("wood", new WoodElement(3, 1, 40, -0.25f, -0.25f, 0.0f, 0.25f), "Wood", "木");
     public static final Element WATER = Element.register("water", new WaterElement(3, 1, 40, 0.0f, 0.25f, 0.0f, 0.0f), "Water", "水");
@@ -28,4 +27,5 @@ public class EWElements {
     public static void register() {
         LOGGER.info("Loading Elements");
     }
+
 }
