@@ -17,10 +17,12 @@ import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWPotions {
 
+    public static int DEFAULT_DURATION = 60 * 20;
+
     public static final Potion FREEZE = registerPotion("freeze", EWEffects.FREEZE, Potions.WATER, EWElements.ICE.getFragmentItem());
     public static final Potion FREEZING_RESISTANCE = registerPotion("freezing_resistance", EWEffects.FREEZING_RESISTANCE, Potions.AWKWARD, EWElements.FIRE.getFragmentItem());
     public static final Potion DIZZY = registerPotion("dizzy", EWEffects.DIZZY);
-    public static int DEFAULT_DURATION = 60 * 20;
+    public static final Potion WATER_FEARING = registerPotion("water_fearing", EWEffects.WATER_FEARING);
 
     public static void register() {
         LOGGER.info("Loading Potions");
@@ -35,8 +37,8 @@ public class EWPotions {
     public static Potion registerPotion(String id, StatusEffect effect) {
         Potion potion = new Potion(new StatusEffectInstance(effect, DEFAULT_DURATION));
         ElementalWorldData.getTranslation(effect).ifPresent(translation -> {
-            String en_us = translation.getContent();
-            String zh_cn = translation.getContent("zh_cn");
+            String en_us = translation.get();
+            String zh_cn = translation.get("zh_cn");
             ElementalWorldData.addTranslation(Items.POTION.getTranslationKey() + ".effect." + id, "Potion of " + en_us, zh_cn + "药水");
             ElementalWorldData.addTranslation(Items.SPLASH_POTION.getTranslationKey() + ".effect." + id, "Splash Potion of " + en_us, "喷溅型" + zh_cn + "药水");
             ElementalWorldData.addTranslation(Items.LINGERING_POTION.getTranslationKey() + ".effect." + id, "Lingering Potion of " + en_us, "滞留型" + zh_cn + "药水");

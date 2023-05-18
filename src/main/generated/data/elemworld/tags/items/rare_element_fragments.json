@@ -1,10 +1,10 @@
 {
   "replace": false,
   "values": [
-    "elemworld:space_element_fragment",
-    "elemworld:time_element_fragment",
-    "elemworld:sound_element_fragment",
     "elemworld:light_element_fragment",
-    "elemworld:darkness_element_fragment"
+    "elemworld:darkness_element_fragment",
+    "elemworld:time_element_fragment",
+    "elemworld:space_element_fragment",
+    "elemworld:sound_element_fragment"
   ]
 }

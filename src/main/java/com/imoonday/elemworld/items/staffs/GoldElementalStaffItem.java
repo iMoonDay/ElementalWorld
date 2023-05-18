@@ -13,17 +13,16 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class GoldElementalStaffItem extends AbstractElementalStaffItem {
-    public GoldElementalStaffItem() {
-        super(128);
-    }
 
     @Override
     protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
         int power = getPower(useTicks);
-        forEachLivingEntity(world, user, power * 2, entity -> {
-            Vec3d vec3d = entity.getPos().subtract(user.getPos()).normalize().multiply(power);
-            entity.setVelocity(vec3d.x, 0.5 + 0.1 * power, vec3d.z);
-        });
+        forEachLivingEntity(world, user, power * 2, entity -> knockBack(user, power, entity), () -> {});
+    }
+
+    private static void knockBack(LivingEntity user, int power, LivingEntity entity) {
+        Vec3d vec3d = entity.getPos().subtract(user.getPos()).normalize().multiply(power);
+        entity.setVelocity(vec3d.x, 0.5 + 0.1 * power, vec3d.z);
     }
 
     @Override

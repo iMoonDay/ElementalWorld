@@ -12,14 +12,11 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.world.World;
 
 public class FireElementalStaffItem extends AbstractElementalStaffItem {
-    public FireElementalStaffItem() {
-        super(128);
-    }
 
     @Override
     protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
         int power = getPower(useTicks);
-        forEachLivingEntity(world, user, power * 2, entity -> entity.setOnFireFor(power * 2));
+        forEachLivingEntity(world, user, power * 2, entity -> entity.setOnFireFor(power * 2), () -> {});
     }
 
     @Override

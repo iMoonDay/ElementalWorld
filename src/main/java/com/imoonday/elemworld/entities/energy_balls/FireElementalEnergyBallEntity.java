@@ -7,6 +7,8 @@ import com.imoonday.elemworld.init.EWEntities;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
 
@@ -26,8 +28,22 @@ public class FireElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        if (!this.world.isClient && this.isTouchingWater()) {
+            this.world.playSound(null, this.getBlockPos(), SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.VOICE);
+            this.discard();
+        }
+    }
+
+    @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        forEachLivingEntity(power * 2, 1.0f * power, entity -> entity.setOnFireFor(power * 2));
+        forEachLivingEntity(power * 2,
+                entity -> 1.0f * power,
+                LivingEntity::isAlive,
+                entity -> entity.setOnFireFor(power * 2),
+                () -> {
+                });
     }
 }

@@ -30,8 +30,9 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
@@ -140,20 +141,30 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
         }
     }
 
-    protected void forEachLivingEntity(double range, float damage, Consumer<LivingEntity> livingEntityConsumer) {
-        Entity owner = getOwner();
-        List<Entity> entities = world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && living.isAlive());
-        if (entities.isEmpty()) {
-            spawnAreaEffectCloudEntity(this, 3.0f, 10);
-        } else {
-            for (Entity entity : entities) {
-                LivingEntity livingEntity = (LivingEntity) entity;
-                float amount = damage * this.getStaffStack().getDamageMultiplier(livingEntity);
-                if (amount > 0) {
-                    livingEntity.damage(Objects.requireNonNullElse(owner, this).getDamageSources().magic(), amount);
+    /**
+     * @param range                Max distance from entity to this
+     * @param damageFunc           Damage taken by each entity
+     * @param predicate            Effective entity conditions
+     * @param livingEntityConsumer Operations on each living entity
+     * @param elseToDo             Run when no entities are found
+     */
+    protected void forEachLivingEntity(double range, Function<LivingEntity, Float> damageFunc, Predicate<LivingEntity> predicate, Consumer<LivingEntity> livingEntityConsumer, Runnable elseToDo) {
+        if (!world.isClient) {
+            Entity owner = getOwner();
+            List<Entity> entities = world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && predicate.test(living));
+            if (entities.isEmpty()) {
+                elseToDo.run();
+                spawnAreaEffectCloudEntity(this, 3.0f, 10);
+            } else {
+                for (Entity entity : entities) {
+                    LivingEntity livingEntity = (LivingEntity) entity;
+                    float amount = damageFunc.apply(livingEntity) * this.getStaffStack().getDamageMultiplier(livingEntity);
+                    if (amount > 0) {
+                        livingEntity.damage(owner != null ? owner.getDamageSources().indirectMagic(this, owner) : this.getDamageSources().magic(), amount);
+                    }
+                    livingEntityConsumer.accept(livingEntity);
+                    spawnAreaEffectCloudEntity(livingEntity, 0.5f * power, power * 2);
                 }
-                livingEntityConsumer.accept(livingEntity);
-                spawnAreaEffectCloudEntity(livingEntity, 0.5f * power, power * 2);
             }
         }
         this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY(), this.getZ(), 1.0, 0, 0);

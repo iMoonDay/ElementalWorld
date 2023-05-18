@@ -14,6 +14,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import dev.emi.trinkets.api.SlotReference;
+import dev.emi.trinkets.api.TrinketsApi;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
@@ -43,6 +45,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Contract;
@@ -89,7 +92,7 @@ public abstract class Element {
         this.damageMultiplier = damageMultiplier;
         this.maxHealthMultiplier = maxHealthMultiplier;
         this.durabilityMultiplier = durabilityMultiplier;
-        this.translation = new Translation<>(this, null);
+        this.translation = new Translation<>(this);
     }
 
     public static void register() {
@@ -102,15 +105,15 @@ public abstract class Element {
                 Identifier id = id(element.name);
                 Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
                 Registry.register(Registries.POTION, id, new ElementPotion(element));
-                String en_us = element.getTranslation().getContent();
-                String zh_cn = element.getTranslation().getContent("zh_cn");
+                String en_us = element.getTranslation().get();
+                String zh_cn = element.getTranslation().get("zh_cn");
                 ElementalWorldData.addTranslation(element.getTranslationKey() + ".potion", "Potion of " + en_us + " Element", zh_cn + "元素药水");
                 ElementalWorldData.addTranslation(element.getTranslationKey() + ".splash_potion", "Splash Potion of " + en_us + " Element", "喷溅型" + zh_cn + "元素药水");
                 ElementalWorldData.addTranslation(element.getTranslationKey() + ".lingering_potion", "Lingering Potion of " + en_us + " Element", "滞留型" + zh_cn + "元素药水");
                 ElementalWorldData.addTranslation(element.getTranslationKey() + ".tipped_arrow", "Arrow of " + en_us + " Element", zh_cn + "元素之箭");
             }
             if (element.hasFragmentItem()) {
-                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element), element.translation.getContent(), element.translation.getContent("zh_cn"), ELEMENT_FRAGMENTS, element.getFragmentTagKey());
+                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element), element.translation.get(), element.translation.get("zh_cn"), ELEMENT_FRAGMENTS, element.getFragmentTagKey());
             }
         }
         ElementalWorldData.addTranslation("element.elemworld.invalid", "Invalid element: %s", "无效的元素: %s");
@@ -333,6 +336,24 @@ public abstract class Element {
         Comparator<Entry> name = Comparator.comparing(o -> o.element().name);
         list.sort(rareLevel.thenComparing(level).thenComparing(name));
         return list;
+    }
+
+    public static void addTrinketElements(boolean repeat, LivingEntity entity, List<Entry> list) {
+        try {
+            if (FabricLoader.getInstance().isModLoaded("trinkets")) {
+                TrinketsApi.getTrinketComponent(entity).ifPresent(component -> {
+                    for (Pair<SlotReference, ItemStack> stackPair : component.getAllEquipped()) {
+                        for (Entry entry : stackPair.getRight().getElements()) {
+                            if (repeat || list.stream().noneMatch(instance1 -> instance1.isElementEqual(entry))) {
+                                list.add(entry);
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (Throwable ignored) {
+
+        }
     }
 
     public Text getTranslationName() {

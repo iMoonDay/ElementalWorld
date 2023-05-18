@@ -1,4 +1,4 @@
-// 1.19.4	2023-05-16T00:31:17.1380654	Elemental World/Model Definitions
+// 1.19.4	2023-05-19T01:27:35.0701602	Elemental World/Model Definitions
 a9bb9e2321537bbd00150d6f4a16f15e488fe18d assets\elemworld\models\item\element_sword.json
 f5a0d3c60e5df596c9c09acd5b357780080673ac assets\elemworld\models\item\grass_element_fragment.json
 da662c97144635b0fbc88244fca1f455508f901a assets\elemworld\models\item\sound_element_fragment.json
@@ -13,14 +13,15 @@ d456494f1025c1cdd12d7cf033a79fc5d5749a0b assets\elemworld\models\item\water_elem
 8c1142213d1e832e0f6a1f453bba6f173b1796ba assets\elemworld\models\item\time_element_fragment.json
 c5814bd55c3525480c66527d2209e4f4ee0df9bf assets\elemworld\models\item\ice_element_fragment.json
 87eb6c305fb0fab1ab94fbf5cdda7e051f9e4e5c assets\elemworld\models\item\ice_elemental_staff.json
+77176390d4167c1feb16a18e5feb242d276edf7a assets\elemworld\models\item\water_elemental_staff.json
 58e3238bc8c999d01e63208687e1252b8100b666 assets\elemworld\models\block\element_smithing_table.json
 c0df388edfde0763b24616e085ebc186219a92d4 assets\elemworld\models\item\element_pickaxe.json
 5db9ab3684a4315db85e67a8479e96d26318b566 assets\elemworld\models\item\rock_element_fragment.json
 4ed1d8681a4389b2f19ed4d4f7cd79be6aba1624 assets\elemworld\models\item\element_smithing_table.json
 c24e5e1cca10c4d7f4e82ef61e0fd9dcb72ef221 assets\elemworld\models\item\darkness_element_fragment.json
 7a3e4c79b8ff6e7708a0c72b3fc5eaf01fdf5d57 assets\elemworld\models\item\element_ingot.json
-0f18a2ac22f80161076c83d83803dedc314b3be3 assets\elemworld\models\item\rare_element_fragment.json
 544bb04a74aa0f484b2dd2848df08a966e4124c7 assets\elemworld\models\item\light_element_fragment.json
+0f18a2ac22f80161076c83d83803dedc314b3be3 assets\elemworld\models\item\rare_element_fragment.json
 f6905aaee43fd6c328761b74e58f55da85d9bcc0 assets\elemworld\models\item\base_element_fragment.json
 c9d781677e0993ba98f356c66d6d9ea061bdf005 assets\elemworld\models\item\fire_elemental_staff.json
 3bd608bc81a7f140b7ffe21b335a53ba71556b7a assets\elemworld\models\item\advanced_element_fragment.json
@@ -32,5 +33,6 @@ a601d0fd687a88372b4c326d8f223d76824c4557 assets\elemworld\models\item\earth_elem
 7c64b1ebdf86f64ea42d827fafb65a53c1b985ad assets\elemworld\models\item\wind_elemental_staff.json
 6b47822cb2f655976f5dff8f40809a0bfbe9b2ff assets\elemworld\models\item\fire_element_fragment.json
 d648f74fd880bf8955b92e1b4be604f2aba66df2 assets\elemworld\blockstates\element_smithing_table.json
+2314902afa74f8a35fd475216680b732416ed3aa assets\elemworld\models\item\wood_elemental_staff.json
 de0d437eae9d29543a45a7cf153e20f882d052b0 assets\elemworld\models\item\element_detector.json
 b0cd44d98bcd9df66b03da6fea242f10bf08a0be assets\elemworld\models\item\element_stick.json

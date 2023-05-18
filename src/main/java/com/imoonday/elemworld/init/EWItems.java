@@ -45,6 +45,8 @@ public class EWItems {
     public static final Item ICE_ELEMENTAL_STAFF = register("ice_elemental_staff", new IceElementalStaffItem(), Models.HANDHELD, "Ice Elemental Staff", "冰元素法杖");
     public static final Item GOLD_ELEMENTAL_STAFF = register("gold_elemental_staff", new GoldElementalStaffItem(), Models.HANDHELD, "Gold Elemental Staff", "金元素法杖");
     public static final Item EARTH_ELEMENTAL_STAFF = register("earth_elemental_staff", new EarthElementalStaffItem(), Models.HANDHELD, "Earth Elemental Staff", "土元素法杖");
+    public static final Item WOOD_ELEMENTAL_STAFF = register("wood_elemental_staff", new WoodElementalStaffItem(), Models.HANDHELD, "Wood Elemental Staff", "木元素法杖");
+    public static final Item WATER_ELEMENTAL_STAFF = register("water_elemental_staff", new WaterElementalStaffItem(), Models.HANDHELD, "Water Elemental Staff", "水元素法杖");
 
     public static void register() {
         LOGGER.info("Loading Items");

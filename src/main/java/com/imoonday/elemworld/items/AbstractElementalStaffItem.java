@@ -14,14 +14,24 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class AbstractElementalStaffItem extends Item {
 
+    public AbstractElementalStaffItem() {
+        this(128);
+    }
+
     public AbstractElementalStaffItem(int maxDamage) {
-        super(new FabricItemSettings().maxCount(1).maxDamage(maxDamage));
+        this(new FabricItemSettings().maxCount(1).maxDamage(maxDamage));
+    }
+
+    public AbstractElementalStaffItem(Settings settings) {
+        super(settings);
     }
 
     @Override
@@ -52,7 +62,7 @@ public abstract class AbstractElementalStaffItem extends Item {
     public abstract Element getElement();
 
     public int getPower(int useTicks) {
-        return Math.min(useTicks / 10, 5);
+        return MathHelper.clamp(useTicks / 10, 1, 5);
     }
 
     public abstract AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks);
@@ -75,11 +85,18 @@ public abstract class AbstractElementalStaffItem extends Item {
         return TypedActionResult.consume(itemStack);
     }
 
-    protected void forEachLivingEntity(World world, LivingEntity user, double range, Consumer<LivingEntity> livingEntityConsumer) {
-        for (Entity entity : world.getOtherEntities(user, user.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && living.isAlive())) {
-            LivingEntity living = (LivingEntity) entity;
-            livingEntityConsumer.accept(living);
-            getElement().addEffect(living, user);
+    protected void forEachLivingEntity(World world, LivingEntity user, double range, Consumer<LivingEntity> livingEntityConsumer, Runnable elseToDo) {
+        if (!world.isClient) {
+            List<Entity> entities = world.getOtherEntities(user, user.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && living.isAlive());
+            if (entities.isEmpty()) {
+                elseToDo.run();
+            } else {
+                for (Entity entity : entities) {
+                    LivingEntity living = (LivingEntity) entity;
+                    livingEntityConsumer.accept(living);
+                    getElement().addEffect(living, user);
+                }
+            }
         }
     }
 

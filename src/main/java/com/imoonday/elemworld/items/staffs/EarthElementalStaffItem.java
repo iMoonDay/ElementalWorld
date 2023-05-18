@@ -2,9 +2,11 @@ package com.imoonday.elemworld.items.staffs;
 
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
+import com.imoonday.elemworld.entities.energy_balls.EarthElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
@@ -12,13 +14,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class EarthElementalStaffItem extends AbstractElementalStaffItem {
-    public EarthElementalStaffItem() {
-        super(128);
-    }
 
     @Override
     public Element getElement() {
@@ -27,27 +23,19 @@ public class EarthElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks) {
-        return null;
+        return new EarthElementalEnergyBallEntity(user, stack, getPower(useTicks));
     }
 
     @Override
     protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
         int power = getPower(useTicks);
-        forEachLivingEntity(world, user, power * 2, entity -> {
-            Set<BlockPos> posSet = new HashSet<>();
-            BlockPos blockPos = entity.getBlockPos();
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    for (int k = -1; k <= 1; k++) {
-                        posSet.add(blockPos.add(i, j, k));
-//                        FallingBlockEntity.spawnFromBlock(world, pos, Blocks.DIRT.getDefaultState());
-                    }
-                }
-            }
-            for (BlockPos pos : posSet) {
-                world.setBlockState(pos, Blocks.DIRT.getDefaultState());
-            }
-        });
+        forEachLivingEntity(world, user, power * 2, entity -> BlockPos.stream(entity.getBoundingBox()).forEach(pos -> spawnFallingBlock(world, power, pos)), () -> {});
+    }
+
+    private static void spawnFallingBlock(World world, int power, BlockPos pos) {
+        FallingBlockEntity fallingBlock = FallingBlockEntity.spawnFromBlock(world, pos.up(5), Blocks.DIRT.getDefaultState());
+        fallingBlock.setHurtEntities(0.5f * power, power);
+        fallingBlock.setDestroyedOnLanding();
     }
 
     @Override

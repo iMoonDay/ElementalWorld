@@ -2,10 +2,7 @@ package com.imoonday.elemworld.init;
 
 import com.imoonday.elemworld.ElementalWorldData;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.energy_balls.FireElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.energy_balls.GoldElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.energy_balls.IceElementalEnergyBallEntity;
-import com.imoonday.elemworld.entities.energy_balls.WindElementalEnergyBallEntity;
+import com.imoonday.elemworld.entities.energy_balls.*;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityDimensions;
@@ -27,6 +24,9 @@ public class EWEntities {
     public static final EntityType<FireElementalEnergyBallEntity> FIRE_ELEMENTAL_ENERGY_BALL = registerEnergyBall("fire_elemental_energy_ball", FireElementalEnergyBallEntity::new, "Fire Elemental Energy Ball", "火元素能量球");
     public static final EntityType<IceElementalEnergyBallEntity> ICE_ELEMENTAL_ENERGY_BALL = registerEnergyBall("ice_elemental_energy_ball", IceElementalEnergyBallEntity::new, "Ice Elemental Energy Ball", "冰元素能量球");
     public static final EntityType<GoldElementalEnergyBallEntity> GOLD_ELEMENTAL_ENERGY_BALL = registerEnergyBall("gold_elemental_energy_ball", GoldElementalEnergyBallEntity::new, "Gold Elemental Energy Ball", "金元素能量球");
+    public static final EntityType<EarthElementalEnergyBallEntity> EARTH_ELEMENTAL_ENERGY_BALL = registerEnergyBall("earth_elemental_energy_ball", EarthElementalEnergyBallEntity::new, "Earth Elemental Energy Ball", "土元素能量球");
+    public static final EntityType<WoodElementalEnergyBallEntity> WOOD_ELEMENTAL_ENERGY_BALL = registerEnergyBall("wood_elemental_energy_ball", WoodElementalEnergyBallEntity::new, "Wood Elemental Energy Ball", "木元素能量球");
+    public static final EntityType<WaterElementalEnergyBallEntity> WATER_ELEMENTAL_ENERGY_BALL = registerEnergyBall("water_elemental_energy_ball", WaterElementalEnergyBallEntity::new, "Water Elemental Energy Ball", "水元素能量球");
 
     public static void register() {
     }

@@ -28,6 +28,10 @@ public class WindElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
     @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        forEachLivingEntity(power * 2, 0.5f * power, entity -> entity.setVelocity(0, 0.5 * power, 0));
+        forEachLivingEntity(power * 2,
+                entity -> 0.5f * power,
+                LivingEntity::isAlive,
+                entity -> entity.setVelocity(0, 0.5 * power, 0),
+                () -> {});
     }
 }

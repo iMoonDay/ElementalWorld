@@ -23,11 +23,10 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.stat.StatType;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -39,7 +38,7 @@ import static com.imoonday.elemworld.init.EWTags.*;
 
 public class ElementalWorldData implements DataGeneratorEntrypoint {
 
-    public static final Set<Translation<?>> TRANSLATIONS = new HashSet<>();
+    private static final Set<Translation<?>> TRANSLATIONS = new HashSet<>();
 
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {
@@ -143,43 +142,51 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
         @Override
         public void generateTranslations(TranslationBuilder translationBuilder) {
             for (Translation<?> translation : TRANSLATIONS) {
-                String content = translation.getContent(languageCode);
+                String content = translation.get(languageCode);
                 if (content != null) {
                     Object instance = translation.getInstance();
-                    if (instance instanceof Item item) {
-                        translationBuilder.add(item, content);
-                    } else if (instance instanceof Block block) {
-                        translationBuilder.add(block, content);
-                    } else if (instance instanceof StatusEffect statusEffect) {
-                        translationBuilder.add(statusEffect, content);
-                    } else if (instance instanceof EntityType<?> entityType) {
-                        translationBuilder.add(entityType, content);
-                    } else if (instance instanceof Enchantment enchantment) {
-                        translationBuilder.add(enchantment, content);
-                    } else if (instance instanceof String translationKey) {
-                        translationBuilder.add(translationKey, content);
-                    } else if (instance instanceof ItemGroup itemGroup) {
-                        translationBuilder.add(itemGroup, content);
-                    } else if (instance instanceof EntityAttribute entityAttribute) {
-                        translationBuilder.add(entityAttribute, content);
-                    } else if (instance instanceof StatType<?> statType) {
-                        translationBuilder.add(statType, content);
-                    } else if (instance instanceof Identifier identifier) {
-                        translationBuilder.add(identifier, content);
-                    } else {
-                        throw new IllegalStateException("Unsupported Type: " + instance);
+                    try {
+                        if (instance instanceof Item item) {
+                            translationBuilder.add(item, content);
+                        } else if (instance instanceof Block block) {
+                            translationBuilder.add(block, content);
+                        } else if (instance instanceof StatusEffect statusEffect) {
+                            translationBuilder.add(statusEffect, content);
+                        } else if (instance instanceof EntityType<?> entityType) {
+                            translationBuilder.add(entityType, content);
+                        } else if (instance instanceof Enchantment enchantment) {
+                            translationBuilder.add(enchantment, content);
+                        } else if (instance instanceof String translationKey) {
+                            translationBuilder.add(translationKey, content);
+                        } else if (instance instanceof ItemGroup itemGroup) {
+                            translationBuilder.add(itemGroup, content);
+                        } else if (instance instanceof EntityAttribute entityAttribute) {
+                            translationBuilder.add(entityAttribute, content);
+                        } else if (instance instanceof StatType<?> statType) {
+                            translationBuilder.add(statType, content);
+                        } else if (instance instanceof Identifier identifier) {
+                            translationBuilder.add(identifier, content);
+                        } else {
+                            throw new IllegalStateException("Unsupported Type: " + instance);
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("Duplicate items found: " + instance);
+                        LOGGER.warn(String.valueOf(e));
                     }
                 }
             }
 
-            try {
-                Path existingFilePath = dataOutput.getModContainer().findPath("assets/elemworld/lang/" + languageCode + ".json").get();
-                translationBuilder.add(existingFilePath);
-            } catch (NoSuchElementException e) {
-                System.out.println("No language files found!");
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to add existing language file!", e);
-            }
+//            try {
+//                Optional<Path> existingFilePath = dataOutput.getModContainer().findPath("assets/elemworld/lang/" + languageCode + ".json");
+//                if (existingFilePath.isPresent()) {
+//                    translationBuilder.add(existingFilePath.get());
+//                } else {
+//                    LOGGER.warn("No language files found!(" + languageCode + ")");
+//                }
+//            } catch (Exception e) {
+//                LOGGER.warn("Failed to add existing language file!(" + languageCode + ")");
+//                LOGGER.warn(String.valueOf(e));
+//            }
         }
     }
 
@@ -197,26 +204,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
         }
     }
 
-    public static <T> void addCustomTranslation(T t, String languageCode, String content) {
-        if (languageCode != null) {
-            Translation<T> translation = new Translation<>(t, null);
-            if (content != null) {
-                translation.add(languageCode, content);
-            }
-            TRANSLATIONS.add(translation);
-        }
-    }
-
-    public static <T> void addExistingTranslationTo(T t, String languageCode, String content) {
-        if (languageCode != null) {
-            for (Translation<?> translation : TRANSLATIONS) {
-                if (translation.getInstance() == t) {
-                    if (content != null) {
-                        translation.add(languageCode, content);
-                    }
-                    break;
-                }
-            }
-        }
+    public static <T> void addCustomTranslation(T t, @NotNull String languageCode, @NotNull String content) {
+        getTranslation(t).ifPresentOrElse(translation -> translation.add(languageCode, content), () -> TRANSLATIONS.add(new Translation<>(t, languageCode, content)));
     }
 }

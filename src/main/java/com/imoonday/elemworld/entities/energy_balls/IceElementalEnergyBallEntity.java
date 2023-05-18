@@ -30,6 +30,10 @@ public class IceElementalEnergyBallEntity extends AbstractElementalEnergyBallEnt
     @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        forEachLivingEntity(power * 2, 0.5f * power, entity -> entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, power * 20 + 1)));
+        forEachLivingEntity(power * 2,
+                entity -> 0.5f * power,
+                LivingEntity::isAlive,
+                entity -> entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, power * 20 + 1)),
+                () -> {});
     }
 }

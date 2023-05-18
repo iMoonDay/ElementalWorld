@@ -1,12 +1,10 @@
 package com.imoonday.elemworld.api;
 
 import com.google.common.collect.ImmutableMap;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Translation<T> {
 
@@ -14,11 +12,30 @@ public class Translation<T> {
     private final Map<String, String> translations = new HashMap<>();
     private final T instance;
 
-    public Translation(T instance, @Nullable String defaultContent) {
+    public Translation(T instance) {
         this.instance = instance;
-        if (defaultContent != null) {
-            this.add(DEFAULT, defaultContent);
-        }
+    }
+
+    public Translation(T instance, @NotNull String defaultContent) {
+        this(instance);
+        this.add(DEFAULT, defaultContent);
+    }
+
+    public Translation(T instance, @NotNull String languageCode, @NotNull String content) {
+        this(instance);
+        this.add(languageCode, content);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Translation<?> that)) return false;
+        return Objects.equals(instance, that.instance);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(instance);
     }
 
     public T getInstance() {
@@ -26,12 +43,12 @@ public class Translation<T> {
     }
 
     @Nullable
-    public String getContent(String languageCode) {
+    public String get(String languageCode) {
         return translations.get(languageCode);
     }
 
-    public String getContent() {
-        return getContent(DEFAULT);
+    public String get() {
+        return get(DEFAULT);
     }
 
     public void add(String languageCode, String content) {
@@ -42,6 +59,10 @@ public class Translation<T> {
                 translations.remove(languageCode);
             }
         }
+    }
+
+    public int size() {
+        return translations.size();
     }
 
     public Iterator<Map.Entry<String, String>> iterator() {

@@ -13,14 +13,10 @@ import net.minecraft.world.World;
 
 public class WindElementalStaffItem extends AbstractElementalStaffItem {
 
-    public WindElementalStaffItem() {
-        super(128);
-    }
-
     @Override
     protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
         int power = getPower(useTicks);
-        forEachLivingEntity(world, user, power * 2, entity -> entity.setVelocity(0, 0.5 * power, 0));
+        forEachLivingEntity(world, user, power * 2, entity -> entity.setVelocity(0, 0.5 * power, 0), () -> {});
     }
 
     @Override

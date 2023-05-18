@@ -28,9 +28,15 @@ public class GoldElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
     @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        forEachLivingEntity(power * 2, 0.5f * power, entity -> {
-            Vec3d vec3d = entity.getPos().subtract(this.getPos()).normalize().multiply(power);
-            entity.setVelocity(vec3d.x, 0.5 + 0.1 * power, vec3d.z);
-        });
+        forEachLivingEntity(power * 2,
+                entity -> 0.5f * power,
+                LivingEntity::isAlive,
+                this::knockBack,
+                () -> {});
+    }
+
+    private void knockBack(LivingEntity entity) {
+        Vec3d vec3d = entity.getPos().subtract(this.getPos()).normalize().multiply(power);
+        entity.setVelocity(vec3d.x, 0.5 + 0.1 * power, vec3d.z);
     }
 }

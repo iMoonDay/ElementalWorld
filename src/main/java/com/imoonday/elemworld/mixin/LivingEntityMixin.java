@@ -5,10 +5,6 @@ import com.imoonday.elemworld.api.EWLivingEntity;
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.init.EWElements;
-import dev.emi.trinkets.api.SlotReference;
-import dev.emi.trinkets.api.TrinketComponent;
-import dev.emi.trinkets.api.TrinketsApi;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -32,7 +28,6 @@ import net.minecraft.potion.Potion;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
@@ -505,22 +500,7 @@ public class LivingEntityMixin implements EWLivingEntity {
                 }
             }
         }
-        if (FabricLoader.getInstance().isModLoaded("trinkets")) {
-            try {
-                Optional<TrinketComponent> trinketComponent = TrinketsApi.getTrinketComponent(entity);
-                trinketComponent.ifPresent(component -> {
-                    for (Pair<SlotReference, ItemStack> stackPair : component.getAllEquipped()) {
-                        for (Element.Entry entry : stackPair.getRight().getElements()) {
-                            if (repeat || list.stream().noneMatch(instance1 -> instance1.isElementEqual(entry))) {
-                                list.add(entry);
-                            }
-                        }
-                    }
-                });
-            } catch (Exception ignore) {
-
-            }
-        }
+        Element.addTrinketElements(repeat, entity, list);
         return list;
     }
 

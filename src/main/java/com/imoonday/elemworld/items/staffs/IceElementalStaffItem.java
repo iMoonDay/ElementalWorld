@@ -14,14 +14,11 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.world.World;
 
 public class IceElementalStaffItem extends AbstractElementalStaffItem {
-    public IceElementalStaffItem() {
-        super(128);
-    }
 
     @Override
     protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
         int power = getPower(useTicks);
-        forEachLivingEntity(world, user, power * 2, entity -> entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, power * 20 + 1)));
+        forEachLivingEntity(world, user, power * 2, entity -> entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, power * 20 + 1)), () -> {});
     }
 
     @Override

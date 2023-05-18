@@ -18,8 +18,8 @@ public class EWKeyBindings {
     public static final String DISPLAY = "key.elemworld.display";
 
     public static void register(){
-        ElementalWorldData.addCustomTranslation(CATEGORY, "Elemental World", "元素世界");
-        ElementalWorldData.addCustomTranslation(DISPLAY, "Open the element screen", "打开元素界面");
+        ElementalWorldData.addTranslation(CATEGORY, "Elemental World", "元素世界");
+        ElementalWorldData.addTranslation(DISPLAY, "Open the element screen", "打开元素界面");
         LOGGER.info("Loading KeyBindings");
     }
 
