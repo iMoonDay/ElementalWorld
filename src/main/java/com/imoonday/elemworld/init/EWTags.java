@@ -13,4 +13,5 @@ public class EWTags {
     public static final TagKey<Item> RARE_ELEMENT_FRAGMENTS = TagKey.of(RegistryKeys.ITEM, id("rare_element_fragments"));
     public static final TagKey<Item> ELEMENT_FRAGMENTS = TagKey.of(RegistryKeys.ITEM, id("element_fragments"));
     public static final TagKey<Item> ELEMENT_TOOLS_AND_WEAPONS = TagKey.of(RegistryKeys.ITEM, id("element_tools_and_weapons"));
+    public static final TagKey<Item> ELEMENT_STAFFS = TagKey.of(RegistryKeys.ITEM, id("element_staffs"));
 }

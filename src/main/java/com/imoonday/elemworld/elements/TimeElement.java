@@ -9,8 +9,8 @@ import net.minecraft.util.math.random.Random;
 import java.awt.*;
 
 public class TimeElement extends Element {
-    public TimeElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
+    public TimeElement() {
+        super(1, 3, 5, 0.75f, 0.75f, 0.25f, 0.0f);
     }
 
     @Override

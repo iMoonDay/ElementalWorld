@@ -13,8 +13,8 @@ import java.awt.*;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_FALL;
 
 public class GrassElement extends Element {
-    public GrassElement(int maxLevel, int rareLevel, int weight) {
-        super(maxLevel, rareLevel, weight);
+    public GrassElement() {
+        super(2, 2, 20);
     }
 
     @Override

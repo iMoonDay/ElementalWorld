@@ -43,8 +43,8 @@ public interface EWLivingEntity {
 
     }
 
-    default boolean hasNoElement() {
-        return false;
+    default boolean dropElementFragmentRandomly() {
+        return true;
     }
 
     default double getSpeed() {

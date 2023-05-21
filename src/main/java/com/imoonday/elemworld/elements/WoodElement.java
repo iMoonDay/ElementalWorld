@@ -9,8 +9,8 @@ import net.minecraft.world.World;
 import java.awt.*;
 
 public class WoodElement extends Element {
-    public WoodElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
+    public WoodElement() {
+        super(3, 1, 40, -0.25f, -0.25f, 0.0f, 0.25f);
     }
 
     @Override

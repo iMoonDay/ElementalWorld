@@ -6,6 +6,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 
 import java.awt.*;
@@ -15,12 +16,12 @@ import static net.minecraft.entity.damage.DamageTypes.SONIC_BOOM;
 import static net.minecraft.entity.effect.StatusEffects.GLOWING;
 
 public class SoundElement extends Element {
-    public SoundElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
+    public SoundElement() {
+        super(1, 3, 5, 0.75f, 0.75f, 0.25f, 0.0f);
     }
 
     @Override
-    public float getMiningSpeedMultiplier (World world, LivingEntity entity, BlockState state){
+    public float getMiningSpeedMultiplier(World world, LivingEntity entity, BlockState state) {
         if (entity.isSubmergedInWater()) {
             return 0.5f;
         }
@@ -28,7 +29,7 @@ public class SoundElement extends Element {
     }
 
     @Override
-    public float getDamageMultiplier (World world, LivingEntity entity, LivingEntity target){
+    public float getDamageMultiplier(World world, LivingEntity entity, LivingEntity target) {
         if (entity.isSubmergedInWater()) {
             return 0.5f;
         }
@@ -36,7 +37,7 @@ public class SoundElement extends Element {
     }
 
     @Override
-    public float getMaxHealthMultiplier(World world, LivingEntity entity){
+    public float getMaxHealthMultiplier(World world, LivingEntity entity) {
         if (entity.isSubmergedInWater()) {
             return 0.25f;
         }
@@ -44,7 +45,7 @@ public class SoundElement extends Element {
     }
 
     @Override
-    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity){
+    public float getDamageProtectionMultiplier(DamageSource source, LivingEntity entity) {
         return source.isOf(SONIC_BOOM) ? 0.2f : 1.0f;
     }
 
@@ -54,20 +55,22 @@ public class SoundElement extends Element {
     }
 
     @Override
-    public void tick (LivingEntity entity){
+    public void tick(LivingEntity entity) {
         List<Entity> otherEntities = entity.world.getOtherEntities(entity, entity.getBoundingBox().expand(15), entity1 -> entity1 instanceof LivingEntity);
         for (Entity otherEntity : otherEntities) {
-            LivingEntity livingEntity = (LivingEntity) otherEntity;
-            double speed = livingEntity.getSpeed();
-            if (speed == 0) {
+            if (otherEntity instanceof PlayerEntity) {
                 continue;
             }
-            livingEntity.addStatusEffect(new StatusEffectInstance(GLOWING, 2, 0, true, false, false));
+            LivingEntity livingEntity = (LivingEntity) otherEntity;
+            double speed = livingEntity.getSpeed();
+            if (speed != 0) {
+                livingEntity.addStatusEffect(new StatusEffectInstance(GLOWING, 2, 0, true, false, false));
+            }
         }
     }
 
     @Override
-    public float getExtraDamage (LivingEntity target,float amount){
+    public float getExtraDamage(LivingEntity target, float amount) {
         if (target.getSpeed() > 0) {
             return amount;
         }

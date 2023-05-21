@@ -5,8 +5,8 @@ import com.imoonday.elemworld.api.Element;
 import java.awt.*;
 
 public class EmptyElement extends Element {
-    public EmptyElement(int weight) {
-        super(0, 0, weight);
+    public EmptyElement() {
+        super(0, 0, 50);
     }
 
     @Override
@@ -17,5 +17,15 @@ public class EmptyElement extends Element {
     @Override
     public boolean isInvalid() {
         return true;
+    }
+
+    @Override
+    public boolean hasEffect() {
+        return false;
+    }
+
+    @Override
+    public boolean hasFragmentItem() {
+        return false;
     }
 }

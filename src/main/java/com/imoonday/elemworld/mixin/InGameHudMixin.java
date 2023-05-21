@@ -12,13 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
 
-    private static ElementRendererGui gui;
-
     @Inject(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;debugEnabled:Z", opcode = Opcodes.GETFIELD, args = {"log=false"}))
     private void beforeRenderDebugScreen(MatrixStack stack, float f, CallbackInfo ci) {
-        if (gui == null) {
-            gui = new ElementRendererGui();
-        }
-        gui.onRenderGameOverlayPost(stack);
+        ElementRendererGui.INSTANCE.onRenderGameOverlayPost(stack);
     }
 }

@@ -1,10 +1,10 @@
 {
   "replace": false,
   "values": [
-    "elemworld:water_element_fragment",
+    "elemworld:fire_element_fragment",
     "elemworld:wood_element_fragment",
     "elemworld:earth_element_fragment",
-    "elemworld:fire_element_fragment",
+    "elemworld:water_element_fragment",
     "elemworld:gold_element_fragment"
   ]
 }

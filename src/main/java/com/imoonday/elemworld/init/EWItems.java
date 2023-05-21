@@ -1,5 +1,8 @@
 package com.imoonday.elemworld.init;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.items.*;
 import com.imoonday.elemworld.items.staffs.*;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -7,16 +10,14 @@ import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.data.client.Model;
 import net.minecraft.data.client.Models;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.registry.tag.TagKey;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.imoonday.elemworld.ElementalWorld.LOGGER;
 import static com.imoonday.elemworld.ElementalWorldData.addTranslation;
@@ -24,8 +25,9 @@ import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWItems {
 
-    public static final HashMap<Item, Model> ITEM_MODELS = new HashMap<>();
-    public static final HashMap<Item, List<TagKey<Item>>> ITEM_TAGS = new HashMap<>();
+    private static final HashMap<Item, Model> ITEM_MODELS = new HashMap<>();
+    private static final HashMap<Item, List<TagKey<Item>>> ITEM_TAGS = new HashMap<>();
+    private static final Set<AbstractElementalStaffItem> ELEMENTAL_STAFFS = new HashSet<>();
 
     public static final Item ELEMENT_DETECTOR = register("element_detector", new ElementDetectorItem(), Models.HANDHELD, "Element Detector", "元素探测器");
     public static final Item ELEMENT_STICK = register("element_stick", "Element Stick", "元素棍");
@@ -40,13 +42,14 @@ public class EWItems {
     public static final Item ELEMENT_SHOVEL = register("element_shovel", ElementTools.createShovel(1.5f, -3.0f), Models.HANDHELD, "Element Shovel", "元素铲", ItemTags.SHOVELS, EWTags.ELEMENT_TOOLS_AND_WEAPONS);
     public static final Item ELEMENT_HOE = register("element_hoe", ElementTools.createHoe(-2, -0.5f), Models.HANDHELD, "Element Hoe", "元素锄", ItemTags.HOES, EWTags.ELEMENT_TOOLS_AND_WEAPONS);
     public static final Item ELEMENT_BOW = register("element_bow", new ElementBowItem(), null, "Element Bow", "元素弓");
-    public static final Item WIND_ELEMENTAL_STAFF = register("wind_elemental_staff", new WindElementalStaffItem(), Models.HANDHELD, "Wind Elemental Staff", "风元素法杖");
-    public static final Item FIRE_ELEMENTAL_STAFF = register("fire_elemental_staff", new FireElementalStaffItem(), Models.HANDHELD, "Fire Elemental Staff", "火元素法杖");
-    public static final Item ICE_ELEMENTAL_STAFF = register("ice_elemental_staff", new IceElementalStaffItem(), Models.HANDHELD, "Ice Elemental Staff", "冰元素法杖");
-    public static final Item GOLD_ELEMENTAL_STAFF = register("gold_elemental_staff", new GoldElementalStaffItem(), Models.HANDHELD, "Gold Elemental Staff", "金元素法杖");
-    public static final Item EARTH_ELEMENTAL_STAFF = register("earth_elemental_staff", new EarthElementalStaffItem(), Models.HANDHELD, "Earth Elemental Staff", "土元素法杖");
-    public static final Item WOOD_ELEMENTAL_STAFF = register("wood_elemental_staff", new WoodElementalStaffItem(), Models.HANDHELD, "Wood Elemental Staff", "木元素法杖");
-    public static final Item WATER_ELEMENTAL_STAFF = register("water_elemental_staff", new WaterElementalStaffItem(), Models.HANDHELD, "Water Elemental Staff", "水元素法杖");
+    public static final Item UMBRELLA = register("unbrella", new UmbrellaItem(), null, "Unbrella", "雨伞", ItemTags.SWORDS);
+    public static final Item WIND_ELEMENTAL_STAFF = registerStaff(new WindElementalStaffItem());
+    public static final Item FIRE_ELEMENTAL_STAFF = registerStaff(new FireElementalStaffItem());
+    public static final Item ICE_ELEMENTAL_STAFF = registerStaff(new IceElementalStaffItem());
+    public static final Item GOLD_ELEMENTAL_STAFF = registerStaff(new GoldElementalStaffItem());
+    public static final Item EARTH_ELEMENTAL_STAFF = registerStaff(new EarthElementalStaffItem());
+    public static final Item WOOD_ELEMENTAL_STAFF = registerStaff(new WoodElementalStaffItem());
+    public static final Item WATER_ELEMENTAL_STAFF = registerStaff(new WaterElementalStaffItem());
 
     public static void register() {
         LOGGER.info("Loading Items");
@@ -54,7 +57,12 @@ public class EWItems {
 
     @SafeVarargs
     public static <T extends Item> T register(String id, T item, @Nullable Model model, String en_us, @Nullable String zh_cn, TagKey<Item>... tags) {
-        ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(item));
+        return register(id, item, EWItemGroups.ELEMENTAL_WORLD, model, en_us, zh_cn, tags);
+    }
+
+    @SafeVarargs
+    public static <T extends Item> T register(String id, T item, ItemGroup itemGroup, @Nullable Model model, String en_us, @Nullable String zh_cn, TagKey<Item>... tags) {
+        ItemGroupEvents.modifyEntriesEvent(itemGroup).register(content -> content.add(item));
         return registerItem(id, item, model, en_us, zh_cn, tags);
     }
 
@@ -97,5 +105,23 @@ public class EWItems {
     @SafeVarargs
     public static Item register(String id, int count, @Nullable Model model, String en_us, @Nullable String zh_cn, TagKey<Item>... tags) {
         return register(id, new Item(new FabricItemSettings().maxCount(count)), model, en_us, zh_cn, tags);
+    }
+
+    public static <T extends AbstractElementalStaffItem> T registerStaff(T item) {
+        ELEMENTAL_STAFFS.add(item);
+        Element element = item.getElement();
+        return register(element.getName() + "_elemental_staff", item, Models.HANDHELD, element.getTranslation().get() + " Elemental Staff", element.getTranslation().get("zh_cn") + "元素法杖", EWTags.ELEMENT_STAFFS);
+    }
+
+    public static ImmutableMap<Item, Model> getAllModels() {
+        return ImmutableMap.copyOf(ITEM_MODELS);
+    }
+
+    public static ImmutableMap<Item, List<TagKey<Item>>> getAllTags() {
+        return ImmutableMap.copyOf(ITEM_TAGS);
+    }
+
+    public static ImmutableSet<AbstractElementalStaffItem> getAllStaffs() {
+        return ImmutableSet.copyOf(ELEMENTAL_STAFFS);
     }
 }

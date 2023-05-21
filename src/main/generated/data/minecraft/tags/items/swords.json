@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "elemworld:unbrella",
     "elemworld:element_sword"
   ]
 }

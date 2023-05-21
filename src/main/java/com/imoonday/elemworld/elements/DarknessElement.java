@@ -16,8 +16,8 @@ import static net.minecraft.entity.damage.DamageTypes.*;
 import static net.minecraft.entity.effect.StatusEffects.SPEED;
 
 public class DarknessElement extends Element {
-    public DarknessElement(int maxLevel, int rareLevel, int weight) {
-        super(maxLevel, rareLevel, weight);
+    public DarknessElement() {
+        super(1, 3, 5);
     }
 
     @Override

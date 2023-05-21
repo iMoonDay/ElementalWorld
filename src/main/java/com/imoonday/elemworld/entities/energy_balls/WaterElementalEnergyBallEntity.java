@@ -49,8 +49,8 @@ public class WaterElementalEnergyBallEntity extends AbstractElementalEnergyBallE
     }
 
     private void spawnWater() {
-        for (int i = 0; i < power + 1; i++) {
-            world.setBlockState(this.getBlockPos().up(i), Blocks.WATER.getDefaultState());
-        }
+        BlockPos.stream(this.getBoundingBox().expand(power - 1))
+                .filter(pos -> world.getBlockState(pos).isAir() || world.getBlockState(pos).isReplaceable())
+                .forEach(pos -> world.setBlockState(pos, Blocks.WATER.getDefaultState()));
     }
 }

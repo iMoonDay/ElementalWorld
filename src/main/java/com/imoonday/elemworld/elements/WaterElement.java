@@ -17,8 +17,8 @@ import static com.imoonday.elemworld.init.EWElements.EARTH;
 import static com.imoonday.elemworld.init.EWElements.FIRE;
 
 public class WaterElement extends Element {
-    public WaterElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
+    public WaterElement() {
+        super(3, 1, 40, 0.0f, 0.25f, 0.0f, 0.0f);
     }
 
     @Override

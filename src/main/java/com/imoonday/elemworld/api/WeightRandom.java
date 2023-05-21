@@ -67,6 +67,13 @@ public class WeightRandom<T> {
         }
     }
 
+    public void addEmpty(int weight) {
+        if (this.weightMap.containsValue(null)) {
+            throw new IllegalStateException("Please do not add empty values repeatedly!");
+        }
+        add(null, weight);
+    }
+
     /**
      * 清空权重表
      */
@@ -92,8 +99,12 @@ public class WeightRandom<T> {
         return this.weightMap.isEmpty();
     }
 
+    public static <T> Optional<T> getRandom(Collection<T> objs) {
+        return getRandom(objs, t -> 1);
+    }
+
     public static <T> Optional<T> getRandom(Collection<T> objs, Function<T, Integer> weightFunc) {
-        return getRandom(objs, t -> true, weightFunc);
+        return objs.isEmpty() ? Optional.empty() : getRandom(objs, t -> true, weightFunc);
     }
 
     public static <T> Optional<T> getRandom(Collection<T> objs, Predicate<T> predicate, Function<T, Integer> weightFunc) {

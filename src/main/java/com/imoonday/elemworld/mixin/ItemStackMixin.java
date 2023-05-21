@@ -31,10 +31,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.imoonday.elemworld.init.EWElements.EMPTY;
 
@@ -89,6 +87,12 @@ public class ItemStackMixin implements EWItemStack {
         ItemStack stack = (ItemStack) (Object) this;
         stack.setElements(entries);
         return stack;
+    }
+
+    @Override
+    public ItemStack withElements(Element... elements) {
+        ItemStack stack = (ItemStack) (Object) this;
+        return stack.withElements(Arrays.stream(elements).map(Element::withRandomLevel).collect(Collectors.toSet()));
     }
 
     @Override

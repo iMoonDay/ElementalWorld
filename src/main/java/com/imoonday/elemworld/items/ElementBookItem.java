@@ -14,10 +14,7 @@ import net.minecraft.util.Rarity;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class ElementBookItem extends Item {
 
@@ -89,17 +86,16 @@ public class ElementBookItem extends Item {
         return true;
     }
 
-    public static ItemStack fromElement(Element.Entry entry) {
+    public static ItemStack fromElements(Element.Entry... entries) {
         ItemStack stack = new ItemStack(EWItems.ELEMENT_BOOK);
-        addElement(stack, entry);
+        Arrays.stream(entries).forEach(entry -> addElement(stack, entry));
         return stack;
     }
 
-    public static ItemStack fromElements(Element.Entry... entries) {
+    public static ItemStack createWithRandomElement() {
         ItemStack stack = new ItemStack(EWItems.ELEMENT_BOOK);
-        for (Element.Entry entry : entries) {
-            addElement(stack, entry);
-        }
+        Element.Entry entry = Element.Entry.createRandom(element -> !element.isInvalid(), element -> element.getWeight(stack));
+        addElement(stack, entry);
         return stack;
     }
 }

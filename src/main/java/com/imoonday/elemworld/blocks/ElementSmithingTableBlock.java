@@ -33,6 +33,5 @@ public class ElementSmithingTableBlock extends Block {
     @Override
     public NamedScreenHandlerFactory createScreenHandlerFactory(BlockState state, World world, BlockPos pos) {
         return new SimpleNamedScreenHandlerFactory((syncId, inventory, player) -> new ElementSmithingScreenHandler(syncId, inventory, ScreenHandlerContext.create(world, pos)), state.getBlock().getName());
-
     }
 }

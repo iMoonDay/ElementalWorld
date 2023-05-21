@@ -25,10 +25,12 @@ public class EWTranslations {
         add(COMMANDS + "clear.success", "Cleanup succeeded", "清除成功");
         add(COMMANDS + "item.invalid", "The item does not exist", "物品不存在");
         add(COMMANDS + "item.unsupport", "The item is not supported", "物品不支持");
+        add("element_visible", "Element display is turned on", "元素显示已开启");
+        add("element_invisible", "Element display is turned off", "元素显示已关闭");
         LOGGER.info("Loading Translations");
     }
 
     private static void add(String key, String en_us, String zh_cn) {
-        ElementalWorldData.addTranslation("text.eleworld." + key, en_us, zh_cn);
+        ElementalWorldData.addTranslation("text.elemworld." + key, en_us, zh_cn);
     }
 }

@@ -25,6 +25,10 @@ public interface EWItemStack {
         return null;
     }
 
+    default ItemStack withElements(Element... elements) {
+        return null;
+    }
+
     default boolean hasElement(Element element) {
         return false;
     }

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "1": {
+      "item": "minecraft:blue_wool"
+    },
+    "2": {
+      "item": "minecraft:stick"
+    },
+    "3": {
+      "item": "minecraft:yellow_carpet"
+    }
+  },
+  "pattern": [
+    " 1 ",
+    "121",
+    " 33"
+  ],
+  "result": {
+    "item": "elemworld:unbrella"
+  },
+  "show_notification": true
+}

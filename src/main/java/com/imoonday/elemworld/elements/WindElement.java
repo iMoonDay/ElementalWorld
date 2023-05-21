@@ -18,8 +18,8 @@ import static net.minecraft.entity.effect.StatusEffects.SPEED;
 import static net.minecraft.registry.tag.DamageTypeTags.IS_FALL;
 
 public class WindElement extends Element {
-    public WindElement(int maxLevel, int rareLevel, int weight) {
-        super(maxLevel, rareLevel, weight);
+    public WindElement() {
+        super(2, 2, 20);
     }
 
     @Override

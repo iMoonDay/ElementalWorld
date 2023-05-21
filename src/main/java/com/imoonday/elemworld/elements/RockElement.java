@@ -16,8 +16,8 @@ import java.util.Map;
 import static net.minecraft.entity.damage.DamageTypes.IN_WALL;
 
 public class RockElement extends Element {
-    public RockElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
+    public RockElement() {
+        super(2, 2, 20, 0.0f, 0.0f, 0.5f, 1.0f);
     }
 
     @Override

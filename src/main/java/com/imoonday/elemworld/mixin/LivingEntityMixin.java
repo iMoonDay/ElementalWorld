@@ -5,6 +5,7 @@ import com.imoonday.elemworld.api.EWLivingEntity;
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.init.EWElements;
+import com.imoonday.elemworld.init.EWItems;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -37,7 +38,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -85,6 +85,9 @@ public class LivingEntityMixin implements EWLivingEntity {
                 element.onElementRemoved(entity, -1, entry.level());
                 break;
             }
+        }
+        if (elements.isEmpty()) {
+            elements.add(Element.Entry.EMPTY);
         }
     }
 
@@ -138,7 +141,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Inject(method = "dropLoot", at = @At("TAIL"))
     public void dropLoot(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity.hasNoElement() || !causedByPlayer) {
+        if (!entity.dropElementFragmentRandomly() || !causedByPlayer) {
             return;
         }
         WeightRandom<Element> random = WeightRandom.create();
@@ -155,7 +158,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     }
 
     @Override
-    public boolean hasNoElement() {
+    public boolean dropElementFragmentRandomly() {
         LivingEntity entity = (LivingEntity) (Object) this;
         return entity.getElements().isEmpty() || entity.getElements().size() == 1 && entity.getElements().contains(Element.Entry.EMPTY);
     }
@@ -352,12 +355,15 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
     }
 
-    @Inject(method = "damage", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "damage", at = @At("RETURN"), cancellable = true)
     public void afterInjury(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
         amount = health - entity.getHealth();
         if (!cir.getReturnValue() || amount <= 0) {
             return;
+        }
+        if (source.isIn(DamageTypeTags.IS_FALL) && entity.isUsingItem() && entity.getActiveItem().isOf(EWItems.UMBRELLA)) {
+            cir.setReturnValue(false);
         }
         afterInjury(source, amount);
         addEffect(source, amount);

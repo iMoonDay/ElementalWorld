@@ -12,9 +12,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(HeldItemRenderer.class)
 public class HeldItemRendererMixin {
 
-    @Redirect(method = "getUsingItemHandRenderType", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isOf(Lnet/minecraft/item/Item;)Z"))
+    @Redirect(method = "getUsingItemHandRenderType", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isOf(Lnet/minecraft/item/Item;)Z", ordinal = 0))
     private static boolean isOf$1(ItemStack instance, Item item) {
-        return instance.isOf(EWItems.ELEMENT_BOW) || instance.isOf(Items.BOW) || instance.isOf(Items.CROSSBOW);
+        return instance.isOf(EWItems.ELEMENT_BOW) || instance.isOf(item);
     }
 
     @Redirect(method = "getHandRenderType", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isOf(Lnet/minecraft/item/Item;)Z"))

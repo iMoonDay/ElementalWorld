@@ -6,6 +6,7 @@ import com.imoonday.elemworld.ElementalWorldData;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItemGroups;
 import com.imoonday.elemworld.init.EWItems;
+import com.imoonday.elemworld.init.EWPotions;
 import com.imoonday.elemworld.items.ElementBookItem;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -26,6 +27,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.InstantStatusEffect;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -44,9 +46,9 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -102,24 +104,19 @@ public abstract class Element {
         for (Entry entry : sortedElements) {
             Element element = entry.element();
             if (element.hasEffect()) {
-                Identifier id = id(element.name);
-                Registry.register(Registries.STATUS_EFFECT, id, new ElementEffect(element));
-                Registry.register(Registries.POTION, id, new ElementPotion(element));
-                String en_us = element.getTranslation().get();
-                String zh_cn = element.getTranslation().get("zh_cn");
-                ElementalWorldData.addTranslation(element.getTranslationKey() + ".potion", "Potion of " + en_us + " Element", zh_cn + "元素药水");
-                ElementalWorldData.addTranslation(element.getTranslationKey() + ".splash_potion", "Splash Potion of " + en_us + " Element", "喷溅型" + zh_cn + "元素药水");
-                ElementalWorldData.addTranslation(element.getTranslationKey() + ".lingering_potion", "Lingering Potion of " + en_us + " Element", "滞留型" + zh_cn + "元素药水");
-                ElementalWorldData.addTranslation(element.getTranslationKey() + ".tipped_arrow", "Arrow of " + en_us + " Element", zh_cn + "元素之箭");
+                ElementEffect.register(element);
+                ElementPotion.register(element);
+                TemporaryElementEffect.register(element);
+                PermanentElementEffect.register(element);
             }
             if (element.hasFragmentItem()) {
-                EWItems.register(element.getFragmentId(), new ElementFragmentItem(element), element.translation.get(), element.translation.get("zh_cn"), ELEMENT_FRAGMENTS, element.getFragmentTagKey());
+                ElementFragmentItem.register(element);
             }
         }
         ElementalWorldData.addTranslation("element.elemworld.invalid", "Invalid element: %s", "无效的元素: %s");
         ElementalWorldData.addTranslation("element.elemworld.name.prefix", "[Elements]", "[元素]");
         ElementalWorldData.addTranslation("element.elemworld.name.fragment", "%s Element fragment", "%s元素碎片");
-        sortedElements.forEach(entry -> ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(ElementBookItem.fromElement(entry))));
+        sortedElements.forEach(entry -> ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(ElementBookItem.fromElements(entry))));
         ServerLifecycleEvents.SERVER_STARTED.register(server -> frozen = true);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
     }
@@ -582,6 +579,10 @@ public abstract class Element {
         return 10 * 20;
     }
 
+    public StatusEffect getTemporaryElementEffect() {
+        return Registries.STATUS_EFFECT.get(id("temporary_" + name + "_element"));
+    }
+
     private static class ElementEffect extends StatusEffect {
 
         private final Element element;
@@ -622,6 +623,10 @@ public abstract class Element {
         public String getTranslationKey() {
             return this.element.getTranslationKey();
         }
+
+        private static void register(Element element) {
+            Registry.register(Registries.STATUS_EFFECT, id(element.name), new ElementEffect(element));
+        }
     }
 
     public static class ElementPotion extends Potion {
@@ -640,6 +645,16 @@ public abstract class Element {
 
         public Element getElement() {
             return element;
+        }
+
+        private static void register(Element element) {
+            Registry.register(Registries.POTION, id(element.name), new ElementPotion(element));
+            String en_us = element.getTranslation().get();
+            String zh_cn = element.getTranslation().get("zh_cn");
+            ElementalWorldData.addTranslation(element.getTranslationKey() + ".potion", "Potion of " + en_us + " Element", zh_cn + "元素药水");
+            ElementalWorldData.addTranslation(element.getTranslationKey() + ".splash_potion", "Splash Potion of " + en_us + " Element", "喷溅型" + zh_cn + "元素药水");
+            ElementalWorldData.addTranslation(element.getTranslationKey() + ".lingering_potion", "Lingering Potion of " + en_us + " Element", "滞留型" + zh_cn + "元素药水");
+            ElementalWorldData.addTranslation(element.getTranslationKey() + ".tipped_arrow", "Arrow of " + en_us + " Element", zh_cn + "元素之箭");
         }
     }
 
@@ -660,6 +675,10 @@ public abstract class Element {
         @Override
         public Text getName(ItemStack stack) {
             return this.getName();
+        }
+
+        private static void register(Element element) {
+            EWItems.register(element.getFragmentId(), new ElementFragmentItem(element), element.translation.get(), element.translation.get("zh_cn"), ELEMENT_FRAGMENTS, element.getFragmentTagKey());
         }
     }
 
@@ -758,6 +777,64 @@ public abstract class Element {
         @Override
         public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
             return CommandSource.suggestMatching(getRegistryMap().keySet(), builder);
+        }
+    }
+
+    private static class TemporaryElementEffect extends StatusEffect {
+
+        private final Element element;
+
+        private TemporaryElementEffect(Element element) {
+            super(StatusEffectCategory.BENEFICIAL, element.getColor().getRGB());
+            this.element = element;
+        }
+
+        @Override
+        public void onApplied(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+            entity.addElement(element.withLevel(MathHelper.clamp(amplifier + 1, 1, element.maxLevel)));
+        }
+
+        @Override
+        public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+            entity.removeElement(element);
+        }
+
+        private static void register(Element element) {
+            String temporaryEffectId = "temporary_" + element.name + "_element";
+            TemporaryElementEffect temporaryEffect = Registry.register(Registries.STATUS_EFFECT, id(temporaryEffectId), new TemporaryElementEffect(element));
+            ElementalWorldData.addTranslation(temporaryEffect, "Temporary " + element.getTranslation().get() + " Element", "临时" + element.getTranslation().get("zh_cn") + "元素");
+            EWPotions.registerPotion(temporaryEffectId, temporaryEffect);
+        }
+    }
+
+    private static class PermanentElementEffect extends InstantStatusEffect {
+
+        private final Element element;
+
+        private PermanentElementEffect(Element element) {
+            super(StatusEffectCategory.BENEFICIAL, element.getColor().getRGB());
+            this.element = element;
+        }
+
+        @Override
+        public void applyUpdateEffect(LivingEntity entity, int amplifier) {
+            addElement(entity, amplifier);
+        }
+
+        @Override
+        public void applyInstantEffect(@Nullable Entity source, @Nullable Entity attacker, LivingEntity target, int amplifier, double proximity) {
+            addElement(target, amplifier);
+        }
+
+        private void addElement(LivingEntity entity, int amplifier) {
+            entity.addElement(element.withLevel(MathHelper.clamp(amplifier + 1, 1, element.maxLevel)));
+        }
+
+        private static void register(Element element) {
+            String permanentEffectId = "permanent_" + element.name + "_element";
+            PermanentElementEffect permanentEffect = Registry.register(Registries.STATUS_EFFECT, id(permanentEffectId), new PermanentElementEffect(element));
+            ElementalWorldData.addTranslation(permanentEffect, "Permanent " + element.getTranslation().get() + " Element", "永久" + element.getTranslation().get("zh_cn") + "元素");
+            EWPotions.registerPotion(permanentEffectId, permanentEffect);
         }
     }
 }

@@ -15,8 +15,8 @@ import net.minecraft.util.math.random.Random;
 import java.awt.*;
 
 public class GoldElement extends Element {
-    public GoldElement(int maxLevel, int rareLevel, int weight, float miningSpeedMultiplier, float damageMultiplier, float maxHealthMultiplier, float durabilityMultiplier) {
-        super(maxLevel, rareLevel, weight, miningSpeedMultiplier, damageMultiplier, maxHealthMultiplier, durabilityMultiplier);
+    public GoldElement() {
+        super(3, 1, 40, 0.25f, 0.25f, 0.0f, -0.25f);
     }
 
     @Override
