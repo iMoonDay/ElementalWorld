@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableMap;
 import com.imoonday.elemworld.blocks.ElementSmithingTableBlock;
 import com.imoonday.elemworld.blocks.ElementalAltarBlock;
 import com.imoonday.elemworld.blocks.entities.ElementalAltarBlockEntity;
+import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.data.client.Model;
 import net.minecraft.data.server.loottable.BlockLootTableGenerator;
@@ -35,7 +37,7 @@ public class EWBlocks {
     private static final HashMap<Block, List<TagKey<Block>>> BLOCK_TAGS = new HashMap<>();
 
     public static final Block ELEMENT_SMITHING_TABLE = register("element_smithing_table", new ElementSmithingTableBlock(), "Element Smithing Table", "元素锻造台", BlockTags.AXE_MINEABLE);
-    public static final Block ELEMENTAL_ALTAR = register("elemental_altar", new ElementalAltarBlock(), "Elemental Altar", "元素祭坛", BlockTags.PICKAXE_MINEABLE);
+    public static final Block ELEMENTAL_ALTAR = register("elemental_altar", new ElementalAltarBlock(), new ItemConvertible[]{}, "Elemental Altar", "元素祭坛", BlockTags.PICKAXE_MINEABLE);
     public static final BlockEntityType<ElementalAltarBlockEntity> ELEMENTAL_ALTAR_BLOCK_ENTITY = registerBlockEntity("elemental_altar", ElementalAltarBlockEntity::new, ELEMENTAL_ALTAR);
 
     public static void register() {
@@ -44,6 +46,7 @@ public class EWBlocks {
 
     public static void registerClient() {
         BlockEntityRendererFactories.register(ELEMENTAL_ALTAR_BLOCK_ENTITY, ElementalAltarBlockEntity.Renderer::new);
+        BlockRenderLayerMap.INSTANCE.putBlock(ELEMENTAL_ALTAR, RenderLayer.getTranslucent());
     }
 
     @SafeVarargs

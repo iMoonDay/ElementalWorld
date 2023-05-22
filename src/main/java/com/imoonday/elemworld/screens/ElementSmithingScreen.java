@@ -81,9 +81,9 @@ public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHa
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null && (!this.handler.getStack().isOf(EWItems.ELEMENT_BOOK) || !this.handler.getMaterial().isEmpty())) {
             Set<Element.Entry> elements = this.handler.getNewElements();
             List<MutableText> texts = Element.getElementsText(elements, false, false);
-            Text text = texts.isEmpty() ? Text.translatable("content.elemworld.modify_elements_screen.no_new") : texts.get(0);
+            Text text = texts.isEmpty() ? Text.translatable("text.elemworld.modify_elements_screen.no_new") : texts.get(0);
             if (elements.size() > 5) {
-                text = Text.translatable("content.elemworld.modify_elements_screen.new", elements.size());
+                text = Text.translatable("text.elemworld.modify_elements_screen.new", elements.size());
             }
             int textWidth = textRenderer.getWidth(text);
             int half = textWidth / 2;
@@ -100,7 +100,7 @@ public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHa
         }
         if (!this.handler.getResult().isEmpty()) {
             Color color = player.experienceLevel >= this.handler.getRequiredLevel() || player.isCreative() ? Color.GREEN : Color.RED;
-            Text cost = Text.translatable("content.elemworld.modify_elements_screen.cost", this.handler.getRequiredLevel());
+            Text cost = Text.translatable("text.elemworld.modify_elements_screen.cost", this.handler.getRequiredLevel());
             int x1 = x + backgroundWidth - textRenderer.getWidth(cost) - 8;
             DrawableHelper.fill(matrices, x1 - 4, y + BUTTON_Y + 2, x + this.backgroundWidth - 8, y + BUTTON_Y + 2 + 12, 0x4F000000);
             textRenderer.drawWithShadow(matrices, cost, x1 - 2, y + BUTTON_Y + 4, color.getRGB());
@@ -114,11 +114,11 @@ public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHa
         ItemStack stack = this.handler.getStack();
         Text tooltip = null;
         if (stack.getElements().size() >= Element.getRegistrySet(false).size() && !stack.isEmpty()) {
-            tooltip = Text.translatable("content.elemworld.modify_elements_screen.full");
+            tooltip = Text.translatable("text.elemworld.modify_elements_screen.full");
         } else if (player.experienceLevel < 1 && !stack.isEmpty() && material.isOf(Items.DIAMOND) && !player.isCreative()) {
-            tooltip = Text.translatable("content.elemworld.modify_elements_screen.not_enough_level");
+            tooltip = Text.translatable("text.elemworld.modify_elements_screen.not_enough_level");
         } else if (!stack.isOf(material.getItem()) && !stack.isEmpty() && !material.isOf(Items.DIAMOND) && !material.isOf(EWItems.ELEMENT_BOOK) && !material.isEmpty()) {
-            tooltip = Text.translatable("content.elemworld.modify_elements_screen.different_item");
+            tooltip = Text.translatable("text.elemworld.modify_elements_screen.different_item");
         }
         return tooltip;
     }

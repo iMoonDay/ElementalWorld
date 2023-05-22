@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import static com.imoonday.elemworld.init.EWBlocks.ELEMENTAL_ALTAR;
 import static com.imoonday.elemworld.init.EWBlocks.ELEMENT_SMITHING_TABLE;
 import static com.imoonday.elemworld.init.EWItems.*;
 import static com.imoonday.elemworld.init.EWTags.*;
@@ -126,7 +125,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
         @Override
         public void generateBlockStateModels(BlockStateModelGenerator blockStateModelGenerator) {
             blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ELEMENT_SMITHING_TABLE, Models.CUBE.upload(ELEMENT_SMITHING_TABLE, new TextureMap().put(TextureKey.PARTICLE, TextureMap.getSubId(ELEMENT_SMITHING_TABLE, "_front")).put(TextureKey.DOWN, TextureMap.getSubId(ELEMENT_SMITHING_TABLE, "_bottom")).put(TextureKey.UP, TextureMap.getSubId(ELEMENT_SMITHING_TABLE, "_top")).put(TextureKey.NORTH, TextureMap.getSubId(ELEMENT_SMITHING_TABLE, "_front")).put(TextureKey.SOUTH, TextureMap.getSubId(ELEMENT_SMITHING_TABLE, "_front")).put(TextureKey.EAST, TextureMap.getSubId(ELEMENT_SMITHING_TABLE, "_side")).put(TextureKey.WEST, TextureMap.getSubId(ELEMENT_SMITHING_TABLE, "_side")), blockStateModelGenerator.modelCollector)));
-            blockStateModelGenerator.registerCubeAllModelTexturePool(ELEMENTAL_ALTAR);
+            blockStateModelGenerator.blockStateCollector.accept(VariantsBlockStateSupplier.create(EWBlocks.ELEMENTAL_ALTAR, BlockStateVariant.create().put(VariantSettings.MODEL, ModelIds.getBlockModelId(EWBlocks.ELEMENTAL_ALTAR))).coordinate(BlockStateModelGenerator.createNorthDefaultHorizontalRotationStates()));
         }
 
         @Override

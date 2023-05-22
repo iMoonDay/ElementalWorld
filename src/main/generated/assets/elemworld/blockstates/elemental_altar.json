@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=east": {
+      "model": "elemworld:block/elemental_altar",
+      "y": 90
+    },
+    "facing=north": {
       "model": "elemworld:block/elemental_altar"
+    },
+    "facing=south": {
+      "model": "elemworld:block/elemental_altar",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "elemworld:block/elemental_altar",
+      "y": 270
     }
   }
 }

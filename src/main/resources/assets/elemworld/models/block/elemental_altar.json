@@ -1,0 +1,122 @@
+{
+	"texture_size": [128, 128],
+	"textures": {
+		"particle": "elemworld:block/elemental_altar",
+		"main": "elemworld:block/elemental_altar"
+	},
+	"elements": [
+		{
+			"name": "base",
+			"from": [1, 0, 1],
+			"to": [15, 8, 15],
+			"faces": {
+				"north": {"uv": [1.75, 1.75, 3.5, 2.75], "texture": "#main"},
+				"east": {"uv": [0, 1.75, 1.75, 2.75], "texture": "#main"},
+				"south": {"uv": [5.25, 1.75, 7, 2.75], "texture": "#main"},
+				"west": {"uv": [3.5, 1.75, 5.25, 2.75], "texture": "#main"},
+				"up": {"uv": [3.5, 1.75, 1.75, 0], "texture": "#main"},
+				"down": {"uv": [5.25, 0, 3.5, 1.75], "texture": "#main"}
+			}
+		},
+		{
+			"name": "table",
+			"from": [5, 8, 5],
+			"to": [11, 9, 11],
+			"faces": {
+				"north": {"uv": [2.5, 5.375, 3.25, 5.5], "texture": "#main"},
+				"east": {"uv": [1.75, 5.375, 2.5, 5.5], "texture": "#main"},
+				"south": {"uv": [4, 5.375, 4.75, 5.5], "texture": "#main"},
+				"west": {"uv": [3.25, 5.375, 4, 5.5], "texture": "#main"},
+				"up": {"uv": [3.25, 5.375, 2.5, 4.625], "texture": "#main"},
+				"down": {"uv": [4, 4.625, 3.25, 5.375], "texture": "#main"}
+			}
+		},
+		{
+			"name": "side",
+			"from": [1, 8, 1],
+			"to": [15, 11, 2],
+			"faces": {
+				"north": {"uv": [5.125, 5.25, 6.875, 5.625], "texture": "#main"},
+				"east": {"uv": [5, 5.25, 5.125, 5.625], "texture": "#main"},
+				"south": {"uv": [7, 5.25, 8.75, 5.625], "texture": "#main"},
+				"west": {"uv": [6.875, 5.25, 7, 5.625], "texture": "#main"},
+				"up": {"uv": [6.875, 5.25, 5.125, 5.125], "texture": "#main"},
+				"down": {"uv": [8.625, 5.125, 6.875, 5.25], "texture": "#main"}
+			}
+		},
+		{
+			"name": "side",
+			"from": [1, 8, 14],
+			"to": [15, 11, 15],
+			"faces": {
+				"north": {"uv": [5.125, 4.75, 6.875, 5.125], "texture": "#main"},
+				"east": {"uv": [5, 4.75, 5.125, 5.125], "texture": "#main"},
+				"south": {"uv": [7, 4.75, 8.75, 5.125], "texture": "#main"},
+				"west": {"uv": [6.875, 4.75, 7, 5.125], "texture": "#main"},
+				"up": {"uv": [6.875, 4.75, 5.125, 4.625], "texture": "#main"},
+				"down": {"uv": [8.625, 4.625, 6.875, 4.75], "texture": "#main"}
+			}
+		},
+		{
+			"name": "side",
+			"from": [14, 8, 2],
+			"to": [15, 11, 14],
+			"faces": {
+				"north": {"uv": [4.75, 6.125, 4.875, 6.5], "texture": "#main"},
+				"east": {"uv": [3.25, 6.125, 4.75, 6.5], "texture": "#main"},
+				"south": {"uv": [6.375, 6.125, 6.5, 6.5], "texture": "#main"},
+				"west": {"uv": [4.875, 6.125, 6.375, 6.5], "texture": "#main"},
+				"up": {"uv": [4.875, 6.125, 4.75, 4.625], "texture": "#main"},
+				"down": {"uv": [5, 4.625, 4.875, 6.125], "texture": "#main"}
+			}
+		},
+		{
+			"name": "side",
+			"from": [1, 8, 2],
+			"to": [2, 11, 14],
+			"faces": {
+				"north": {"uv": [1.5, 6.125, 1.625, 6.5], "texture": "#main"},
+				"east": {"uv": [0, 6.125, 1.5, 6.5], "texture": "#main"},
+				"south": {"uv": [3.125, 6.125, 3.25, 6.5], "texture": "#main"},
+				"west": {"uv": [1.625, 6.125, 3.125, 6.5], "texture": "#main"},
+				"up": {"uv": [1.625, 6.125, 1.5, 4.625], "texture": "#main"},
+				"down": {"uv": [1.75, 4.625, 1.625, 6.125], "texture": "#main"}
+			}
+		},
+		{
+			"name": "top",
+			"from": [1, 11, 1],
+			"to": [15, 12, 15],
+			"faces": {
+				"north": {"uv": [1.75, 4.5, 3.5, 4.625], "texture": "#main"},
+				"east": {"uv": [0, 4.5, 1.75, 4.625], "texture": "#main"},
+				"south": {"uv": [5.25, 4.5, 7, 4.625], "texture": "#main"},
+				"west": {"uv": [3.5, 4.5, 5.25, 4.625], "texture": "#main"},
+				"up": {"uv": [3.5, 4.5, 1.75, 2.75], "texture": "#main"},
+				"down": {"uv": [5.25, 2.75, 3.5, 4.5], "texture": "#main"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [0, 0, -3],
+			"scale": [0.5, 0.5, 0.5]
+		},
+		"thirdperson_lefthand": {
+			"translation": [0, 0, -3],
+			"scale": [0.5, 0.5, 0.5]
+		},
+		"ground": {
+			"translation": [0, 4.5, 0],
+			"scale": [0.5, 0.5, 0.5]
+		},
+		"gui": {
+			"rotation": [30, 30, 0],
+			"translation": [0, 1.25, 0],
+			"scale": [0.75, 0.75, 0.75]
+		},
+		"head": {
+			"translation": [0, 15, 0]
+		}
+	}
+}
