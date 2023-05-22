@@ -66,6 +66,7 @@ import java.util.stream.Collectors;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 import static com.imoonday.elemworld.init.EWTags.*;
+import static com.imoonday.elemworld.init.EWTranslationKeys.*;
 
 @SuppressWarnings("unused")
 public abstract class Element {
@@ -113,9 +114,6 @@ public abstract class Element {
                 ElementFragmentItem.register(element);
             }
         }
-        ElementalWorldData.addTranslation("element.elemworld.invalid", "Invalid element: %s", "无效的元素: %s");
-        ElementalWorldData.addTranslation("element.elemworld.name.prefix", "[Elements]", "[元素]");
-        ElementalWorldData.addTranslation("element.elemworld.name.fragment", "%s Element fragment", "%s元素碎片");
         sortedElements.forEach(entry -> ItemGroupEvents.modifyEntriesEvent(EWItemGroups.ELEMENTAL_WORLD).register(content -> content.add(ElementBookItem.fromElements(entry))));
         ServerLifecycleEvents.SERVER_STARTED.register(server -> frozen = true);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> frozen = false);
@@ -298,7 +296,7 @@ public abstract class Element {
         List<Entry> sortedElements = getSortedElements(elements);
         MutableText text;
         List<MutableText> list = new ArrayList<>();
-        text = prefix ? Text.translatable("element.elemworld.name.prefix").formatted(Formatting.WHITE) : Text.empty();
+        text = prefix ? Text.translatable(ELEMENT_NAME_PREFIX).formatted(Formatting.WHITE) : Text.empty();
         int lastLevel = -1;
         Iterator<Entry> iterator = sortedElements.iterator();
         while (iterator.hasNext()) {
@@ -669,7 +667,7 @@ public abstract class Element {
 
         @Override
         public Text getName() {
-            return Text.translatable("element.elemworld.name.fragment", this.element.getTranslationName());
+            return Text.translatable(ELEMENT_FRAGMENT_NAME, this.element.getTranslationName());
         }
 
         @Override
@@ -753,7 +751,7 @@ public abstract class Element {
 
     public static class ElementArgumentType implements ArgumentType<Element> {
 
-        public static final DynamicCommandExceptionType INVALID_ELEMENT_EXCEPTION = new DynamicCommandExceptionType(element -> Text.translatable("element.elemworld.invalid", element));
+        public static final DynamicCommandExceptionType INVALID_ELEMENT_EXCEPTION = new DynamicCommandExceptionType(element -> Text.translatable(INVALID_ELEMENT, element));
 
         @Contract(value = " -> new", pure = true)
         public static @NotNull Element.ElementArgumentType element() {

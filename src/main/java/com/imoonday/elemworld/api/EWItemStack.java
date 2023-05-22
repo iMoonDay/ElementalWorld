@@ -84,4 +84,8 @@ public interface EWItemStack {
     default void addNewRandomElement() {
 
     }
+
+    default boolean hasAllElements() {
+        return false;
+    }
 }

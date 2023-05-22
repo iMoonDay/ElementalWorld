@@ -82,4 +82,8 @@ public interface EWLivingEntity {
     default boolean isHolding(Element element) {
         return false;
     }
+
+    default boolean hasAllElements() {
+        return false;
+    }
 }

@@ -45,8 +45,8 @@ public class ElementalAltarBlockEntity extends BlockEntity {
         this.material = material;
     }
 
-    public void addCount(int count) {
-        this.material.setCount(this.material.getCount() + count);
+    public void increment(int count) {
+        this.material.increment(count);
     }
 
     @Override

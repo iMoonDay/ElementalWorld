@@ -307,6 +307,7 @@
   "text.elemworld.commands.remove.success": "Delete succeeded",
   "text.elemworld.element_invisible": "Element display is turned off",
   "text.elemworld.element_visible": "Element display is turned on",
+  "text.elemworld.get_new_element": "Get a new element: %s",
   "text.elemworld.modify_elements_screen.cost": "Cost of modification : %d",
   "text.elemworld.modify_elements_screen.different_item": "The materials must be the same item",
   "text.elemworld.modify_elements_screen.full": "The item already contains all the elements",

@@ -307,6 +307,7 @@
   "text.elemworld.commands.remove.success": "删除成功",
   "text.elemworld.element_invisible": "元素显示已关闭",
   "text.elemworld.element_visible": "元素显示已开启",
+  "text.elemworld.get_new_element": "获得一个新元素: %s",
   "text.elemworld.modify_elements_screen.cost": "锻造花费 : %d",
   "text.elemworld.modify_elements_screen.different_item": "材料必须为相同物品",
   "text.elemworld.modify_elements_screen.full": "物品已包含所有元素",

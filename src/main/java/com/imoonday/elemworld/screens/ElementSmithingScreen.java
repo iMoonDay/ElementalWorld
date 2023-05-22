@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
+import static com.imoonday.elemworld.init.EWTranslationKeys.*;
 
 public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHandler> {
 
@@ -81,9 +82,9 @@ public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHa
         if ((!this.handler.getStack().isEmpty() || !this.handler.getResult().isEmpty()) && tooltip == null && (!this.handler.getStack().isOf(EWItems.ELEMENT_BOOK) || !this.handler.getMaterial().isEmpty())) {
             Set<Element.Entry> elements = this.handler.getNewElements();
             List<MutableText> texts = Element.getElementsText(elements, false, false);
-            Text text = texts.isEmpty() ? Text.translatable("text.elemworld.modify_elements_screen.no_new") : texts.get(0);
+            Text text = texts.isEmpty() ? Text.translatable(NO_NEW_ELEMENTS) : texts.get(0);
             if (elements.size() > 5) {
-                text = Text.translatable("text.elemworld.modify_elements_screen.new", elements.size());
+                text = Text.translatable(NEW_ELEMENTS, elements.size());
             }
             int textWidth = textRenderer.getWidth(text);
             int half = textWidth / 2;
@@ -100,7 +101,7 @@ public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHa
         }
         if (!this.handler.getResult().isEmpty()) {
             Color color = player.experienceLevel >= this.handler.getRequiredLevel() || player.isCreative() ? Color.GREEN : Color.RED;
-            Text cost = Text.translatable("text.elemworld.modify_elements_screen.cost", this.handler.getRequiredLevel());
+            Text cost = Text.translatable(COST, this.handler.getRequiredLevel());
             int x1 = x + backgroundWidth - textRenderer.getWidth(cost) - 8;
             DrawableHelper.fill(matrices, x1 - 4, y + BUTTON_Y + 2, x + this.backgroundWidth - 8, y + BUTTON_Y + 2 + 12, 0x4F000000);
             textRenderer.drawWithShadow(matrices, cost, x1 - 2, y + BUTTON_Y + 4, color.getRGB());
@@ -113,12 +114,12 @@ public class ElementSmithingScreen extends HandledScreen<ElementSmithingScreenHa
         ItemStack material = this.handler.getMaterial();
         ItemStack stack = this.handler.getStack();
         Text tooltip = null;
-        if (stack.getElements().size() >= Element.getRegistrySet(false).size() && !stack.isEmpty()) {
-            tooltip = Text.translatable("text.elemworld.modify_elements_screen.full");
+        if (stack.hasAllElements() && !stack.isEmpty()) {
+            tooltip = Text.translatable(ELEMENT_FULL);
         } else if (player.experienceLevel < 1 && !stack.isEmpty() && material.isOf(Items.DIAMOND) && !player.isCreative()) {
-            tooltip = Text.translatable("text.elemworld.modify_elements_screen.not_enough_level");
+            tooltip = Text.translatable(NOT_ENOUGH_LEVEL);
         } else if (!stack.isOf(material.getItem()) && !stack.isEmpty() && !material.isOf(Items.DIAMOND) && !material.isOf(EWItems.ELEMENT_BOOK) && !material.isEmpty()) {
-            tooltip = Text.translatable("text.elemworld.modify_elements_screen.different_item");
+            tooltip = Text.translatable(NEED_DIFFERENT_ITEM);
         }
         return tooltip;
     }

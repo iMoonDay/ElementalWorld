@@ -1,6 +1,7 @@
 package com.imoonday.elemworld.gui;
 
 import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.init.EWTranslationKeys;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
@@ -25,7 +26,7 @@ public class ElementRendererGui {
 
     public void toggleVisibility() {
         visible = !visible;
-        player.sendMessage(Text.translatable("text.elemworld.element_" + (visible ? "visible" : "invisible")), true);
+        player.sendMessage(Text.translatable(visible ? EWTranslationKeys.VISIBLE : EWTranslationKeys.INVISIBLE), true);
     }
 
     public void onRenderGameOverlayPost(MatrixStack stack) {

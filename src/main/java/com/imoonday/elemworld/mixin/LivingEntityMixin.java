@@ -571,4 +571,12 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         return entity.getMainHandStack().hasElement(element) || entity.getOffHandStack().hasElement(element);
     }
+
+    @Override
+    public boolean hasAllElements() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        int size = entity.getElements().size();
+        int size1 = Element.getSizeOf(element -> element.isSuitableFor(entity) && !element.isInvalid());
+        return size >= size1;
+    }
 }

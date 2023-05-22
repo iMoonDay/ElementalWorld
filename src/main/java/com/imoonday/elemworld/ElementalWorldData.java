@@ -198,7 +198,7 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
         return TRANSLATIONS.stream().filter(translation -> translation.getInstance() == t).findFirst();
     }
 
-    public static <T> void addTranslation(T t, String en_us, @Nullable String zh_cn) {
+    public static <T> T addTranslation(T t, String en_us, @Nullable String zh_cn) {
         if (en_us != null) {
             Translation<T> translation = new Translation<>(t, en_us);
             if (zh_cn != null) {
@@ -206,9 +206,11 @@ public class ElementalWorldData implements DataGeneratorEntrypoint {
             }
             TRANSLATIONS.add(translation);
         }
+        return t;
     }
 
-    public static <T> void addCustomTranslation(T t, @NotNull String languageCode, @NotNull String content) {
+    public static <T> T addCustomTranslation(T t, @NotNull String languageCode, @NotNull String content) {
         getTranslation(t).ifPresentOrElse(translation -> translation.add(languageCode, content), () -> TRANSLATIONS.add(new Translation<>(t, languageCode, content)));
+        return t;
     }
 }

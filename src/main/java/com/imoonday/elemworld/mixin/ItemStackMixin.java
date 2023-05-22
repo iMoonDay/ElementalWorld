@@ -438,4 +438,10 @@ public class ItemStackMixin implements EWItemStack {
         }
         return false;
     }
+
+    @Override
+    public boolean hasAllElements() {
+        ItemStack stack = (ItemStack) (Object) this;
+        return stack.getElements().size() >= Element.getSizeOf(element -> element.isSuitableFor(stack) && !element.isInvalid());
+    }
 }

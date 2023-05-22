@@ -3,11 +3,13 @@ package com.imoonday.elemworld.blocks;
 import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.blocks.entities.ElementalAltarBlockEntity;
 import com.imoonday.elemworld.init.EWBlocks;
+import com.imoonday.elemworld.init.EWTranslationKeys;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
@@ -35,9 +37,12 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 public class ElementalAltarBlock extends BlockWithEntity {
 
     public static final Property<Direction> FACING = HorizontalFacingBlock.FACING;
+    private static final String MATERIAL = "Material";
 
     public ElementalAltarBlock() {
         super(FabricBlockSettings.copyOf(Blocks.ENCHANTING_TABLE).nonOpaque());
@@ -57,6 +62,17 @@ public class ElementalAltarBlock extends BlockWithEntity {
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
         builder.add(FACING);
+    }
+
+    @Override
+    public void appendTooltip(ItemStack stack, @Nullable BlockView world, List<Text> tooltip, TooltipContext options) {
+        super.appendTooltip(stack, world, tooltip, options);
+        if (stack.getNbt() != null && stack.getNbt().contains(MATERIAL)) {
+            ItemStack itemStack = ItemStack.fromNbt(stack.getNbt().getCompound(MATERIAL));
+            if (itemStack != null && !itemStack.isEmpty()) {
+                tooltip.add(Text.literal("材料: ").append(itemStack.getName()).append(" " + itemStack.getCount()));
+            }
+        }
     }
 
     @Nullable
@@ -95,15 +111,20 @@ public class ElementalAltarBlock extends BlockWithEntity {
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (blockEntity instanceof ElementalAltarBlockEntity entity) {
             if (entity.getMaterial() != null && entity.getMaterial().getCount() >= entity.getMaterial().getMaxCount()) {
+                return ActionResult.FAIL;
+            }
+            if (player.experienceLevel < 1) {
+                player.sendMessage(Text.translatable(EWTranslationKeys.LEVEL_LESS_THAN, 1), true);
                 return ActionResult.CONSUME;
+            }
+            player.experienceLevel--;
+            if (entity.getMaterial() != null && entity.getMaterial().isItemEqual(stack)) {
+                entity.increment(1);
+            } else {
+                entity.setMaterial(stack.copyWithCount(1));
             }
             if (!player.getAbilities().creativeMode) {
                 stack.decrement(1);
-            }
-            if (entity.getMaterial() != null && entity.getMaterial().isItemEqual(stack)) {
-                entity.addCount(1);
-            } else {
-                entity.setMaterial(stack.copyWithCount(1));
             }
         }
         return ActionResult.CONSUME;
@@ -112,10 +133,10 @@ public class ElementalAltarBlock extends BlockWithEntity {
     @Override
     public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
         super.onPlaced(world, pos, state, placer, itemStack);
-        if (itemStack.getNbt() == null || !itemStack.getNbt().contains("Material")) {
+        if (itemStack.getNbt() == null || !itemStack.getNbt().contains(MATERIAL)) {
             return;
         }
-        ItemStack material = ItemStack.fromNbt(itemStack.getNbt().getCompound("Material"));
+        ItemStack material = ItemStack.fromNbt(itemStack.getNbt().getCompound(MATERIAL));
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (blockEntity instanceof ElementalAltarBlockEntity entity) {
             entity.setMaterial(material);
@@ -125,13 +146,16 @@ public class ElementalAltarBlock extends BlockWithEntity {
     @Override
     public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
         super.onBreak(world, pos, state, player);
+        if (player.isCreative()) {
+            return;
+        }
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (!(blockEntity instanceof ElementalAltarBlockEntity entity)) {
             return;
         }
         ItemStack material = entity.getMaterial();
         ItemStack drop = new ItemStack(this.asItem());
-        drop.getOrCreateNbt().put("Material", material.writeNbt(new NbtCompound()));
+        drop.getOrCreateNbt().put(MATERIAL, material.writeNbt(new NbtCompound()));
         Vec3d centerPos = pos.toCenterPos();
         ItemEntity itemEntity = new ItemEntity(world, centerPos.getX(), centerPos.getY(), centerPos.getZ(), drop);
         itemEntity.setToDefaultPickupDelay();
@@ -147,6 +171,12 @@ public class ElementalAltarBlock extends BlockWithEntity {
         if (!world.isReceivingRedstonePower(pos)) {
             return;
         }
+        if (!(entity instanceof LivingEntity living)) {
+            return;
+        }
+        if (living.hasAllElements()) {
+            return;
+        }
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (!(blockEntity instanceof ElementalAltarBlockEntity altarBlockEntity)) {
             return;
@@ -155,22 +185,18 @@ public class ElementalAltarBlock extends BlockWithEntity {
             return;
         }
         int count = altarBlockEntity.getMaterial().getCount();
-        altarBlockEntity.setMaterial(ItemStack.EMPTY);
-        if (world.random.nextInt(64) >= count) {
-            return;
+        if (world.random.nextInt(64) < count) {
+            Element.Entry entry = Element.Entry.createRandom(element -> !element.isInvalid() && element.isSuitableFor(living), Element::getWeight);
+            if (living.addElement(entry) && !entry.element().isInvalid()) {
+                if (living instanceof PlayerEntity player) {
+                    player.sendMessage(Text.translatable(EWTranslationKeys.GET_NEW_ELEMENT, Text.translatable(entry.element().getTranslationKey()).formatted(entry.element().getFormatting())));
+                }
+                world.playSound(null, pos, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS);
+                altarBlockEntity.setMaterial(ItemStack.EMPTY);
+                return;
+            }
         }
-        if (!(entity instanceof LivingEntity living)) {
-            return;
-        }
-        Element.Entry entry = Element.Entry.createRandom(element -> !element.isInvalid() && !element.isIn(Element.Entry.getElementSet(living.getElements())), Element::getWeight);
-        boolean success = living.addElement(entry) && !entry.element().isInvalid();
-        if (!success) {
-            return;
-        }
-        if (living instanceof PlayerEntity player) {
-            player.sendMessage(Text.literal("获得一个新元素: ").append(Text.translatable(entry.element().getTranslationKey())));
-        }
-        world.playSound(null, pos, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS);
+        altarBlockEntity.increment(-8);
     }
 
     @Override
