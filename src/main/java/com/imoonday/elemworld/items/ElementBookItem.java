@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.items;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWItems;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.client.item.TooltipContext;

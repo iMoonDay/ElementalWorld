@@ -1,6 +1,6 @@
 package com.imoonday.elemworld;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.*;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
@@ -26,5 +26,6 @@ public class ElementalWorld implements ModInitializer {
         Element.register();
         EWPotions.register();
         EWTranslationKeys.register();
+        LOGGER.info("Elemental World " + VERSION + " is now initialized!");
     }
 }

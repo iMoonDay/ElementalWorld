@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.entities;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;

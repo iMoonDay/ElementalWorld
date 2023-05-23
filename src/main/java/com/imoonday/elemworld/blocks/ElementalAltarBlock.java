@@ -1,7 +1,7 @@
 package com.imoonday.elemworld.blocks;
 
-import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.blocks.entities.ElementalAltarBlockEntity;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWBlocks;
 import com.imoonday.elemworld.init.EWTranslationKeys;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
@@ -101,33 +101,54 @@ public class ElementalAltarBlock extends BlockWithEntity {
 
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if (!(world.getBlockEntity(pos) instanceof ElementalAltarBlockEntity entity)) {
+            return ActionResult.FAIL;
+        }
         ItemStack stack = player.getMainHandStack();
+        ItemStack material = entity.getMaterial();
         if (!stack.isOf(Items.DIAMOND)) {
+            if (stack.isEmpty()) {
+                if (!world.isClient) {
+                    Vec3d centerPos = pos.toCenterPos();
+                    if (player.isSneaking()) {
+                        ItemEntity itemEntity = new ItemEntity(world, centerPos.getX(), centerPos.getY(), centerPos.getZ(), material);
+                        itemEntity.setToDefaultPickupDelay();
+                        world.spawnEntity(itemEntity);
+                        entity.setMaterial(ItemStack.EMPTY);
+                    } else {
+                        ItemEntity itemEntity = new ItemEntity(world, centerPos.getX(), centerPos.getY(), centerPos.getZ(), material.copyWithCount(1));
+                        itemEntity.setToDefaultPickupDelay();
+                        world.spawnEntity(itemEntity);
+                        entity.increment(-1);
+                    }
+                }
+                return ActionResult.success(world.isClient);
+            }
             return ActionResult.PASS;
         }
-        if (world.isClient) {
-            return ActionResult.SUCCESS;
+        if (material != null && material.getCount() >= material.getMaxCount()) {
+            return ActionResult.FAIL;
         }
-        BlockEntity blockEntity = world.getBlockEntity(pos);
-        if (blockEntity instanceof ElementalAltarBlockEntity entity) {
-            if (entity.getMaterial() != null && entity.getMaterial().getCount() >= entity.getMaterial().getMaxCount()) {
-                return ActionResult.FAIL;
-            }
-            if (player.experienceLevel < 1) {
-                player.sendMessage(Text.translatable(EWTranslationKeys.LEVEL_LESS_THAN, 1), true);
-                return ActionResult.CONSUME;
-            }
-            player.experienceLevel--;
-            if (entity.getMaterial() != null && entity.getMaterial().isItemEqual(stack)) {
-                entity.increment(1);
-            } else {
-                entity.setMaterial(stack.copyWithCount(1));
-            }
-            if (!player.getAbilities().creativeMode) {
-                stack.decrement(1);
+        int cost = 5;
+        if (!player.isCreative()) {
+            if (player.experienceLevel < cost) {
+                player.sendMessage(Text.translatable(EWTranslationKeys.LEVEL_LESS_THAN, cost), true);
+                return ActionResult.SUCCESS;
             }
         }
-        return ActionResult.CONSUME;
+        int removedCount;
+        if (material != null && material.isItemEqual(stack)) {
+            removedCount = stack.getCount() + material.getCount() <= material.getMaxCount() ? stack.getCount() : material.getMaxCount() - material.getCount();
+            entity.increment(removedCount);
+        } else {
+            entity.setMaterial(stack.copy());
+            removedCount = stack.getCount();
+        }
+        if (!player.isCreative()) {
+            stack.decrement(removedCount);
+            player.experienceLevel -= cost;
+        }
+        return ActionResult.SUCCESS;
     }
 
     @Override
@@ -177,14 +198,16 @@ public class ElementalAltarBlock extends BlockWithEntity {
         if (living.hasAllElements()) {
             return;
         }
-        BlockEntity blockEntity = world.getBlockEntity(pos);
-        if (!(blockEntity instanceof ElementalAltarBlockEntity altarBlockEntity)) {
+        if (!(world.getBlockEntity(pos) instanceof ElementalAltarBlockEntity altarBlockEntity)) {
             return;
         }
         if (altarBlockEntity.getMaterial() == null || altarBlockEntity.getMaterial().isEmpty()) {
             return;
         }
         int count = altarBlockEntity.getMaterial().getCount();
+        if (count < 8) {
+            return;
+        }
         if (world.random.nextInt(64) < count) {
             Element.Entry entry = Element.Entry.createRandom(element -> !element.isInvalid() && element.isSuitableFor(living), Element::getWeight);
             if (living.addElement(entry) && !entry.element().isInvalid()) {
@@ -192,8 +215,11 @@ public class ElementalAltarBlock extends BlockWithEntity {
                     player.sendMessage(Text.translatable(EWTranslationKeys.GET_NEW_ELEMENT, Text.translatable(entry.element().getTranslationKey()).formatted(entry.element().getFormatting())));
                 }
                 world.playSound(null, pos, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS);
-                altarBlockEntity.setMaterial(ItemStack.EMPTY);
-                return;
+                int maxRareLevel = Element.getRegistrySet(false).stream().mapToInt(element -> element.rareLevel).max().orElse(3);
+                if (entry.element().rareLevel > world.random.nextInt(maxRareLevel)) {
+                    world.breakBlock(pos, false);
+                    return;
+                }
             }
         }
         altarBlockEntity.increment(-8);

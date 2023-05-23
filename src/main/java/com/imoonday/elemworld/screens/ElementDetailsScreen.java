@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.screens;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.screens.handler.ElementDetailsScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;

@@ -1,5 +1,7 @@
 package com.imoonday.elemworld.api;
 
+import com.imoonday.elemworld.elements.Element;
+
 import java.util.HashMap;
 import java.util.Map;
 

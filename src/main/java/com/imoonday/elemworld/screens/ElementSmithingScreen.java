@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.screens;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.screens.handler.ElementSmithingScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;

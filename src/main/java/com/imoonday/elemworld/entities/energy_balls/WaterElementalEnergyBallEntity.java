@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.entities.energy_balls;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWEffects;
 import com.imoonday.elemworld.init.EWElements;

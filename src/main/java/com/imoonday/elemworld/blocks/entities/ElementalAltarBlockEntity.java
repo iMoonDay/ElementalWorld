@@ -45,8 +45,8 @@ public class ElementalAltarBlockEntity extends BlockEntity {
         this.material = material;
     }
 
-    public void increment(int count) {
-        this.material.increment(count);
+    public void increment(int amount) {
+        this.material.increment(amount);
     }
 
     @Override
@@ -103,9 +103,13 @@ public class ElementalAltarBlockEntity extends BlockEntity {
             int lightAbove = WorldRenderer.getLightmapCoordinates(blockEntity.world, blockEntity.getPos().up());
             itemRenderer.renderItem(stack, ModelTransformationMode.GROUND, lightAbove, overlay, matrices, vertexConsumers, blockEntity.world, 0);
             matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
-            matrices.translate(0, 0, -0.18);
+            matrices.translate(0.13, 0.55, 0.08);
             matrices.scale(0.05f, 0.05f, 0.05f);
-            textRenderer.draw(matrices, String.valueOf(stack.getCount()), -8, -8, 16777215);
+            String count = String.valueOf(stack.getCount());
+            if (count.length() == 1) {
+                count = "0" + count;
+            }
+            textRenderer.draw(matrices, count, -8, -8, 16777215);
             matrices.pop();
         }
     }

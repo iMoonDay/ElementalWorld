@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.screens.handler;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWBlocks;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.init.EWScreens;

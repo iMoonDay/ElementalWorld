@@ -1,6 +1,5 @@
 package com.imoonday.elemworld.elements;
 
-import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWEffects;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.LivingEntity;

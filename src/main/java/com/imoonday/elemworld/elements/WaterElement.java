@@ -1,6 +1,5 @@
 package com.imoonday.elemworld.elements;
 
-import com.imoonday.elemworld.api.Element;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;

@@ -1,6 +1,5 @@
 package com.imoonday.elemworld.elements;
 
-import com.imoonday.elemworld.api.Element;
 import com.jamieswhiteshirt.reachentityattributes.ReachEntityAttributes;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityStatuses;

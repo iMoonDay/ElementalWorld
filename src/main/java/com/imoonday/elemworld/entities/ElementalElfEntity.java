@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.entities;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.init.EWEntities;
 import com.imoonday.elemworld.init.EWItems;

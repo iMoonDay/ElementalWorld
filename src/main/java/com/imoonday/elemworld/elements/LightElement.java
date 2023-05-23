@@ -1,6 +1,5 @@
 package com.imoonday.elemworld.elements;
 
-import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWElements;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;

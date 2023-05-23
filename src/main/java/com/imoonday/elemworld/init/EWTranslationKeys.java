@@ -26,9 +26,13 @@ public class EWTranslationKeys {
     public static final String GET_NEW_ELEMENT = registerText("get_new_element", "Get a new element: %s", "获得一个新元素: %s");
     public static final String LEVEL_LESS_THAN = registerText("level_less_than", "Your level is less than %s", "等级不足%s级");
 
-    public static final String INVALID_ELEMENT = register("element.elemworld.invalid", "Invalid element: %s", "无效的元素: %s");
+    public static final String ELEMENT_INVALID = register("element.elemworld.invalid", "Invalid element: %s", "无效的元素: %s");
     public static final String ELEMENT_NAME_PREFIX = register("element.elemworld.name.prefix", "[Elements]", "[元素]");
     public static final String ELEMENT_FRAGMENT_NAME = register("element.elemworld.name.fragment", "%s Element fragment", "%s元素碎片");
+
+    public static final String KEY_CATEGORY = register("key.categories.elemworld", "Elemental World", "元素世界");
+    public static final String KEY_DISPLAY = register("key.elemworld.display", "Open the element screen", "打开元素界面");
+    public static final String KEY_TOGGLE_VISIBILITY = register("key.elemworld.toggle_visibility", "Toggle the display of entities' elements", "切换生物元素显示");
 
     public static void register() {
         LOGGER.info("Loading Translations");

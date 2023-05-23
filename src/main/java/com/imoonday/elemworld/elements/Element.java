@@ -1,8 +1,11 @@
-package com.imoonday.elemworld.api;
+package com.imoonday.elemworld.elements;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.imoonday.elemworld.ElementalWorldData;
+import com.imoonday.elemworld.api.EWRegistry;
+import com.imoonday.elemworld.api.Translation;
+import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItemGroups;
 import com.imoonday.elemworld.init.EWItems;
@@ -751,7 +754,7 @@ public abstract class Element {
 
     public static class ElementArgumentType implements ArgumentType<Element> {
 
-        public static final DynamicCommandExceptionType INVALID_ELEMENT_EXCEPTION = new DynamicCommandExceptionType(element -> Text.translatable(INVALID_ELEMENT, element));
+        public static final DynamicCommandExceptionType INVALID_ELEMENT_EXCEPTION = new DynamicCommandExceptionType(element -> Text.translatable(ELEMENT_INVALID, element));
 
         @Contract(value = " -> new", pure = true)
         public static @NotNull Element.ElementArgumentType element() {

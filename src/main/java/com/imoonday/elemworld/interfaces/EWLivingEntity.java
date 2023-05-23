@@ -1,4 +1,6 @@
-package com.imoonday.elemworld.api;
+package com.imoonday.elemworld.interfaces;
+
+import com.imoonday.elemworld.elements.Element;
 
 import java.util.ArrayList;
 import java.util.HashSet;

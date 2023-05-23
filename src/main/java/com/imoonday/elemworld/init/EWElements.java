@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.init;
 
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.elements.*;
 
 import static com.imoonday.elemworld.ElementalWorld.LOGGER;

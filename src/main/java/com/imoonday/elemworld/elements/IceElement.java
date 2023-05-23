@@ -1,6 +1,5 @@
 package com.imoonday.elemworld.elements;
 
-import com.imoonday.elemworld.api.Element;
 import com.imoonday.elemworld.init.EWEffects;
 import com.imoonday.elemworld.init.EWElements;
 import net.minecraft.entity.LivingEntity;

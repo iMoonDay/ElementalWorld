@@ -1,7 +1,8 @@
-package com.imoonday.elemworld.api;
+package com.imoonday.elemworld.loot.function;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.items.ElementBookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.condition.LootCondition;

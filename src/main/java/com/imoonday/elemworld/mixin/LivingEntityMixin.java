@@ -1,8 +1,8 @@
 package com.imoonday.elemworld.mixin;
 
-import com.imoonday.elemworld.api.EWItemStack;
-import com.imoonday.elemworld.api.EWLivingEntity;
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.interfaces.EWItemStack;
+import com.imoonday.elemworld.interfaces.EWLivingEntity;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItems;

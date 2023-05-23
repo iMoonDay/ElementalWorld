@@ -2,7 +2,7 @@ package com.imoonday.elemworld.init;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.items.*;
 import com.imoonday.elemworld.items.staffs.*;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;

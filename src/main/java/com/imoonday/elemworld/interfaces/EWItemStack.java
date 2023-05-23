@@ -1,5 +1,6 @@
-package com.imoonday.elemworld.api;
+package com.imoonday.elemworld.interfaces;
 
+import com.imoonday.elemworld.elements.Element;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 

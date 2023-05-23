@@ -1,6 +1,6 @@
 package com.imoonday.elemworld.items;
 
-import com.imoonday.elemworld.api.EWLivingEntity;
+import com.imoonday.elemworld.interfaces.EWLivingEntity;
 import com.imoonday.elemworld.screens.handler.ElementDetailsScreenHandler;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;

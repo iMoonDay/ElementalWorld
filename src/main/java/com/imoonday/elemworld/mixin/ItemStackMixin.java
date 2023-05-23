@@ -1,7 +1,7 @@
 package com.imoonday.elemworld.mixin;
 
-import com.imoonday.elemworld.api.EWItemStack;
-import com.imoonday.elemworld.api.Element;
+import com.imoonday.elemworld.interfaces.EWItemStack;
+import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.items.ElementBookItem;
 import net.minecraft.block.BlockState;

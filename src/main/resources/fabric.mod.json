@@ -38,10 +38,10 @@
   "custom": {
     "loom:injected_interfaces": {
       "net/minecraft/class_1799": [
-        "com/imoonday/elemworld/api/EWItemStack"
+        "com/imoonday/elemworld/interfaces/EWItemStack"
       ],
       "net/minecraft/class_1309": [
-        "com/imoonday/elemworld/api/EWLivingEntity"
+        "com/imoonday/elemworld/interfaces/EWLivingEntity"
       ]
     }
   }

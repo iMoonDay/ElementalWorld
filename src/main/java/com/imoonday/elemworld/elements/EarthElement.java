@@ -1,7 +1,5 @@
 package com.imoonday.elemworld.elements;
 
-import com.imoonday.elemworld.api.Element;
-
 import java.awt.*;
 
 public class EarthElement extends Element {
