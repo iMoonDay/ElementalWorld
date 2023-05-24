@@ -14,6 +14,7 @@ public class EWTags {
     public static final TagKey<Item> ELEMENT_FRAGMENTS = registerItem("element_fragments");
     public static final TagKey<Item> ELEMENT_TOOLS_AND_WEAPONS = registerItem("element_tools_and_weapons");
     public static final TagKey<Item> ELEMENT_STAFFS = registerItem("element_staffs");
+    public static final TagKey<Item> COMBINED_ELEMENT_FRAGMENTS = registerItem("combined_element_fragments");
 
     public static TagKey<Item> registerItem(String name) {
         return TagKey.of(RegistryKeys.ITEM, id(name));

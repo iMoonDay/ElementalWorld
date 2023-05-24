@@ -23,8 +23,9 @@ public class EWTranslationKeys {
     public static final String UNSUPPORTED_ITEM = registerText("commands.item.unsupport", "The item is not supported", "物品不支持");
     public static final String VISIBLE = registerText("element_visible", "Element display is turned on", "元素显示已开启");
     public static final String INVISIBLE = registerText("element_invisible", "Element display is turned off", "元素显示已关闭");
-    public static final String GET_NEW_ELEMENT = registerText("get_new_element", "Get a new element: %s", "获得一个新元素: %s");
-    public static final String LEVEL_LESS_THAN = registerText("level_less_than", "Your level is less than %s", "等级不足%s级");
+    public static final String GET_NEW_ELEMENT = registerText("get_new_element", "%s get a new element: %s", "%s 获得一个新元素: %s");
+    public static final String LEVEL_LESS_THAN = registerText("level_less_than", "Your level is less than %d", "等级不足%d级");
+    public static final String NOT_ENOUGH_TIMES = registerText("not_enough_times", "The number of times available is not enough to acquire this element", "可用次数不足以获取本元素");
 
     public static final String ELEMENT_INVALID = register("element.elemworld.invalid", "Invalid element: %s", "无效的元素: %s");
     public static final String ELEMENT_NAME_PREFIX = register("element.elemworld.name.prefix", "[Elements]", "[元素]");

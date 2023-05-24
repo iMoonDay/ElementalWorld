@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.util.Identifier;
 
+import static com.imoonday.elemworld.init.EWIdentifiers.CHANGE_LEVEL;
 import static com.imoonday.elemworld.init.EWIdentifiers.DISPLAY_SCREEN;
 
 public class EWEvents {
@@ -15,6 +16,16 @@ public class EWEvents {
                 ElementDetectorItem.openScreen(player, player);
             }
         }));
+
+        registerClient(CHANGE_LEVEL, (client, handler, buf, responseSender) -> {
+            int count = buf.readInt();
+            client.execute(() -> {
+                if (client.player != null) {
+                    client.player.experienceLevel += count;
+                }
+            });
+
+        });
     }
 
     private static void registerServer(Identifier channelName, ServerPlayNetworking.PlayChannelHandler channelHandler) {

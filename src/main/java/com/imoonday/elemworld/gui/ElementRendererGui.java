@@ -3,7 +3,6 @@ package com.imoonday.elemworld.gui;
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWTranslationKeys;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
@@ -16,24 +15,24 @@ public class ElementRendererGui {
 
     public static final ElementRendererGui INSTANCE = new ElementRendererGui();
     private final MinecraftClient mc;
-    private final ClientPlayerEntity player;
     private boolean visible = true;
 
     public ElementRendererGui() {
         mc = MinecraftClient.getInstance();
-        player = mc.player;
     }
 
     public void toggleVisibility() {
         visible = !visible;
-        player.sendMessage(Text.translatable(visible ? EWTranslationKeys.VISIBLE : EWTranslationKeys.INVISIBLE), true);
+        if (mc.player != null) {
+            mc.player.sendMessage(Text.translatable(visible ? EWTranslationKeys.VISIBLE : EWTranslationKeys.INVISIBLE), true);
+        }
     }
 
     public void onRenderGameOverlayPost(MatrixStack stack) {
         if (mc.options.debugEnabled || mc.options.hudHidden || !visible) {
             return;
         }
-        if (player == null) {
+        if (mc.player == null) {
             return;
         }
         if (!(mc.targetedEntity instanceof LivingEntity living)) {

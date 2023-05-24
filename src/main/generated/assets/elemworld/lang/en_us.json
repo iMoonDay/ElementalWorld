@@ -310,12 +310,13 @@
   "text.elemworld.commands.remove.success": "Delete succeeded",
   "text.elemworld.element_invisible": "Element display is turned off",
   "text.elemworld.element_visible": "Element display is turned on",
-  "text.elemworld.get_new_element": "Get a new element: %s",
-  "text.elemworld.level_less_than": "Your level is less than %s",
+  "text.elemworld.get_new_element": "%s get a new element: %s",
+  "text.elemworld.level_less_than": "Your level is less than %d",
   "text.elemworld.modify_elements_screen.cost": "Cost of modification : %d",
   "text.elemworld.modify_elements_screen.different_item": "The materials must be the same item",
   "text.elemworld.modify_elements_screen.full": "The item already contains all the elements",
   "text.elemworld.modify_elements_screen.new": "Added %d elements",
   "text.elemworld.modify_elements_screen.no_new": "No new elements",
-  "text.elemworld.modify_elements_screen.not_enough_level": "Refresh elements requires at least level 1 experience"
+  "text.elemworld.modify_elements_screen.not_enough_level": "Refresh elements requires at least level 1 experience",
+  "text.elemworld.not_enough_times": "The number of times available is not enough to acquire this element"
 }

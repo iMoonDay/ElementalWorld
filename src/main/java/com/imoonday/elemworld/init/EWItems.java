@@ -31,9 +31,9 @@ public class EWItems {
 
     public static final Item ELEMENT_DETECTOR = register("element_detector", new ElementDetectorItem(), Models.HANDHELD, "Element Detector", "元素探测器");
     public static final Item ELEMENT_STICK = register("element_stick", "Element Stick", "元素棍");
-    public static final Item BASE_ELEMENT_FRAGMENT = register("base_element_fragment", new ElementFragmentItem(1), "Base Element Fragment", "基础元素碎块");
-    public static final Item ADVANCED_ELEMENT_FRAGMENT = register("advanced_element_fragment", new ElementFragmentItem(2), "Advanced Element Fragment", "进阶元素碎块");
-    public static final Item RARE_ELEMENT_FRAGMENT = register("rare_element_fragment", new ElementFragmentItem(3), "Rare Element Fragment", "稀有元素碎块");
+    public static final Item BASE_ELEMENT_FRAGMENT = register("base_element_fragment", new ElementFragmentItem(1), "Base Element Fragment", "基础元素碎块", EWTags.COMBINED_ELEMENT_FRAGMENTS);
+    public static final Item ADVANCED_ELEMENT_FRAGMENT = register("advanced_element_fragment", new ElementFragmentItem(2), "Advanced Element Fragment", "进阶元素碎块", EWTags.COMBINED_ELEMENT_FRAGMENTS);
+    public static final Item RARE_ELEMENT_FRAGMENT = register("rare_element_fragment", new ElementFragmentItem(3), "Rare Element Fragment", "稀有元素碎块", EWTags.COMBINED_ELEMENT_FRAGMENTS);
     public static final Item ELEMENT_INGOT = register("element_ingot", "Element Ingot", "元素锭");
     public static final Item ELEMENT_BOOK = registerItem("element_book", new ElementBookItem(), "Element Book", "元素书");
     public static final Item ELEMENT_SWORD = register("element_sword", new ElementSwordItem(3, -2.4f), Models.HANDHELD, "Element Sword", "元素剑", ItemTags.SWORDS, EWTags.ELEMENT_TOOLS_AND_WEAPONS);

@@ -1,12 +1,13 @@
-// 1.19.4	2023-05-23T18:07:03.7908548	Elemental World/Tags for minecraft:item
-a1ae5b129c336e3b2927eb10d1dcec340b87022f data\elemworld\tags\items\rare_element_fragments.json
-646b66a957c7d1fa4ba687f0dfaa93a7172e04ed data\elemworld\tags\items\advanced_element_fragments.json
-483230e9c285bca40a1c1f3417d70178e532b128 data\minecraft\tags\items\pickaxes.json
+// 1.19.4	2023-05-25T00:59:51.7144494	Elemental World/Tags for minecraft:item
+651c9e6afdcbe95b565bbfb22a06daa328f7c6d7 data\elemworld\tags\items\rare_element_fragments.json
+3931453d2f30d36e6c7eba99e70e0d29997f0240 data\elemworld\tags\items\advanced_element_fragments.json
+dd169baaeb750ea6dcf0403a00ddbc825aa8c3df data\elemworld\tags\items\combined_element_fragments.json
 a5038259e2e66fec6e92b5157ab788038a9aa042 data\minecraft\tags\items\shovels.json
-ac5aa5099017032dde05981ff5ca997e3e0a3f5c data\minecraft\tags\items\swords.json
-71b64559d96458220f3f5b8e0b7f33ef41de31f6 data\elemworld\tags\items\base_element_fragments.json
-af98a5f82cb5cbc9ab6b6febcdbb05d51eb01931 data\minecraft\tags\items\hoes.json
-767b39191ff2e5b4d3a8e04d2b3ee5572876faff data\elemworld\tags\items\element_fragments.json
-bb97a84e3a2b952031293bea672718b15906f30b data\elemworld\tags\items\element_staffs.json
+fdfc65128fa4b9013c2d496f7e75c0736ffc5fcb data\minecraft\tags\items\swords.json
+cd069eb3e31ff1b729f3fd78185f42f83e775421 data\elemworld\tags\items\element_staffs.json
 5572000cea4b3f12c7ebe1207869eeee797b4b93 data\minecraft\tags\items\axes.json
-2a711aa08c3b728a66333f2b51b2390a903f2fb7 data\elemworld\tags\items\element_tools_and_weapons.json
+483230e9c285bca40a1c1f3417d70178e532b128 data\minecraft\tags\items\pickaxes.json
+af98a5f82cb5cbc9ab6b6febcdbb05d51eb01931 data\minecraft\tags\items\hoes.json
+5a758b5446db4c489e749737627513b6406200ee data\elemworld\tags\items\base_element_fragments.json
+7b4f48512233febe31eee8bf7ccea2b0157c83df data\elemworld\tags\items\element_fragments.json
+3a9b01e0761e58f8259a7ef852d229abd23e6c40 data\elemworld\tags\items\element_tools_and_weapons.json

@@ -419,9 +419,9 @@ public class ItemStackMixin implements EWItemStack {
     }
 
     @Override
-    public void addNewRandomElement() {
+    public boolean addNewRandomElement() {
         ItemStack stack = (ItemStack) (Object) this;
-        stack.addElement(Element.Entry.createRandom(element -> !element.isIn(Element.Entry.getElementSet(stack.getElements())) && element.isSuitableFor(stack) || stack.isOf(EWItems.ELEMENT_BOOK) && !element.isInvalid(), element -> element.getWeight(stack)));
+        return stack.addElement(Element.Entry.createRandom(element -> !element.isIn(Element.Entry.getElementSet(stack.getElements())) && element.isSuitableFor(stack) || stack.isOf(EWItems.ELEMENT_BOOK) && !element.isInvalid(), element -> element.getWeight(stack)));
     }
 
     private static boolean addRandomElement(ItemStack stack) {

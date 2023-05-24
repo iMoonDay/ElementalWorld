@@ -1,9 +1,9 @@
 {
   "replace": false,
   "values": [
-    "elemworld:element_shovel",
-    "elemworld:element_axe",
     "elemworld:element_hoe",
+    "elemworld:element_axe",
+    "elemworld:element_shovel",
     "elemworld:element_sword",
     "elemworld:element_pickaxe"
   ]

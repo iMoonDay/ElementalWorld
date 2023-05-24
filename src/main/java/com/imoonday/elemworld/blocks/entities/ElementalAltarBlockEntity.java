@@ -1,15 +1,12 @@
 package com.imoonday.elemworld.blocks.entities;
 
-import com.imoonday.elemworld.blocks.ElementalAltarBlock;
 import com.imoonday.elemworld.init.EWBlocks;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
@@ -28,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 public class ElementalAltarBlockEntity extends BlockEntity {
 
     private ItemStack material = ItemStack.EMPTY;
+    private int availableTimes = 3;
 
     public ElementalAltarBlockEntity(BlockPos pos, BlockState state) {
         super(EWBlocks.ELEMENTAL_ALTAR_BLOCK_ENTITY, pos, state);
@@ -35,6 +33,9 @@ public class ElementalAltarBlockEntity extends BlockEntity {
 
     public static void tick(World world, BlockPos pos, BlockState state, ElementalAltarBlockEntity blockEntity) {
         world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS);
+        if (blockEntity.availableTimes == 0 || blockEntity.availableTimes < -1) {
+            world.breakBlock(pos, false);
+        }
     }
 
     public ItemStack getMaterial() {
@@ -45,8 +46,16 @@ public class ElementalAltarBlockEntity extends BlockEntity {
         this.material = material;
     }
 
-    public void increment(int amount) {
-        this.material.increment(amount);
+    public int getAvailableTimes() {
+        return availableTimes;
+    }
+
+    public void setAvailableTimes(int availableTimes) {
+        this.availableTimes = availableTimes;
+    }
+
+    public void addAvailableTimes(int count) {
+        this.availableTimes = Math.max(this.availableTimes + count, 0);
     }
 
     @Override
@@ -80,11 +89,9 @@ public class ElementalAltarBlockEntity extends BlockEntity {
     public static class Renderer implements BlockEntityRenderer<ElementalAltarBlockEntity> {
 
         private final ItemRenderer itemRenderer;
-        private final TextRenderer textRenderer;
 
         public Renderer(BlockEntityRendererFactory.Context ctx) {
             itemRenderer = ctx.getItemRenderer();
-            textRenderer = ctx.getTextRenderer();
         }
 
         @Override
@@ -97,19 +104,11 @@ public class ElementalAltarBlockEntity extends BlockEntity {
                 return;
             }
             matrices.push();
-            matrices.translate(0.5, 0.57, 0.5);
+            double offset = Math.sin((blockEntity.world.getTime() + tickDelta) / 8.0) / 32.0;
+            matrices.translate(0.5, 1.5 + offset, 0.5);
             matrices.scale(0.75f, 0.75f, 0.75f);
-            matrices.multiply(blockEntity.getCachedState().get(ElementalAltarBlock.FACING).getOpposite().getRotationQuaternion());
-            int lightAbove = WorldRenderer.getLightmapCoordinates(blockEntity.world, blockEntity.getPos().up());
-            itemRenderer.renderItem(stack, ModelTransformationMode.GROUND, lightAbove, overlay, matrices, vertexConsumers, blockEntity.world, 0);
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180));
-            matrices.translate(0.13, 0.55, 0.08);
-            matrices.scale(0.05f, 0.05f, 0.05f);
-            String count = String.valueOf(stack.getCount());
-            if (count.length() == 1) {
-                count = "0" + count;
-            }
-            textRenderer.draw(matrices, count, -8, -8, 16777215);
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees((blockEntity.world.getTime() + tickDelta) * 4));
+            itemRenderer.renderItem(stack, ModelTransformationMode.GROUND, light, overlay, matrices, vertexConsumers, blockEntity.world, 0);
             matrices.pop();
         }
     }
