@@ -1,20 +1,20 @@
 {
   "replace": false,
   "values": [
-    "elemworld:darkness_element_fragment",
+    "elemworld:time_element_fragment",
+    "elemworld:space_element_fragment",
+    "elemworld:grass_element_fragment",
+    "elemworld:fire_element_fragment",
+    "elemworld:gold_element_fragment",
     "elemworld:earth_element_fragment",
+    "elemworld:rock_element_fragment",
+    "elemworld:sound_element_fragment",
+    "elemworld:wood_element_fragment",
+    "elemworld:darkness_element_fragment",
+    "elemworld:wind_element_fragment",
     "elemworld:thunder_element_fragment",
     "elemworld:light_element_fragment",
-    "elemworld:gold_element_fragment",
-    "elemworld:sound_element_fragment",
-    "elemworld:time_element_fragment",
-    "elemworld:grass_element_fragment",
-    "elemworld:wood_element_fragment",
-    "elemworld:rock_element_fragment",
-    "elemworld:water_element_fragment",
     "elemworld:ice_element_fragment",
-    "elemworld:wind_element_fragment",
-    "elemworld:fire_element_fragment",
-    "elemworld:space_element_fragment"
+    "elemworld:water_element_fragment"
   ]
 }

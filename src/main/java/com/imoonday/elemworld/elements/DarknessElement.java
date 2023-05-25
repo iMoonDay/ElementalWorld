@@ -4,6 +4,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,12 +45,17 @@ public class DarknessElement extends Element {
     private Float getMultiplier(World world, LivingEntity entity) {
         long time = world.getTimeOfDay();
         if (time < 1000 || time >= 13000) {
-            if (world.getLightLevel(entity.getBlockPos()) == 0) {
+            if (hasNoLight(world, entity)) {
                 return 2.0f;
             }
             return 1.0f;
         }
         return null;
+    }
+
+    private static boolean hasNoLight(World world, LivingEntity entity) {
+        BlockPos pos = entity.getBlockPos();
+        return world.getLightLevel(pos) == 0;
     }
 
     @Override
@@ -75,5 +81,10 @@ public class DarknessElement extends Element {
     @Override
     public Color getColor() {
         return Color.BLACK;
+    }
+
+    @Override
+    public boolean shouldAddEffect(LivingEntity entity) {
+        return hasNoLight(entity.world, entity);
     }
 }

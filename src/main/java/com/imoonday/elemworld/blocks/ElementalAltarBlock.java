@@ -30,7 +30,8 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import static com.imoonday.elemworld.init.EWTranslationKeys.*;
+import static com.imoonday.elemworld.init.EWTranslationKeys.GET_NEW_ELEMENT;
+import static com.imoonday.elemworld.init.EWTranslationKeys.LEVEL_LESS_THAN;
 
 public class ElementalAltarBlock extends BlockWithEntity {
 
@@ -50,13 +51,19 @@ public class ElementalAltarBlock extends BlockWithEntity {
         return checkType(type, EWBlocks.ELEMENTAL_ALTAR_BLOCK_ENTITY, ElementalAltarBlockEntity::tick);
     }
 
-
     @Override
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
         VoxelShape shape = VoxelShapes.empty();
         shape = VoxelShapes.union(shape, VoxelShapes.cuboid(0, 0, 0, 1, 1.35, 1));
-        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(-0.5, 0, -0.5, 1.5, 0.4, 1.5));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(-0.5, 0, -0.5, 1.5, 0.4 / 3, 1.5));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(-0.375, 0, -0.375, 1.375, 0.4 / 3 * 2, 1.375));
+        shape = VoxelShapes.union(shape, VoxelShapes.cuboid(-0.25, 0, -0.25, 1.25, 0.4, 1.25));
         return shape;
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+        return getOutlineShape(state, world, pos, context);
     }
 
     @Override
@@ -77,20 +84,22 @@ public class ElementalAltarBlock extends BlockWithEntity {
             ActionResult result = tryAddElement(world, pos, player, altar, material, stack);
             if (result != null) return result;
         } else if (stack.hasSuitableElement() || stack.isEmpty()) {
-            replaceMaterial(player, hand, altar, material, stack);
+            replaceMaterial(player, world, pos, hand, altar, material, stack);
         }
         return ActionResult.CONSUME;
     }
 
-    protected void replaceMaterial(PlayerEntity player, Hand hand, ElementalAltarBlockEntity altar, ItemStack material, ItemStack stack) {
+    protected void replaceMaterial(PlayerEntity player, World world, BlockPos pos, Hand hand, ElementalAltarBlockEntity altar, ItemStack material, ItemStack stack) {
         if (material == null || material.isEmpty()) {
             if (!stack.isEmpty()) {
                 altar.setMaterial(stack.copy());
                 player.setStackInHand(hand, ItemStack.EMPTY);
+                world.playSound(null, pos, SoundEvents.ENTITY_ITEM_FRAME_ADD_ITEM, SoundCategory.VOICE);
             }
         } else {
             altar.setMaterial(stack.copy());
             player.setStackInHand(hand, material);
+            world.playSound(null, pos, stack.isEmpty() ? SoundEvents.ENTITY_ITEM_FRAME_REMOVE_ITEM : SoundEvents.ENTITY_ITEM_FRAME_ROTATE_ITEM, SoundCategory.VOICE);
         }
     }
 
@@ -103,10 +112,6 @@ public class ElementalAltarBlock extends BlockWithEntity {
             boolean success;
             Element.Entry entry = Element.Entry.createRandom(element -> element.isSuitableFor(material), Element::getWeight);
             int rareLevel = entry.element().rareLevel;
-            if (altar.getAvailableTimes() < rareLevel) {
-                player.sendMessage(Text.translatable(NOT_ENOUGH_TIMES), true);
-                return ActionResult.CONSUME;
-            }
             if (stack.isOf(EWItems.BASE_ELEMENT_FRAGMENT)) {
                 ActionResult result = checkLevel(player, 3);
                 if (result != null) return result;
@@ -125,7 +130,7 @@ public class ElementalAltarBlock extends BlockWithEntity {
             }
             if (success) {
                 altar.setMaterial(material);
-                player.sendMessage(Text.translatable(GET_NEW_ELEMENT, material.getName(), entry.element().getTranslationName()), true);
+                player.sendMessage(Text.translatable(GET_NEW_ELEMENT, material.getName(), entry.getName()), true);
                 world.playSound(null, pos, SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS);
                 if (altar.getAvailableTimes() != -1 && !player.isCreative()) {
                     altar.addAvailableTimes(-rareLevel);

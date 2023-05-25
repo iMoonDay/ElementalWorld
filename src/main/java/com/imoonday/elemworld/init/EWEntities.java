@@ -5,6 +5,7 @@ import com.imoonday.elemworld.ElementalWorldData;
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.entities.ElementalElfEntity;
+import com.imoonday.elemworld.entities.GoblinEntity;
 import com.imoonday.elemworld.entities.energy_balls.*;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -49,7 +50,12 @@ public class EWEntities {
     public static final EntityType<WaterElementalEnergyBallEntity> WATER_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WaterElementalEnergyBallEntity::new, EWElements.WATER);
 
     public static final EntityType<ElementalElfEntity> ELEMENTAL_ELF = register("elemental_elf",
-            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, ElementalElfEntity::new).dimensions(EntityDimensions.fixed(0.25f, 0.25f)).trackRangeChunks(8).trackedUpdateRate(2).build(),
+            FabricEntityTypeBuilder
+                    .create(SpawnGroup.CREATURE, ElementalElfEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.25f, 0.25f))
+                    .trackRangeChunks(8)
+                    .trackedUpdateRate(2)
+                    .build(),
             "Elemental Elf",
             "元素精灵",
             AllayEntity.createAllayAttributes(),
@@ -64,6 +70,25 @@ public class EWEntities {
             56063,
             0xFF0000);
 
+    public static final EntityType<GoblinEntity> GOBLIN = register("goblin",
+            FabricEntityTypeBuilder
+                    .<GoblinEntity>create(SpawnGroup.MONSTER, GoblinEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6f, 1.95f))
+                    .build(),
+            "Goblin",
+            "哥布林",
+            GoblinEntity.createGoblinAttributes(),
+            SpawnRestriction.Location.ON_GROUND,
+            Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+            GoblinEntity::canMobSpawn,
+            BiomeSelectors.foundInOverworld(),
+            SpawnGroup.MONSTER,
+            10,
+            1,
+            2,
+            56063,
+            56063);
+
     public static final EntityModelLayer MODEL_ELEMENTAL_ELF_LAYER = registerModelLayer("elemental_elf");
 
     public static void register() {
@@ -71,6 +96,7 @@ public class EWEntities {
 
     public static void registerClient() {
         EntityRendererRegistry.register(ELEMENTAL_ELF, ElementalElfEntity.Renderer::new);
+        EntityRendererRegistry.register(GOBLIN, GoblinEntity.Renderer::new);
         ENERGY_BALLS.forEach((type, id) -> EntityRendererRegistry.register(type, ctx -> new AbstractElementalEnergyBallEntity.EnergyBallEntityRenderer<>(ctx, id)));
         EntityModelLayerRegistry.registerModelLayer(MODEL_ELEMENTAL_ELF_LAYER, ElementalElfEntity.Model::getTexturedModelData);
     }

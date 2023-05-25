@@ -388,6 +388,10 @@ public abstract class Element {
         return Registries.STATUS_EFFECT.get(id(name));
     }
 
+    public static Optional<Element> getElementFrom(StatusEffect effect) {
+        return effect instanceof ElementEffect elementEffect ? Optional.of(elementEffect.element) : Optional.empty();
+    }
+
     public void addEffect(LivingEntity target, @Nullable Entity attacker) {
         int sec = this.getEffectTime(target);
         if (sec > 0) {
@@ -420,7 +424,7 @@ public abstract class Element {
         return elements.contains(this);
     }
 
-    public boolean immuneOnDeath(LivingEntity entity) {
+    public boolean immuneDamageOnDeath(LivingEntity entity) {
         return false;
     }
 

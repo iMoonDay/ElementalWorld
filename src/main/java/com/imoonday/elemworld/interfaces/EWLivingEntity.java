@@ -13,6 +13,10 @@ public interface EWLivingEntity {
         return new HashSet<>();
     }
 
+    default Set<Element.Entry> getEffectElements() {
+        return null;
+    }
+
     default boolean addElement(Element.Entry entry) {
         return false;
     }

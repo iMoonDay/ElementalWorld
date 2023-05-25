@@ -18,13 +18,13 @@ public class TimeElement extends Element {
     }
 
     @Override
-    public boolean immuneOnDeath(LivingEntity entity) {
+    public boolean immuneDamageOnDeath(LivingEntity entity) {
         if (entity.getImmuneCooldown() <= 0) {
             entity.setImmuneCooldown(5 * 60 * 20);
             entity.world.sendEntityStatus(entity, EntityStatuses.USE_TOTEM_OF_UNDYING);
             return true;
         }
-        return super.immuneOnDeath(entity);
+        return super.immuneDamageOnDeath(entity);
     }
 
     @Override
