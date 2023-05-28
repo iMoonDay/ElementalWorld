@@ -51,6 +51,8 @@ public class EWItems {
     public static final Item WOOD_ELEMENTAL_STAFF = registerStaff(new WoodElementalStaffItem());
     public static final Item WATER_ELEMENTAL_STAFF = registerStaff(new WaterElementalStaffItem());
 
+    public static final Item GOLD_COIN = register("gold_coin", new GoldCoinItem(), "Gold Coin", "金币");
+
     public static void register() {
         LOGGER.info("Loading Items");
     }

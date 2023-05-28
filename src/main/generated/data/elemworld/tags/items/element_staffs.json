@@ -1,12 +1,12 @@
 {
   "replace": false,
   "values": [
-    "elemworld:earth_elemental_staff",
     "elemworld:gold_elemental_staff",
-    "elemworld:fire_elemental_staff",
-    "elemworld:ice_elemental_staff",
     "elemworld:water_elemental_staff",
     "elemworld:wind_elemental_staff",
-    "elemworld:wood_elemental_staff"
+    "elemworld:earth_elemental_staff",
+    "elemworld:ice_elemental_staff",
+    "elemworld:wood_elemental_staff",
+    "elemworld:fire_elemental_staff"
   ]
 }

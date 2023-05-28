@@ -6,6 +6,7 @@ import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.entities.ElementalElfEntity;
 import com.imoonday.elemworld.entities.GoblinEntity;
+import com.imoonday.elemworld.entities.GoblinTraderEntity;
 import com.imoonday.elemworld.entities.energy_balls.*;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
@@ -19,6 +20,7 @@ import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.data.client.Model;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.AllayEntity;
 import net.minecraft.item.ItemGroups;
@@ -71,21 +73,36 @@ public class EWEntities {
             0xFF0000);
 
     public static final EntityType<GoblinEntity> GOBLIN = register("goblin",
-            FabricEntityTypeBuilder
-                    .<GoblinEntity>create(SpawnGroup.MONSTER, GoblinEntity::new)
-                    .dimensions(EntityDimensions.fixed(0.6f, 1.95f))
-                    .build(),
+            FabricEntityTypeBuilder.<GoblinEntity>create(SpawnGroup.MONSTER, GoblinEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6f, 1.95f)).build(),
             "Goblin",
             "哥布林",
             GoblinEntity.createGoblinAttributes(),
             SpawnRestriction.Location.ON_GROUND,
             Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
-            GoblinEntity::canMobSpawn,
+            HostileEntity::canSpawnInDark,
             BiomeSelectors.foundInOverworld(),
             SpawnGroup.MONSTER,
             10,
+            3,
+            6,
+            56063,
+            56063);
+
+    public static final EntityType<GoblinTraderEntity> GOBLIN_TRADER = register("goblin_trader",
+            FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, GoblinTraderEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6f, 1.95f)).build(),
+            "Goblin Trader",
+            "哥布林商人",
+            GoblinTraderEntity.createMobAttributes(),
+            SpawnRestriction.Location.ON_GROUND,
+            Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+            GoblinTraderEntity::canMobSpawn,
+            BiomeSelectors.foundInOverworld(),
+            SpawnGroup.CREATURE,
+            3,
             1,
-            2,
+            1,
             56063,
             56063);
 
@@ -97,6 +114,7 @@ public class EWEntities {
     public static void registerClient() {
         EntityRendererRegistry.register(ELEMENTAL_ELF, ElementalElfEntity.Renderer::new);
         EntityRendererRegistry.register(GOBLIN, GoblinEntity.Renderer::new);
+        EntityRendererRegistry.register(GOBLIN_TRADER, GoblinTraderEntity.Renderer::new);
         ENERGY_BALLS.forEach((type, id) -> EntityRendererRegistry.register(type, ctx -> new AbstractElementalEnergyBallEntity.EnergyBallEntityRenderer<>(ctx, id)));
         EntityModelLayerRegistry.registerModelLayer(MODEL_ELEMENTAL_ELF_LAYER, ElementalElfEntity.Model::getTexturedModelData);
     }

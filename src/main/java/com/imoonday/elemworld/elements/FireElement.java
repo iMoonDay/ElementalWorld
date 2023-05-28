@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.mob.WaterCreatureEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.RemoveEntityStatusEffectS2CPacket;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -104,5 +105,10 @@ public class FireElement extends Element {
     @Override
     public Color getColor() {
         return Color.RED;
+    }
+
+    @Override
+    public boolean isSuitableFor(LivingEntity entity) {
+        return super.isSuitableFor(entity) && !(entity instanceof WaterCreatureEntity);
     }
 }

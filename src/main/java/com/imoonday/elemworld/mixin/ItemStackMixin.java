@@ -1,8 +1,9 @@
 package com.imoonday.elemworld.mixin;
 
-import com.imoonday.elemworld.interfaces.EWItemStack;
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWItems;
+import com.imoonday.elemworld.interfaces.EWItemStack;
+import com.imoonday.elemworld.interfaces.BaseElement;
 import com.imoonday.elemworld.items.ElementBookItem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
@@ -35,6 +36,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.imoonday.elemworld.init.EWElements.EMPTY;
+import static com.imoonday.elemworld.init.EWTranslationKeys.*;
 
 @Mixin(ItemStack.class)
 public class ItemStackMixin implements EWItemStack {
@@ -207,12 +209,19 @@ public class ItemStackMixin implements EWItemStack {
         if (world.isClient) {
             return;
         }
+        checkElement();
+    }
+
+    @Override
+    public void checkElement() {
         ItemStack stack = (ItemStack) (Object) this;
-        Set<Element.Entry> elements = stack.getElements();
-        if (hasSuitableElement() && elements.size() == 0) {
+        if (stack.hasSuitableElement() && stack.getElements().size() == 0) {
             stack.addRandomElements();
         }
         stack.removeInvalidElements();
+        if (stack.getItem() instanceof BaseElement baseElement) {
+            baseElement.checkBaseElement(stack);
+        }
     }
 
     @Inject(method = "getTooltip", at = @At("RETURN"))
@@ -227,7 +236,7 @@ public class ItemStackMixin implements EWItemStack {
         }
         Set<Element.Entry> elements = stack.getElements();
         if (hasSuitableElement() && elements.size() == 0) {
-            list.add(1, Text.literal("暂未生成元素").formatted(Formatting.GRAY));
+            list.add(1, Text.translatable(ELEMENT_NOT_GENERATED).formatted(Formatting.GRAY));
             return;
         }
         List<MutableText> texts = Element.getElementsText(elements, false, elements.size() > 5);
@@ -245,19 +254,23 @@ public class ItemStackMixin implements EWItemStack {
         if (damage == 1.0f && maxHealth == 1.0f && mine == 1.0f && durability == 1.0f) {
             return;
         }
-        list.add(index++, Text.literal("元素增幅(" + elements.size() + ")：").formatted(Formatting.GRAY));
+        list.add(index++, Text.translatable(ELEMENT_BUFFS, elements.size()).formatted(Formatting.GRAY));
         if (damage != 1.0f) {
-            list.add(index++, Text.literal("×" + String.format("%.2f", damage) + " 攻击伤害").formatted(Formatting.DARK_GREEN));
+            list.add(index++, Text.translatable(ELEMENT_DAMAGE, round(damage)).formatted(Formatting.DARK_GREEN));
         }
         if (maxHealth != 1.0f && (stack.getItem() instanceof Equipment || stack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof Equipment)) {
-            list.add(index++, Text.literal("×" + String.format("%.2f", maxHealth) + " 生命上限").formatted(Formatting.BLUE));
+            list.add(index++, Text.translatable(ELEMENT_MAX_HEALTH, round(maxHealth)).formatted(Formatting.BLUE));
         }
         if (mine != 1.0f) {
-            list.add(index++, Text.literal("×" + String.format("%.2f", mine) + " 挖掘速度").formatted(Formatting.RED));
+            list.add(index++, Text.translatable(ELEMENT_MINING_SPEED, round(mine)).formatted(Formatting.RED));
         }
         if (durability != 1.0f) {
-            list.add(index, Text.literal("×" + String.format("%.2f", durability) + " 耐久度").formatted(Formatting.WHITE));
+            list.add(index, Text.translatable(ELEMENT_DURABILITY, round(durability)).formatted(Formatting.WHITE));
         }
+    }
+
+    private static String round(float damage) {
+        return String.format("%.2f", damage);
     }
 
     @Override

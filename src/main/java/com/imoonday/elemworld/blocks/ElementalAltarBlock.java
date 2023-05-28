@@ -171,7 +171,7 @@ public class ElementalAltarBlock extends BlockWithEntity {
             if (blockEntity instanceof ElementalAltarBlockEntity entity) {
                 ItemStack material = entity.getMaterial();
                 if (material != null && !material.isEmpty()) {
-                    dropStack(world, pos, material);
+                    dropStack(world, pos.up(), material);
                 }
             }
         }

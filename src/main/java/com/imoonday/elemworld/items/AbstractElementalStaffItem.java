@@ -2,8 +2,9 @@ package com.imoonday.elemworld.items;
 
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
+import com.imoonday.elemworld.init.EWEnchantments;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.minecraft.entity.Entity;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -37,6 +38,10 @@ public abstract class AbstractElementalStaffItem extends Item {
     @Override
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
         int useTicks = getMaxUseTime(stack) - remainingUseTicks;
+        boolean instantLaunch = EnchantmentHelper.getLevel(EWEnchantments.INSTANT_LAUNCH, stack) > 0;
+        if (useTicks < 50 && instantLaunch) {
+            useTicks = 50;
+        }
         if (useTicks < getMinUseTime()) {
             return;
         }
@@ -59,10 +64,24 @@ public abstract class AbstractElementalStaffItem extends Item {
         }
     }
 
+    @Override
+    public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+        onStoppedUsing(stack, world, user, 0);
+        return stack;
+    }
+
     public abstract Element getElement();
 
     public int getPower(int useTicks) {
-        return MathHelper.clamp(useTicks / 10, 1, 5);
+        return MathHelper.clamp(useTicks / getPowerLevel(), 1, getMaxPower());
+    }
+
+    public int getPowerLevel() {
+        return 10;
+    }
+
+    public int getMaxPower() {
+        return 5;
     }
 
     public abstract AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks);
@@ -87,14 +106,13 @@ public abstract class AbstractElementalStaffItem extends Item {
 
     protected void forEachLivingEntity(World world, LivingEntity user, double range, Consumer<LivingEntity> livingEntityConsumer, Runnable elseToDo) {
         if (!world.isClient) {
-            List<Entity> entities = world.getOtherEntities(user, user.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && living.isAlive());
+            List<LivingEntity> entities = world.getEntitiesByClass(LivingEntity.class, user.getBoundingBox().expand(range), LivingEntity::isAlive);
             if (entities.isEmpty()) {
                 elseToDo.run();
             } else {
-                for (Entity entity : entities) {
-                    LivingEntity living = (LivingEntity) entity;
-                    livingEntityConsumer.accept(living);
-                    getElement().addEffect(living, user);
+                for (LivingEntity entity : entities) {
+                    livingEntityConsumer.accept(entity);
+                    getElement().addEffect(entity, user);
                 }
             }
         }
@@ -102,6 +120,12 @@ public abstract class AbstractElementalStaffItem extends Item {
 
     @Override
     public int getMaxUseTime(ItemStack stack) {
+        if (EnchantmentHelper.getLevel(EWEnchantments.CONTINUOUS_LAUNCH, stack) > 0) {
+            if (EnchantmentHelper.getLevel(EWEnchantments.INSTANT_LAUNCH, stack) > 0) {
+                return getMinUseTime();
+            }
+            return getPowerLevel() * getMaxPower();
+        }
         return 72000;
     }
 

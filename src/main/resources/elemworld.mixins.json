@@ -6,6 +6,7 @@
   "mixins": [
     "ArgumentTypesMixin",
     "ArrowEntityAccessor",
+    "EnchantmentHelperMixin",
     "EnderPearlEntityMixin",
     "EntityMixin",
     "ItemMixin",

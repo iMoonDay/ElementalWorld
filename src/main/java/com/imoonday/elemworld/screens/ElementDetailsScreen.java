@@ -1,11 +1,13 @@
 package com.imoonday.elemworld.screens;
 
 import com.imoonday.elemworld.elements.Element;
+import com.imoonday.elemworld.init.EWTranslationKeys;
 import com.imoonday.elemworld.screens.handler.ElementDetailsScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -35,27 +37,24 @@ public class ElementDetailsScreen extends HandledScreen<ElementDetailsScreenHand
         int y = (height - backgroundHeight) / 2;
         drawTexture(matrices, x, y, 0, 0, backgroundWidth, backgroundHeight);
         PlayerEntity player = this.handler.getPlayer();
-        float[] multipliers = {1.0f, 1.0f};
+        LivingEntity livingEntity = this.handler.getLivingEntity();
+        float damage = 1.0f;
+        float health = 1.0f;
         int count = 0;
         for (int i = 0; i < 5; i++) {
             ItemStack stack = this.handler.getSlot(i).getStack();
-            multipliers[0] += stack.getDamageMultiplier(player) - 1;
-            multipliers[1] += stack.getMaxHealthMultiplier(player) - 1;
+            damage += stack.getDamageMultiplier(player) - 1;
+            health += stack.getMaxHealthMultiplier(player) - 1;
             Set<Element.Entry> entries = stack.getElements();
             int size = entries.size();
-            if (size == 1 && entries.iterator().next().element().isInvalid()) {
-                continue;
+            if (size != 1 || !entries.iterator().next().element().isInvalid()) {
+                count += size;
             }
-            count += size;
         }
-        textRenderer.draw(matrices, Text.literal("元素个数 - " + count).formatted(Formatting.BOLD), x + 44, y + 18, Color.WHITE.getRGB());
-        String[] strings = {"攻击伤害", "生命上限"};
-        Formatting[] formattings = {Formatting.DARK_GREEN, Formatting.BLUE};
-        for (int i = 0; i < 2; i++) {
-            Text text = Text.literal(strings[i] + " × " + String.format("%.2f", multipliers[i])).formatted(formattings[i], Formatting.BOLD);
-            textRenderer.draw(matrices, text, x + 44, y + 18 + (i + 1) * 12, Color.WHITE.getRGB());
-        }
-        int i = player.getImmuneCooldown() / 20;
+        textRenderer.draw(matrices, Text.translatable(EWTranslationKeys.ELEMENT_COUNT, count).formatted(Formatting.BOLD), x + 44, y + 18, Color.WHITE.getRGB());
+        textRenderer.draw(matrices, Text.translatable(EWTranslationKeys.ELEMENT_DAMAGE_BEHIND, String.format("%.2f", damage)).formatted(Formatting.DARK_GREEN, Formatting.BOLD), x + 44, y + 30, Color.WHITE.getRGB());
+        textRenderer.draw(matrices, Text.translatable(EWTranslationKeys.ELEMENT_MAX_HEALTH_BEHIND, String.format("%.2f", health)).formatted(Formatting.BLUE, Formatting.BOLD), x + 44, y + 42, Color.WHITE.getRGB());
+        int i = livingEntity.getImmuneCooldown() / 20;
         if (i > 0) {
             String text = i + "s";
             textRenderer.draw(matrices, text, x + 16 - (float) textRenderer.getWidth(text) / 2, y + 44, Color.GREEN.getRGB());

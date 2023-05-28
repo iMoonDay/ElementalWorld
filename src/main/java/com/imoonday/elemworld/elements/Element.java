@@ -25,6 +25,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.item.TooltipContext;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -674,12 +675,18 @@ public abstract class Element {
 
         @Override
         public Text getName() {
-            return Text.translatable(ELEMENT_FRAGMENT_NAME, this.element.getTranslationName());
+            return Text.translatable(ELEMENT_FRAGMENT_NAME);
         }
 
         @Override
         public Text getName(ItemStack stack) {
             return this.getName();
+        }
+
+        @Override
+        public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+            super.appendTooltip(stack, world, tooltip, context);
+            tooltip.add(this.element.getTranslationName());
         }
 
         private static void register(Element element) {

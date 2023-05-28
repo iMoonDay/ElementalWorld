@@ -1,8 +1,8 @@
 {
   "replace": false,
   "values": [
-    "elemworld:base_element_fragment",
     "elemworld:advanced_element_fragment",
+    "elemworld:base_element_fragment",
     "elemworld:rare_element_fragment"
   ]
 }

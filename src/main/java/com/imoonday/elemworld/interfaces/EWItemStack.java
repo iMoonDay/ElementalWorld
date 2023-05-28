@@ -62,6 +62,10 @@ public interface EWItemStack {
         return false;
     }
 
+    default void checkElement() {
+
+    }
+
     default float getDamageMultiplier(LivingEntity entity) {
         return 1.0f;
     }

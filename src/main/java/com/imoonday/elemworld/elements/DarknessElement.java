@@ -85,6 +85,6 @@ public class DarknessElement extends Element {
 
     @Override
     public boolean shouldAddEffect(LivingEntity entity) {
-        return hasNoLight(entity.world, entity);
+        return hasNoLight(entity.world, entity) && !entity.world.isClient;
     }
 }

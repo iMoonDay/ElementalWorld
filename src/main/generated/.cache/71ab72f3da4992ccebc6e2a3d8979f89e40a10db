@@ -1,4 +1,4 @@
-// 1.19.4	2023-05-26T00:29:04.2556761	Elemental World/Model Definitions
+// 1.19.4	2023-05-28T17:41:39.5965406	Elemental World/Model Definitions
 a9bb9e2321537bbd00150d6f4a16f15e488fe18d assets\elemworld\models\item\element_sword.json
 f5a0d3c60e5df596c9c09acd5b357780080673ac assets\elemworld\models\item\grass_element_fragment.json
 da662c97144635b0fbc88244fca1f455508f901a assets\elemworld\models\item\sound_element_fragment.json
@@ -21,12 +21,14 @@ c0df388edfde0763b24616e085ebc186219a92d4 assets\elemworld\models\item\element_pi
 4ed1d8681a4389b2f19ed4d4f7cd79be6aba1624 assets\elemworld\models\item\element_smithing_table.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets\elemworld\models\item\elemental_elf_spawn_egg.json
 c24e5e1cca10c4d7f4e82ef61e0fd9dcb72ef221 assets\elemworld\models\item\darkness_element_fragment.json
+511491508c4c0c0cb5cfdd5947e113a1ee254aee assets\elemworld\models\item\gold_coin.json
 7a3e4c79b8ff6e7708a0c72b3fc5eaf01fdf5d57 assets\elemworld\models\item\element_ingot.json
 0f18a2ac22f80161076c83d83803dedc314b3be3 assets\elemworld\models\item\rare_element_fragment.json
 544bb04a74aa0f484b2dd2848df08a966e4124c7 assets\elemworld\models\item\light_element_fragment.json
 f6905aaee43fd6c328761b74e58f55da85d9bcc0 assets\elemworld\models\item\base_element_fragment.json
 c9d781677e0993ba98f356c66d6d9ea061bdf005 assets\elemworld\models\item\fire_elemental_staff.json
 3bd608bc81a7f140b7ffe21b335a53ba71556b7a assets\elemworld\models\item\advanced_element_fragment.json
+63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets\elemworld\models\item\goblin_trader_spawn_egg.json
 a601d0fd687a88372b4c326d8f223d76824c4557 assets\elemworld\models\item\earth_element_fragment.json
 7b5e3c497b56808563b1e3c40bef4a3ab0e89d58 assets\elemworld\models\item\element_book.json
 64d32ccda5f834547c72fbc8cc2d7e17c00040de assets\elemworld\models\item\wind_element_fragment.json

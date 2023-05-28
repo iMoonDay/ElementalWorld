@@ -6,7 +6,7 @@ import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.interfaces.EWItemStack;
 import com.imoonday.elemworld.interfaces.EWLivingEntity;
-import com.imoonday.elemworld.interfaces.FixedElement;
+import com.imoonday.elemworld.interfaces.BaseElement;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -189,22 +189,25 @@ public class LivingEntityMixin implements EWLivingEntity {
         addEffect();
         cooldownTick();
         if (!entity.world.isClient) {
-            entity.getDataTracker().set(ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(elements));
-            entity.getDataTracker().set(EFFECT_ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(getEffectElements(entity)));
+            updateDataTracker();
             onElementChanged();
             addRandomElementsIfEmpty();
-            removeEmptyElement();
+            removeEmptyElementIfNeeded();
             addRandomElementsToStackIfEmpty();
         }
         checkElement();
     }
 
+    private void updateDataTracker() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        entity.getDataTracker().set(ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(elements));
+        entity.getDataTracker().set(EFFECT_ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(getEffectElements(entity)));
+    }
+
     public void checkElement() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity instanceof FixedElement fixedElement) {
-            if (entity.getElements().stream().noneMatch(entry -> entry.element().isOf(fixedElement.getElement()))) {
-                entity.addElement(fixedElement.getElement().withRandomLevel());
-            }
+        if (entity instanceof BaseElement baseElement) {
+            baseElement.checkBaseElement(entity);
         }
     }
 
@@ -305,7 +308,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
     }
 
-    private void removeEmptyElement() {
+    private void removeEmptyElementIfNeeded() {
         if (this.elements.size() > 1) {
             this.elements.removeIf(entry -> entry.element().isInvalid());
         }
@@ -319,8 +322,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
         stacks.add(entity.getMainHandStack());
         stacks.add(entity.getOffHandStack());
-        stacks.stream().filter(stack -> stack.hasSuitableElement() && stack.getElements().size() == 0)
-                .forEach(EWItemStack::addRandomElements);
+        stacks.forEach(EWItemStack::checkElement);
     }
 
     public boolean hasSuitableElement() {

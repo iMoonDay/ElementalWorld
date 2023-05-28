@@ -17,7 +17,7 @@ public class EWScreens {
 
     static {
         ELEMENT_SMITHING_SCREEN_HANDLER = ScreenHandlerRegistry.registerSimple(id("modify_elements"), ElementSmithingScreenHandler::new);
-        ELEMENT_DETAILS_SCREEN_HANDLER = ScreenHandlerRegistry.registerSimple(id("element_details"), ElementDetailsScreenHandler::new);
+        ELEMENT_DETAILS_SCREEN_HANDLER = ScreenHandlerRegistry.registerExtended(id("element_details"), ElementDetailsScreenHandler::new);
     }
 
     public static void registerClient() {
