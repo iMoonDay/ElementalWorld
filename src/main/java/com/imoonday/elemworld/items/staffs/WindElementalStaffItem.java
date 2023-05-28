@@ -8,29 +8,39 @@ import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
+
+import java.util.Map;
 
 public class WindElementalStaffItem extends AbstractElementalStaffItem {
 
-    @Override
-    protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
-        int power = getPower(useTicks);
-        forEachLivingEntity(world, user, power * 2, entity -> entity.setVelocity(0, 0.5 * power, 0), () -> {});
+    public WindElementalStaffItem(){
+        super(192);
     }
 
     @Override
-    public Element getElement() {
+    public Element getBaseElement() {
         return EWElements.WIND;
     }
 
     @Override
-    public AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks) {
-        return new WindElementalEnergyBallEntity(user, stack, getPower(useTicks));
+    public AbstractElementalEnergyBallEntity createEnergyBall(LivingEntity user, ItemStack stack) {
+        return new WindElementalEnergyBallEntity(user, stack);
     }
 
     @Override
-    protected SoundEvent getSoundEvent() {
-        return SoundEvents.ENTITY_ALLAY_ITEM_GIVEN;
+    protected void addEffects(ItemStack stack, World world, LivingEntity user) {
+
+    }
+
+    @Override
+    protected SoundEvent getSoundEvent(boolean isSneaking) {
+        return null;
+    }
+
+    @Override
+    public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        return lootables;
     }
 }

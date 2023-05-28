@@ -40,17 +40,16 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
 
     private ItemStack staffStack = ItemStack.EMPTY;
     protected boolean collided = false;
-    protected int power;
 
     protected AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> entityType, World world) {
         super(entityType, world);
     }
 
-    public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack, int power) {
-        this(type, owner, staffStack, power, 0.5f + power * 0.2f);
+    public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack) {
+        this(type, owner, staffStack, 1.0f);
     }
 
-    public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack, int power, float speed) {
+    public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack, float speed) {
         this(type, owner.world);
         this.staffStack = staffStack;
         this.refreshPositionAndAngles(owner.getX(), owner.getEyeY(), owner.getZ(), owner.getYaw(), owner.getPitch());
@@ -58,7 +57,6 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
         this.setOwner(owner);
         this.staffStack = staffStack.copy();
         this.setNoGravity(true);
-        this.power = Math.max(power, 1);
         this.setVelocity(owner, owner.getPitch(), owner.getYaw(), 0f, speed, 1.0f);
     }
 
@@ -124,7 +122,6 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
     @Override
     protected void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
-        nbt.putInt("Power", this.power);
         if (this.staffStack != null) {
             nbt.put("StaffStack", this.staffStack.writeNbt(new NbtCompound()));
         }
@@ -133,9 +130,6 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
-        if (nbt.contains("Power", NbtElement.INT_TYPE)) {
-            this.power = nbt.getInt("Power");
-        }
         if (nbt.contains("StaffStack", NbtElement.COMPOUND_TYPE)) {
             this.staffStack = ItemStack.fromNbt(nbt.getCompound("StaffStack"));
         }
@@ -154,7 +148,6 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
             List<Entity> entities = world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && predicate.test(living));
             if (entities.isEmpty()) {
                 elseToDo.run();
-                spawnAreaEffectCloudEntity(this, 3.0f, 10);
             } else {
                 for (Entity entity : entities) {
                     LivingEntity livingEntity = (LivingEntity) entity;
@@ -163,7 +156,6 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
                         livingEntity.damage(owner != null ? owner.getDamageSources().indirectMagic(this, owner) : this.getDamageSources().magic(), amount);
                     }
                     livingEntityConsumer.accept(livingEntity);
-                    spawnAreaEffectCloudEntity(livingEntity, 0.5f * power, power * 2);
                 }
             }
         }

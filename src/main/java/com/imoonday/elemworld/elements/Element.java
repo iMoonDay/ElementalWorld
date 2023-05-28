@@ -6,6 +6,7 @@ import com.imoonday.elemworld.ElementalWorldData;
 import com.imoonday.elemworld.api.EWRegistry;
 import com.imoonday.elemworld.api.Translation;
 import com.imoonday.elemworld.api.WeightRandom;
+import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItemGroups;
 import com.imoonday.elemworld.init.EWItems;
@@ -28,6 +29,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.damage.DamageSource;
@@ -587,6 +589,10 @@ public abstract class Element {
 
     public StatusEffect getTemporaryElementEffect() {
         return Registries.STATUS_EFFECT.get(id("temporary_" + name + "_element"));
+    }
+
+    public EntityType<? extends AbstractElementalEnergyBallEntity> getEnergyBallEntity() {
+        return null;
     }
 
     private static class ElementEffect extends StatusEffect {

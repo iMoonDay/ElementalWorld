@@ -1,31 +1,35 @@
 package com.imoonday.elemworld.items;
 
-import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWEnchantments;
+import com.imoonday.elemworld.init.EWItems;
+import com.imoonday.elemworld.interfaces.BaseElement;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootPool;
+import net.minecraft.loot.condition.RandomChanceLootCondition;
+import net.minecraft.loot.entry.ItemEntry;
+import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
-public abstract class AbstractElementalStaffItem extends Item {
-
-    public AbstractElementalStaffItem() {
-        this(128);
-    }
+public abstract class AbstractElementalStaffItem extends Item implements BaseElement {
 
     public AbstractElementalStaffItem(int maxDamage) {
         this(new FabricItemSettings().maxCount(1).maxDamage(maxDamage));
@@ -39,60 +43,38 @@ public abstract class AbstractElementalStaffItem extends Item {
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
         int useTicks = getMaxUseTime(stack) - remainingUseTicks;
         boolean instantLaunch = EnchantmentHelper.getLevel(EWEnchantments.INSTANT_LAUNCH, stack) > 0;
-        if (useTicks < 50 && instantLaunch) {
-            useTicks = 50;
-        }
-        if (useTicks < getMinUseTime()) {
+        if (useTicks < getMinUseTime() && !instantLaunch) {
             return;
         }
-        int amount;
-        SoundEvent soundEvent;
-        boolean success = true;
-        AbstractElementalEnergyBallEntity energyBallEntity = getEnergyBallEntity(user, stack, useTicks);
-        if (user.isSneaking() || energyBallEntity == null) {
-            onUsing(stack, world, user, useTicks);
-            amount = 1;
-            soundEvent = getSoundEvent();
+        boolean sneaking = user.isSneaking();
+        if (sneaking) {
+            addEffects(stack, world, user);
         } else {
-            success = world.spawnEntity(energyBallEntity);
-            amount = 2;
-            soundEvent = SoundEvents.ENTITY_SNOWBALL_THROW;
+            spawnProjectiles(user, stack);
         }
-        if (success) {
-            stack.damage(amount, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
+        stack.damage(sneaking ? 2 : 1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
+        SoundEvent soundEvent = getSoundEvent(sneaking);
+        if (soundEvent != null) {
             world.playSound(null, user.getBlockPos(), soundEvent, SoundCategory.VOICE);
         }
     }
 
-    @Override
-    public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
-        onStoppedUsing(stack, world, user, 0);
-        return stack;
+    public void spawnProjectiles(LivingEntity user, ItemStack stack) {
+        user.world.spawnEntity(createEnergyBall(user, stack));
     }
 
-    public abstract Element getElement();
-
-    public int getPower(int useTicks) {
-        return MathHelper.clamp(useTicks / getPowerLevel(), 1, getMaxPower());
-    }
-
-    public int getPowerLevel() {
-        return 10;
-    }
-
-    public int getMaxPower() {
-        return 5;
-    }
-
-    public abstract AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks);
+    public abstract AbstractElementalEnergyBallEntity createEnergyBall(LivingEntity user, ItemStack stack);
 
     protected int getMinUseTime() {
         return 10;
     }
 
-    protected abstract void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks);
+    protected abstract void addEffects(ItemStack stack, World world, LivingEntity user);
 
-    protected abstract SoundEvent getSoundEvent();
+    @Nullable
+    protected abstract SoundEvent getSoundEvent(boolean isSneaking);
+
+    public abstract Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables);
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
@@ -112,7 +94,7 @@ public abstract class AbstractElementalStaffItem extends Item {
             } else {
                 for (LivingEntity entity : entities) {
                     livingEntityConsumer.accept(entity);
-                    getElement().addEffect(entity, user);
+                    getBaseElement().addEffect(entity, user);
                 }
             }
         }
@@ -120,17 +102,26 @@ public abstract class AbstractElementalStaffItem extends Item {
 
     @Override
     public int getMaxUseTime(ItemStack stack) {
-        if (EnchantmentHelper.getLevel(EWEnchantments.CONTINUOUS_LAUNCH, stack) > 0) {
-            if (EnchantmentHelper.getLevel(EWEnchantments.INSTANT_LAUNCH, stack) > 0) {
-                return getMinUseTime();
-            }
-            return getPowerLevel() * getMaxPower();
-        }
         return 72000;
     }
 
     @Override
     public UseAction getUseAction(ItemStack stack) {
         return UseAction.BOW;
+    }
+
+    public static void register() {
+        EWItems.getAllStaffs().forEach(item -> LootTableEvents.MODIFY.register((resourceManager, lootManager, id, tableBuilder, source) -> {
+            item.getLootables(new HashMap<>()).forEach((identifier, chance) -> {
+                if (identifier.equals(id)) {
+                    LootPool.Builder poolBuilder = LootPool.builder()
+                            .rolls(ConstantLootNumberProvider.create(1))
+                            .with(ItemEntry.builder(item)
+                                    .conditionally(RandomChanceLootCondition.builder(chance)));
+
+                    tableBuilder.pool(poolBuilder);
+                }
+            });
+        }));
     }
 }

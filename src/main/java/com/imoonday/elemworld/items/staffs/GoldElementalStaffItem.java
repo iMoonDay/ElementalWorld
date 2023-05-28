@@ -8,35 +8,39 @@ import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
+
+import java.util.Map;
 
 public class GoldElementalStaffItem extends AbstractElementalStaffItem {
 
-    @Override
-    protected void onUsing(ItemStack stack, World world, LivingEntity user, int useTicks) {
-        int power = getPower(useTicks);
-        forEachLivingEntity(world, user, power * 2, entity -> knockBack(user, power, entity), () -> {});
-    }
-
-    private static void knockBack(LivingEntity user, int power, LivingEntity entity) {
-        Vec3d vec3d = entity.getPos().subtract(user.getPos()).normalize().multiply(power);
-        entity.setVelocity(vec3d.x, 0.5 + 0.1 * power, vec3d.z);
+    public GoldElementalStaffItem(){
+        super(32);
     }
 
     @Override
-    public Element getElement() {
+    public Element getBaseElement() {
         return EWElements.GOLD;
     }
 
     @Override
-    public AbstractElementalEnergyBallEntity getEnergyBallEntity(LivingEntity user, ItemStack stack, int useTicks) {
-        return new GoldElementalEnergyBallEntity(user, stack, getPower(useTicks));
+    public AbstractElementalEnergyBallEntity createEnergyBall(LivingEntity user, ItemStack stack) {
+        return new GoldElementalEnergyBallEntity(user, stack);
     }
 
     @Override
-    protected SoundEvent getSoundEvent() {
-        return SoundEvents.BLOCK_ANVIL_PLACE;
+    protected void addEffects(ItemStack stack, World world, LivingEntity user) {
+
+    }
+
+    @Override
+    protected SoundEvent getSoundEvent(boolean isSneaking) {
+        return null;
+    }
+
+    @Override
+    public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        return lootables;
     }
 }

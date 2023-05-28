@@ -43,13 +43,21 @@ public class EWEntities {
     public static final String MAIN = "main";
     public static final Model TEMPLATE_SPAWN_EGG_MODEL = new Model(Optional.of(new Identifier("minecraft", "item/template_spawn_egg")), Optional.empty());
 
-    public static final EntityType<WindElementalEnergyBallEntity> WIND_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WindElementalEnergyBallEntity::new, EWElements.WIND);
-    public static final EntityType<FireElementalEnergyBallEntity> FIRE_ELEMENTAL_ENERGY_BALL = registerEnergyBall(FireElementalEnergyBallEntity::new, EWElements.FIRE);
-    public static final EntityType<IceElementalEnergyBallEntity> ICE_ELEMENTAL_ENERGY_BALL = registerEnergyBall(IceElementalEnergyBallEntity::new, EWElements.ICE);
-    public static final EntityType<GoldElementalEnergyBallEntity> GOLD_ELEMENTAL_ENERGY_BALL = registerEnergyBall(GoldElementalEnergyBallEntity::new, EWElements.GOLD);
-    public static final EntityType<EarthElementalEnergyBallEntity> EARTH_ELEMENTAL_ENERGY_BALL = registerEnergyBall(EarthElementalEnergyBallEntity::new, EWElements.EARTH);
-    public static final EntityType<WoodElementalEnergyBallEntity> WOOD_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WoodElementalEnergyBallEntity::new, EWElements.WOOD);
-    public static final EntityType<WaterElementalEnergyBallEntity> WATER_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WaterElementalEnergyBallEntity::new, EWElements.WATER);
+    public static final EntityType<DarknessElementalEnergyBallEntity> DARKNESS_ELEMENTAL_ENERGY_BALL = registerEnergyBall(DarknessElementalEnergyBallEntity::new);
+    public static final EntityType<EarthElementalEnergyBallEntity> EARTH_ELEMENTAL_ENERGY_BALL = registerEnergyBall(EarthElementalEnergyBallEntity::new);
+    public static final EntityType<FireElementalEnergyBallEntity> FIRE_ELEMENTAL_ENERGY_BALL = registerEnergyBall(FireElementalEnergyBallEntity::new);
+    public static final EntityType<GoldElementalEnergyBallEntity> GOLD_ELEMENTAL_ENERGY_BALL = registerEnergyBall(GoldElementalEnergyBallEntity::new);
+    public static final EntityType<GrassElementalEnergyBallEntity> GRASS_ELEMENTAL_ENERGY_BALL = registerEnergyBall(GrassElementalEnergyBallEntity::new);
+    public static final EntityType<IceElementalEnergyBallEntity> ICE_ELEMENTAL_ENERGY_BALL = registerEnergyBall(IceElementalEnergyBallEntity::new);
+    public static final EntityType<LightElementalEnergyBallEntity> LIGHT_ELEMENTAL_ENERGY_BALL = registerEnergyBall(LightElementalEnergyBallEntity::new);
+    public static final EntityType<RockElementalEnergyBallEntity> ROCK_ELEMENTAL_ENERGY_BALL = registerEnergyBall(RockElementalEnergyBallEntity::new);
+    public static final EntityType<SoundElementalEnergyBallEntity> SOUND_ELEMENTAL_ENERGY_BALL = registerEnergyBall(SoundElementalEnergyBallEntity::new);
+    public static final EntityType<SpaceElementalEnergyBallEntity> SPACE_ELEMENTAL_ENERGY_BALL = registerEnergyBall(SpaceElementalEnergyBallEntity::new);
+    public static final EntityType<ThunderElementalEnergyBallEntity> THUNDER_ELEMENTAL_ENERGY_BALL = registerEnergyBall(ThunderElementalEnergyBallEntity::new);
+    public static final EntityType<TimeElementalEnergyBallEntity> TIME_ELEMENTAL_ENERGY_BALL = registerEnergyBall(TimeElementalEnergyBallEntity::new);
+    public static final EntityType<WaterElementalEnergyBallEntity> WATER_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WaterElementalEnergyBallEntity::new);
+    public static final EntityType<WindElementalEnergyBallEntity> WIND_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WindElementalEnergyBallEntity::new);
+    public static final EntityType<WoodElementalEnergyBallEntity> WOOD_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WoodElementalEnergyBallEntity::new);
 
     public static final EntityType<ElementalElfEntity> ELEMENTAL_ELF = register("elemental_elf",
             FabricEntityTypeBuilder
@@ -149,12 +157,13 @@ public class EWEntities {
         BiomeModifications.addSpawn(biomeSelector, spawnGroup, type, spawnWeight, spawnMinGroupSize, spawnMaxGroupSize);
     }
 
-    public static <T extends AbstractElementalEnergyBallEntity> EntityType<T> registerEnergyBall(EntityType.EntityFactory<T> factory, Element element) {
+    public static <T extends AbstractElementalEnergyBallEntity> EntityType<T> registerEnergyBall(EntityType.EntityFactory<T> factory) {
+        EntityType<T> type = FabricEntityTypeBuilder.create(SpawnGroup.MISC, factory).dimensions(EntityDimensions.fixed(1.0f, 1.0f)).trackRangeChunks(8).trackedUpdateRate(10).forceTrackedVelocityUpdates(true).build();
+        Element element = factory.create(type, null).getElement();
         String id = element.getName() + "_elemental_energy_ball";
         if (ENERGY_BALLS.containsValue(id)) {
             throw new IllegalStateException(id + " already exists!");
         }
-        EntityType<T> type = FabricEntityTypeBuilder.create(SpawnGroup.MISC, factory).dimensions(EntityDimensions.fixed(1.0f, 1.0f)).trackRangeChunks(8).trackedUpdateRate(10).forceTrackedVelocityUpdates(true).build();
         ENERGY_BALLS.put(type, id);
         return register(id, type, element.getTranslation().get() + " Elemental Energy Ball", element.getTranslation().get("zh_cn") + "元素能量球");
     }

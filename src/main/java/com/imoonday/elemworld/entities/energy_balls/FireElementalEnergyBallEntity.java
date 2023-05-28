@@ -18,8 +18,8 @@ public class FireElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
         super(entityType, world);
     }
 
-    public FireElementalEnergyBallEntity(LivingEntity owner, ItemStack stack, int power) {
-        super(EWEntities.FIRE_ELEMENTAL_ENERGY_BALL, owner, stack, power);
+    public FireElementalEnergyBallEntity(LivingEntity owner, ItemStack stack) {
+        super(EWEntities.FIRE_ELEMENTAL_ENERGY_BALL, owner, stack);
     }
 
     @Override
@@ -39,11 +39,24 @@ public class FireElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
     @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        forEachLivingEntity(power * 2,
-                entity -> 1.0f * power,
+        forEachLivingEntity(5 * 2,
+                entity -> 7.0f,
                 LivingEntity::isAlive,
-                entity -> entity.setOnFireFor(power * 2),
-                () -> {
-                });
+                this::fireOrExplode,
+                this::explode);
+    }
+
+    private void fireOrExplode(LivingEntity entity) {
+        if (entity.getRandom().nextFloat() < 0.25f) {
+            if (entity.isOnFire()) {
+                entity.world.createExplosion(getOwner(), entity.getX(), entity.getY(), entity.getZ(), 3.0f, World.ExplosionSourceType.NONE);
+            } else {
+                entity.setOnFireFor(10);
+            }
+        }
+    }
+
+    private void explode() {
+        this.world.createExplosion(getOwner(), this.getX(), this.getY(), this.getZ(), 3.0f, true, World.ExplosionSourceType.MOB);
     }
 }

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "elemworld:item/darkness_elemental_staff"
+  }
+}

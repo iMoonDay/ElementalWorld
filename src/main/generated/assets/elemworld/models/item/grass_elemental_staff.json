@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "elemworld:item/grass_elemental_staff"
+  }
+}

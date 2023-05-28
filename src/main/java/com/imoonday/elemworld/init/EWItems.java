@@ -43,15 +43,23 @@ public class EWItems {
     public static final Item ELEMENT_HOE = register("element_hoe", ElementTools.createHoe(-2, -0.5f), Models.HANDHELD, "Element Hoe", "元素锄", ItemTags.HOES, EWTags.ELEMENT_TOOLS_AND_WEAPONS);
     public static final Item ELEMENT_BOW = register("element_bow", new ElementBowItem(), null, "Element Bow", "元素弓");
     public static final Item UMBRELLA = register("unbrella", new UmbrellaItem(), null, "Unbrella", "雨伞", ItemTags.SWORDS);
-    public static final Item WIND_ELEMENTAL_STAFF = registerStaff(new WindElementalStaffItem());
-    public static final Item FIRE_ELEMENTAL_STAFF = registerStaff(new FireElementalStaffItem());
-    public static final Item ICE_ELEMENTAL_STAFF = registerStaff(new IceElementalStaffItem());
-    public static final Item GOLD_ELEMENTAL_STAFF = registerStaff(new GoldElementalStaffItem());
-    public static final Item EARTH_ELEMENTAL_STAFF = registerStaff(new EarthElementalStaffItem());
-    public static final Item WOOD_ELEMENTAL_STAFF = registerStaff(new WoodElementalStaffItem());
-    public static final Item WATER_ELEMENTAL_STAFF = registerStaff(new WaterElementalStaffItem());
-
     public static final Item GOLD_COIN = register("gold_coin", new GoldCoinItem(), "Gold Coin", "金币");
+
+    public static final Item DARKNESS_ELEMENTAL_STAFF = registerStaff(new DarknessElementalStaffItem());
+    public static final Item EARTH_ELEMENTAL_STAFF = registerStaff(new EarthElementalStaffItem());
+    public static final Item FIRE_ELEMENTAL_STAFF = registerStaff(new FireElementalStaffItem());
+    public static final Item GOLD_ELEMENTAL_STAFF = registerStaff(new GoldElementalStaffItem());
+    public static final Item GRASS_ELEMENTAL_STAFF = registerStaff(new GrassElementalStaffItem());
+    public static final Item ICE_ELEMENTAL_STAFF = registerStaff(new IceElementalStaffItem());
+    public static final Item LIGHT_ELEMENTAL_STAFF = registerStaff(new LightElementalStaffItem());
+    public static final Item ROCK_ELEMENTAL_STAFF = registerStaff(new RockElementalStaffItem());
+    public static final Item SOUND_ELEMENTAL_STAFF = registerStaff(new SoundElementalStaffItem());
+    public static final Item SPACE_ELEMENTAL_STAFF = registerStaff(new SpaceElementalStaffItem());
+    public static final Item THUNDER_ELEMENTAL_STAFF = registerStaff(new ThunderElementalStaffItem());
+    public static final Item TIME_ELEMENTAL_STAFF = registerStaff(new TimeElementalStaffItem());
+    public static final Item WATER_ELEMENTAL_STAFF = registerStaff(new WaterElementalStaffItem());
+    public static final Item WIND_ELEMENTAL_STAFF = registerStaff(new WindElementalStaffItem());
+    public static final Item WOOD_ELEMENTAL_STAFF = registerStaff(new WoodElementalStaffItem());
 
     public static void register() {
         LOGGER.info("Loading Items");
@@ -111,7 +119,7 @@ public class EWItems {
 
     public static <T extends AbstractElementalStaffItem> T registerStaff(T item) {
         ELEMENTAL_STAFFS.add(item);
-        Element element = item.getElement();
+        Element element = item.getBaseElement();
         return register(element.getName() + "_elemental_staff", item, Models.HANDHELD, element.getTranslation().get() + " Elemental Staff", element.getTranslation().get("zh_cn") + "元素法杖", EWTags.ELEMENT_STAFFS);
     }
 

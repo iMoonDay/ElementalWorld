@@ -26,6 +26,7 @@ public class EWEvents {
             });
 
         });
+
     }
 
     private static void registerServer(Identifier channelName, ServerPlayNetworking.PlayChannelHandler channelHandler) {

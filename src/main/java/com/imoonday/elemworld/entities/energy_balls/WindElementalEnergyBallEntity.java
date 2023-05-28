@@ -7,7 +7,6 @@ import com.imoonday.elemworld.init.EWEntities;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
 
 public class WindElementalEnergyBallEntity extends AbstractElementalEnergyBallEntity {
@@ -16,22 +15,12 @@ public class WindElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
         super(entityType, world);
     }
 
-    public WindElementalEnergyBallEntity(LivingEntity owner, ItemStack stack, int power) {
-        super(EWEntities.WIND_ELEMENTAL_ENERGY_BALL, owner, stack, power);
+    public WindElementalEnergyBallEntity(LivingEntity owner, ItemStack staffStack) {
+        super(EWEntities.WIND_ELEMENTAL_ENERGY_BALL, owner, staffStack);
     }
 
     @Override
     public Element getElement() {
         return EWElements.WIND;
-    }
-
-    @Override
-    protected void onCollision(HitResult hitResult) {
-        super.onCollision(hitResult);
-        forEachLivingEntity(power * 2,
-                entity -> 0.5f * power,
-                LivingEntity::isAlive,
-                entity -> entity.setVelocity(0, 0.5 * power, 0),
-                () -> {});
     }
 }

@@ -7,36 +7,20 @@ import com.imoonday.elemworld.init.EWEntities;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class GoldElementalEnergyBallEntity extends AbstractElementalEnergyBallEntity {
+
     public GoldElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> entityType, World world) {
         super(entityType, world);
     }
 
-    public GoldElementalEnergyBallEntity(LivingEntity owner, ItemStack stack, int power) {
-        super(EWEntities.GOLD_ELEMENTAL_ENERGY_BALL, owner, stack, power);
+    public GoldElementalEnergyBallEntity(LivingEntity owner, ItemStack staffStack) {
+        super(EWEntities.GOLD_ELEMENTAL_ENERGY_BALL, owner, staffStack);
     }
 
     @Override
     public Element getElement() {
         return EWElements.GOLD;
-    }
-
-    @Override
-    protected void onCollision(HitResult hitResult) {
-        super.onCollision(hitResult);
-        forEachLivingEntity(power * 2,
-                entity -> 0.5f * power,
-                LivingEntity::isAlive,
-                this::knockBack,
-                () -> {});
-    }
-
-    private void knockBack(LivingEntity entity) {
-        Vec3d vec3d = entity.getPos().subtract(this.getPos()).normalize().multiply(power);
-        entity.setVelocity(vec3d.x, 0.5 + 0.1 * power, vec3d.z);
     }
 }
