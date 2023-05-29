@@ -4,6 +4,8 @@ import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWEntities;
 import com.imoonday.elemworld.init.EWItems;
+import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.VertexConsumer;
@@ -11,8 +13,7 @@ import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MovementType;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.control.FlightMoveControl;
 import net.minecraft.entity.ai.goal.EscapeDangerGoal;
 import net.minecraft.entity.ai.goal.FlyGoal;
@@ -21,7 +22,9 @@ import net.minecraft.entity.ai.goal.LookAtEntityGoal;
 import net.minecraft.entity.ai.pathing.BirdNavigation;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.entity.passive.AllayEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
@@ -29,6 +32,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
@@ -116,6 +120,29 @@ public class ElementalElfEntity extends PathAwareEntity {
     @Override
     public boolean canEquip(ItemStack stack) {
         return false;
+    }
+
+    public static EntityType<ElementalElfEntity> register() {
+        return EWEntities.register("elemental_elf",
+                FabricEntityTypeBuilder
+                        .create(SpawnGroup.CREATURE, ElementalElfEntity::new)
+                        .dimensions(EntityDimensions.fixed(0.25f, 0.25f))
+                        .trackRangeChunks(8)
+                        .trackedUpdateRate(2)
+                        .build(),
+                "Elemental Elf",
+                "元素精灵",
+                AllayEntity.createAllayAttributes(),
+                SpawnRestriction.Location.ON_GROUND,
+                Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+                MobEntity::canMobSpawn,
+                BiomeSelectors.foundInOverworld(),
+                SpawnGroup.CREATURE,
+                10,
+                2,
+                4,
+                56063,
+                0xFF0000);
     }
 
     public static class Renderer extends MobEntityRenderer<ElementalElfEntity, Model> {

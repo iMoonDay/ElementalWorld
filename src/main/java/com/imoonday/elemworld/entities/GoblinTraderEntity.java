@@ -2,18 +2,18 @@ package com.imoonday.elemworld.entities;
 
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWElements;
+import com.imoonday.elemworld.init.EWEntities;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.interfaces.BaseElement;
+import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.BipedEntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.entity.EntityData;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.*;
@@ -34,11 +34,13 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TradeOfferList;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -56,6 +58,25 @@ public class GoblinTraderEntity extends MerchantEntity implements BaseElement {
 
     public GoblinTraderEntity(EntityType<? extends MerchantEntity> entityType, World world) {
         super(entityType, world);
+    }
+
+    public static EntityType<GoblinTraderEntity> register() {
+        return EWEntities.register("goblin_trader",
+                FabricEntityTypeBuilder.create(SpawnGroup.CREATURE, GoblinTraderEntity::new)
+                        .dimensions(EntityDimensions.fixed(0.6f, 1.95f)).build(),
+                "Goblin Trader",
+                "哥布林商人",
+                createMobAttributes(),
+                SpawnRestriction.Location.ON_GROUND,
+                Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+                GoblinTraderEntity::canMobSpawn,
+                BiomeSelectors.foundInOverworld(),
+                SpawnGroup.CREATURE,
+                10,
+                1,
+                1,
+                Color.YELLOW.getRGB(),
+                Color.GREEN.getRGB());
     }
 
     @Override

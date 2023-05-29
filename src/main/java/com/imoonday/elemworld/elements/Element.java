@@ -660,13 +660,14 @@ public abstract class Element {
         }
 
         private static void register(Element element) {
-            Registry.register(Registries.POTION, id(element.name), new ElementPotion(element));
+            ElementPotion potion = Registry.register(Registries.POTION, id(element.name), new ElementPotion(element));
             String en_us = element.getTranslation().get();
             String zh_cn = element.getTranslation().get("zh_cn");
             ElementalWorldData.addTranslation(element.getTranslationKey() + ".potion", "Potion of " + en_us + " Element", zh_cn + "元素药水");
             ElementalWorldData.addTranslation(element.getTranslationKey() + ".splash_potion", "Splash Potion of " + en_us + " Element", "喷溅型" + zh_cn + "元素药水");
             ElementalWorldData.addTranslation(element.getTranslationKey() + ".lingering_potion", "Lingering Potion of " + en_us + " Element", "滞留型" + zh_cn + "元素药水");
             ElementalWorldData.addTranslation(element.getTranslationKey() + ".tipped_arrow", "Arrow of " + en_us + " Element", zh_cn + "元素之箭");
+            EWPotions.addPotion(potion);
         }
     }
 

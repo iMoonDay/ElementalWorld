@@ -2,6 +2,9 @@ package com.imoonday.elemworld.gui;
 
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWTranslationKeys;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
@@ -13,6 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Environment(EnvType.CLIENT)
 public class ElementRendererGui {
 
     public static final ElementRendererGui INSTANCE = new ElementRendererGui();
@@ -61,5 +65,9 @@ public class ElementRendererGui {
         int y = mc.getWindow().getScaledHeight() / 2 + offsetY;
         int x = mc.getWindow().getScaledWidth() / 2 - 8 + 16 * index - (size - 1) * 16 / 2;
         mc.getItemRenderer().renderInGui(matrixStack, new ItemStack(item), x, y);
+    }
+
+    public static void registerClient(){
+        HudRenderCallback.EVENT.register((matrixStack, tickDelta) -> INSTANCE.onRenderGameOverlayPost(matrixStack));
     }
 }

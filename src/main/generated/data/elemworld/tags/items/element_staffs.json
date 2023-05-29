@@ -1,20 +1,20 @@
 {
   "replace": false,
   "values": [
-    "elemworld:fire_elemental_staff",
-    "elemworld:gold_elemental_staff",
-    "elemworld:earth_elemental_staff",
-    "elemworld:wood_elemental_staff",
     "elemworld:grass_elemental_staff",
-    "elemworld:rock_elemental_staff",
-    "elemworld:light_elemental_staff",
-    "elemworld:ice_elemental_staff",
     "elemworld:time_elemental_staff",
-    "elemworld:water_elemental_staff",
-    "elemworld:darkness_elemental_staff",
-    "elemworld:thunder_elemental_staff",
-    "elemworld:wind_elemental_staff",
+    "elemworld:gold_elemental_staff",
+    "elemworld:space_elemental_staff",
     "elemworld:sound_elemental_staff",
-    "elemworld:space_elemental_staff"
+    "elemworld:light_elemental_staff",
+    "elemworld:wood_elemental_staff",
+    "elemworld:wind_elemental_staff",
+    "elemworld:fire_elemental_staff",
+    "elemworld:ice_elemental_staff",
+    "elemworld:thunder_elemental_staff",
+    "elemworld:earth_elemental_staff",
+    "elemworld:water_elemental_staff",
+    "elemworld:rock_elemental_staff",
+    "elemworld:darkness_elemental_staff"
   ]
 }

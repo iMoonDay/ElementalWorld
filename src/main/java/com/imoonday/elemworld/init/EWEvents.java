@@ -2,6 +2,7 @@ package com.imoonday.elemworld.init;
 
 import com.imoonday.elemworld.items.ElementDetectorItem;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.util.Identifier;
 
@@ -27,6 +28,11 @@ public class EWEvents {
 
         });
 
+        ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
+            if (oldPlayer.world.getGameRules().getBoolean(EWGameRules.KEEP_ELEMENTS)) {
+                newPlayer.setElements(oldPlayer.getElements());
+            }
+        });
     }
 
     private static void registerServer(Identifier channelName, ServerPlayNetworking.PlayChannelHandler channelHandler) {

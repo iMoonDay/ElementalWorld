@@ -23,4 +23,5 @@ public class DarknessElementalEnergyBallEntity extends AbstractElementalEnergyBa
     public Element getElement() {
         return EWElements.DARKNESS;
     }
+
 }

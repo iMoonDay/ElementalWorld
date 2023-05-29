@@ -1,5 +1,6 @@
 package com.imoonday.elemworld;
 
+import com.imoonday.elemworld.gui.ElementRendererGui;
 import com.imoonday.elemworld.init.EWBlocks;
 import com.imoonday.elemworld.init.EWEntities;
 import com.imoonday.elemworld.init.EWKeyBindings;
@@ -15,5 +16,6 @@ public class ElementalWorldClient implements ClientModInitializer {
         ElementBowItem.registerClient();
         EWEntities.registerClient();
         EWBlocks.registerClient();
+        ElementRendererGui.registerClient();
     }
 }

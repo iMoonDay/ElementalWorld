@@ -15,14 +15,12 @@
     "MobEntityMixin",
     "PlayerEntityMixin",
     "PlayerInventoryMixin",
-    "ServerPlayerEntityMixin",
     "TridentEntityInvoker"
   ],
   "client": [
     "AbstractClientPlayerEntityMixin",
     "ClientPlayerEntityMixin",
-    "HeldItemRendererMixin",
-    "InGameHudMixin"
+    "HeldItemRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

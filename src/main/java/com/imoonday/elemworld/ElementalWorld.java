@@ -20,13 +20,14 @@ public class ElementalWorld implements ModInitializer {
         EWItemGroups.register();
         EWItems.register();
         EWBlocks.register();
-        EWEntities.register();
         EWEffects.register();
         EWEnchantments.register();
         EWEvents.register();
         EWGameRules.register();
-        Element.register();
         EWPotions.register();
+        Element.register();
+        EWItemGroups.registerItems();
+        EWEntities.register();
         AbstractElementalStaffItem.register();
         EWTranslationKeys.register();
         LOGGER.info("Elemental World " + VERSION + " is now initialized!");

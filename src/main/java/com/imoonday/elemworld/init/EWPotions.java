@@ -1,5 +1,6 @@
 package com.imoonday.elemworld.init;
 
+import com.google.common.collect.ImmutableList;
 import com.imoonday.elemworld.ElementalWorldData;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -12,10 +13,15 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.imoonday.elemworld.ElementalWorld.LOGGER;
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWPotions {
+
+    private static final List<Potion> POTIONS = new ArrayList<>();
 
     public static int DEFAULT_DURATION = 60 * 20;
 
@@ -35,7 +41,7 @@ public class EWPotions {
     }
 
     public static Potion registerPotion(String id, StatusEffect effect) {
-        Potion potion = new Potion(new StatusEffectInstance(effect, DEFAULT_DURATION));
+        Potion potion = new Potion(new StatusEffectInstance(effect, effect.isInstant() ? 1 : DEFAULT_DURATION));
         ElementalWorldData.getTranslation(effect).ifPresent(translation -> {
             String en_us = translation.get();
             String zh_cn = translation.get("zh_cn");
@@ -44,6 +50,15 @@ public class EWPotions {
             ElementalWorldData.addTranslation(Items.LINGERING_POTION.getTranslationKey() + ".effect." + id, "Lingering Potion of " + en_us, "滞留型" + zh_cn + "药水");
             ElementalWorldData.addTranslation(Items.TIPPED_ARROW.getTranslationKey() + ".effect." + id, "Arrow of " + en_us, zh_cn + "之箭");
         });
+        addPotion(potion);
         return Registry.register(Registries.POTION, id(id), potion);
+    }
+
+    public static void addPotion(Potion potion) {
+        POTIONS.add(potion);
+    }
+
+    public static ImmutableList<Potion> getPotions() {
+        return ImmutableList.copyOf(POTIONS);
     }
 }

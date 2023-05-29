@@ -2,8 +2,11 @@ package com.imoonday.elemworld.entities;
 
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWElements;
+import com.imoonday.elemworld.init.EWEntities;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.interfaces.BaseElement;
+import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.BipedEntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
@@ -30,10 +33,13 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
@@ -74,17 +80,15 @@ public class GoblinEntity extends HostileEntity implements BaseElement {
     @Override
     protected void initEquipment(Random random, LocalDifficulty localDifficulty) {
         super.initEquipment(random, localDifficulty);
+        this.equipAtChance(EquipmentSlot.HEAD, new ItemStack(Items.GOLDEN_HELMET));
+        this.equipAtChance(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_CHESTPLATE));
+        this.equipAtChance(EquipmentSlot.FEET, new ItemStack(Items.GOLDEN_BOOTS));
+        this.equipAtChance(EquipmentSlot.LEGS, new ItemStack(Items.GOLDEN_LEGGINGS));
+    }
+
+    private void equipAtChance(EquipmentSlot slot, ItemStack stack) {
         if (random.nextFloat() < 0.25f) {
-            this.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.GOLDEN_HELMET));
-        }
-        if (random.nextFloat() < 0.25f) {
-            this.equipStack(EquipmentSlot.CHEST, new ItemStack(Items.GOLDEN_CHESTPLATE));
-        }
-        if (random.nextFloat() < 0.25f) {
-            this.equipStack(EquipmentSlot.FEET, new ItemStack(Items.GOLDEN_BOOTS));
-        }
-        if (random.nextFloat() < 0.25f) {
-            this.equipStack(EquipmentSlot.LEGS, new ItemStack(Items.GOLDEN_LEGGINGS));
+            this.equipStack(slot, stack);
         }
     }
 
@@ -147,6 +151,25 @@ public class GoblinEntity extends HostileEntity implements BaseElement {
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putInt("ExtraCoins", this.extraCoins);
+    }
+
+    public static EntityType<GoblinEntity> register() {
+        return EWEntities.register("goblin",
+                FabricEntityTypeBuilder.<GoblinEntity>create(SpawnGroup.MONSTER, GoblinEntity::new)
+                        .dimensions(EntityDimensions.fixed(0.6f, 1.95f)).build(),
+                "Goblin",
+                "哥布林",
+                createGoblinAttributes(),
+                SpawnRestriction.Location.ON_GROUND,
+                Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+                HostileEntity::canSpawnInDark,
+                BiomeSelectors.spawnsOneOf(EntityType.ZOMBIE),
+                SpawnGroup.MONSTER,
+                100,
+                3,
+                6,
+                Color.YELLOW.getRGB(),
+                Color.ORANGE.getRGB());
     }
 
     public static class Renderer extends BipedEntityRenderer<GoblinEntity, Model> {
