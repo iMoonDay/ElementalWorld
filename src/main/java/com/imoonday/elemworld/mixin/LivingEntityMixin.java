@@ -562,6 +562,11 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Override
     public boolean hasElement(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
+        if (entity instanceof BaseElement baseElement) {
+            if (element.isOf(baseElement.getBaseElement())) {
+                return true;
+            }
+        }
         return entity.getAllElements(false).stream().anyMatch(entry -> entry.element().isOf(element));
     }
 

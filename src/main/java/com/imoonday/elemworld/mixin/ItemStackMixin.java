@@ -100,6 +100,11 @@ public class ItemStackMixin implements EWItemStack {
     @Override
     public boolean hasElement(Element element) {
         ItemStack stack = (ItemStack) (Object) this;
+        if (stack.getItem() instanceof BaseElement baseElement) {
+            if (element.isOf(baseElement.getBaseElement())) {
+                return true;
+            }
+        }
         return stack.getElements().stream().anyMatch(entry -> entry.element().isOf(element));
     }
 

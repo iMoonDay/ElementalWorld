@@ -591,10 +591,6 @@ public abstract class Element {
         return Registries.STATUS_EFFECT.get(id("temporary_" + name + "_element"));
     }
 
-    public EntityType<? extends AbstractElementalEnergyBallEntity> getEnergyBallEntity() {
-        return null;
-    }
-
     private static class ElementEffect extends StatusEffect {
 
         private final Element element;

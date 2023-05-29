@@ -60,7 +60,10 @@ public abstract class AbstractElementalStaffItem extends Item implements BaseEle
     }
 
     public void spawnProjectiles(LivingEntity user, ItemStack stack) {
-        user.world.spawnEntity(createEnergyBall(user, stack));
+        AbstractElementalEnergyBallEntity energyBall = createEnergyBall(user, stack);
+        if (energyBall != null) {
+            user.world.spawnEntity(energyBall);
+        }
     }
 
     public abstract AbstractElementalEnergyBallEntity createEnergyBall(LivingEntity user, ItemStack stack);
