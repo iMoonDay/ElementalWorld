@@ -9,13 +9,13 @@ public interface BaseElement {
     Element getBaseElement();
 
     default void checkBaseElement(LivingEntity entity) {
-        if (entity.getElements().stream().noneMatch(entry -> entry.element().isOf(this.getBaseElement()))) {
+        if (!entity.hasElement(this.getBaseElement())) {
             entity.addElement(this.getBaseElement().withRandomLevel());
         }
     }
 
     default void checkBaseElement(ItemStack stack) {
-        if (stack.getElements().stream().noneMatch(entry -> entry.element().isOf(this.getBaseElement()))) {
+        if (!stack.hasElement(this.getBaseElement())) {
             stack.addElement(this.getBaseElement().withRandomLevel());
         }
     }

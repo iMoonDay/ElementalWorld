@@ -4,9 +4,9 @@ import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItems;
+import com.imoonday.elemworld.interfaces.BaseElement;
 import com.imoonday.elemworld.interfaces.EWItemStack;
 import com.imoonday.elemworld.interfaces.EWLivingEntity;
-import com.imoonday.elemworld.interfaces.BaseElement;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -17,6 +17,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.TridentEntity;
@@ -224,7 +225,7 @@ public class LivingEntityMixin implements EWLivingEntity {
             for (Map.Entry<StatusEffect, Integer> effectEntry : effects.entrySet()) {
                 StatusEffect key = effectEntry.getKey();
                 Integer value = effectEntry.getValue();
-                entity.addStatusEffect(new StatusEffectInstance(key, 2, value, false, false, false));
+                entity.addStatusEffect(new StatusEffectInstance(key, key == StatusEffects.NIGHT_VISION ? 15 * 20 + 2 : 2, value, false, false, false));
             }
         }
     }
@@ -562,11 +563,6 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Override
     public boolean hasElement(Element element) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity instanceof BaseElement baseElement) {
-            if (element.isOf(baseElement.getBaseElement())) {
-                return true;
-            }
-        }
         return entity.getAllElements(false).stream().anyMatch(entry -> entry.element().isOf(element));
     }
 

@@ -21,10 +21,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.TagKey;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static com.imoonday.elemworld.ElementalWorld.LOGGER;
@@ -33,8 +30,8 @@ import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWBlocks {
 
-    private static final HashMap<Block, Consumer<BlockLootTableGenerator>> BLOCK_DROPS = new HashMap<>();
-    private static final HashMap<Block, List<TagKey<Block>>> BLOCK_TAGS = new HashMap<>();
+    private static final Map<Block, Consumer<BlockLootTableGenerator>> BLOCK_DROPS = new HashMap<>();
+    private static final Map<Block, List<TagKey<Block>>> BLOCK_TAGS = new HashMap<>();
 
     public static final Block ELEMENT_SMITHING_TABLE = register("element_smithing_table", new ElementSmithingTableBlock(), "Element Smithing Table", "元素锻造台", BlockTags.AXE_MINEABLE);
     public static final Block ELEMENTAL_ALTAR = register("elemental_altar", new ElementalAltarBlock(), "Elemental Altar", "元素祭坛", BlockTags.PICKAXE_MINEABLE);

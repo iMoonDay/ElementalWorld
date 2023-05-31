@@ -5,6 +5,7 @@ import com.imoonday.elemworld.init.EWTranslationKeys;
 import com.imoonday.elemworld.screens.handler.ElementDetailsScreenHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
@@ -38,6 +39,7 @@ public class ElementDetailsScreen extends HandledScreen<ElementDetailsScreenHand
         drawTexture(matrices, x, y, 0, 0, backgroundWidth, backgroundHeight);
         PlayerEntity player = this.handler.getPlayer();
         LivingEntity livingEntity = this.handler.getLivingEntity();
+        InventoryScreen.drawEntity(matrices, x + 15, y + 44, 30, (float) (x + 15) - mouseX, (float) (y + 44 - 50) - mouseY, livingEntity);
         float damage = 1.0f;
         float health = 1.0f;
         int count = 0;
@@ -66,6 +68,7 @@ public class ElementDetailsScreen extends HandledScreen<ElementDetailsScreenHand
         renderBackground(matrices);
         super.render(matrices, mouseX, mouseY, delta);
         drawMouseoverTooltip(matrices, mouseX, mouseY);
+
     }
 
     @Override

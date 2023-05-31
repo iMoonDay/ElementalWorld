@@ -2,19 +2,13 @@ package com.imoonday.elemworld.items;
 
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWEnchantments;
-import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.interfaces.BaseElement;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootPool;
-import net.minecraft.loot.condition.RandomChanceLootCondition;
-import net.minecraft.loot.entry.ItemEntry;
-import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Hand;
@@ -24,7 +18,6 @@ import net.minecraft.util.UseAction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -113,18 +106,4 @@ public abstract class AbstractElementalStaffItem extends Item implements BaseEle
         return UseAction.BOW;
     }
 
-    public static void register() {
-        EWItems.getAllStaffs().forEach(item -> LootTableEvents.MODIFY.register((resourceManager, lootManager, id, tableBuilder, source) -> {
-            item.getLootables(new HashMap<>()).forEach((identifier, chance) -> {
-                if (identifier.equals(id)) {
-                    LootPool.Builder poolBuilder = LootPool.builder()
-                            .rolls(ConstantLootNumberProvider.create(1))
-                            .with(ItemEntry.builder(item)
-                                    .conditionally(RandomChanceLootCondition.builder(chance)));
-
-                    tableBuilder.pool(poolBuilder);
-                }
-            });
-        }));
-    }
 }

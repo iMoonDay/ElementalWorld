@@ -6,11 +6,9 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
 import java.awt.*;
-import java.util.Arrays;
 
 public class WaterFearingEffect extends StatusEffect {
 
@@ -26,11 +24,12 @@ public class WaterFearingEffect extends StatusEffect {
     @Override
     public void applyUpdateEffect(LivingEntity entity, int amplifier) {
         if (entity.isWet() || entity.hasEffectOf(EWElements.WATER)) {
-            if (isBeingRainedOn(entity)) {
-                for (ItemStack stack : Arrays.asList(entity.getEquippedStack(EquipmentSlot.HEAD), entity.getMainHandStack(), entity.getOffHandStack())) {
-                    if (stack.isOf(EWItems.UMBRELLA)) {
-                        return;
-                    }
+            if (isBeingRainedOn(entity) && !entity.isTouchingWater()) {
+                if (entity.getEquippedStack(EquipmentSlot.HEAD).isOf(EWItems.UMBRELLA)) {
+                    return;
+                }
+                if (entity.isUsingItem() && entity.getActiveItem().isOf(EWItems.UMBRELLA)) {
+                    return;
                 }
             }
             entity.damage(entity.getDamageSources().magic(), (amplifier + 1) * 0.3f);

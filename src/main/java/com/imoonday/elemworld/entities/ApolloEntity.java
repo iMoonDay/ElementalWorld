@@ -6,12 +6,14 @@ import com.imoonday.elemworld.init.EWEntities;
 import com.imoonday.elemworld.interfaces.BaseElement;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.entity.SpawnRestriction;
+import net.minecraft.entity.*;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.SkeletonEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.Random;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 
 import java.awt.*;
@@ -35,7 +37,7 @@ public class ApolloEntity extends SkeletonEntity implements BaseElement {
                 SkeletonEntity.createAbstractSkeletonAttributes(),
                 SpawnRestriction.Location.ON_GROUND,
                 Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
-                ApolloEntity::canSpawnIgnoreLightLevel,
+                ApolloEntity::cannotSpawnInDark,
                 BiomeSelectors.spawnsOneOf(EntityType.SKELETON),
                 SpawnGroup.MONSTER,
                 80,
@@ -43,5 +45,9 @@ public class ApolloEntity extends SkeletonEntity implements BaseElement {
                 3,
                 Color.YELLOW.getRGB(),
                 Color.WHITE.getRGB());
+    }
+
+    public static boolean cannotSpawnInDark(EntityType<? extends HostileEntity> type, ServerWorldAccess world, SpawnReason spawnReason, BlockPos pos, Random random) {
+        return world.getDifficulty() != Difficulty.PEACEFUL && !HostileEntity.isSpawnDark(world, pos, random) && HostileEntity.canMobSpawn(type, world, spawnReason, pos, random);
     }
 }

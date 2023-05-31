@@ -39,11 +39,8 @@ public class FireElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
     @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        forEachLivingEntity(5 * 2,
-                entity -> 7.0f,
-                LivingEntity::isAlive,
-                this::fireOrExplode,
-                this::explode);
+        this.world.createExplosion(getOwner(), this.getX(), this.getY(), this.getZ(), 3.0f, true, World.ExplosionSourceType.MOB);
+        forEachLivingEntity(10, entity -> 7.0f, LivingEntity::isAlive, this::fireOrExplode, true);
     }
 
     private void fireOrExplode(LivingEntity entity) {
@@ -56,7 +53,4 @@ public class FireElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
         }
     }
 
-    private void explode() {
-        this.world.createExplosion(getOwner(), this.getX(), this.getY(), this.getZ(), 3.0f, true, World.ExplosionSourceType.MOB);
-    }
 }

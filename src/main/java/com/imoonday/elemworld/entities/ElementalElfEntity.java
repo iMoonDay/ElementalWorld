@@ -4,6 +4,7 @@ import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.init.EWEntities;
 import com.imoonday.elemworld.init.EWItems;
+import com.imoonday.elemworld.init.EWTags;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.block.BlockState;
@@ -62,6 +63,9 @@ public class ElementalElfEntity extends PathAwareEntity {
         WeightRandom.getRandom(Element.getRegistrySet(false), element -> element.getWeight(this)).ifPresent(element -> this.dropItem(element.getFragmentItem()));
         if (this.random.nextFloat() < 0.01f) {
             WeightRandom.getRandom(EWItems.getAllStaffs()).ifPresent(this::dropItem);
+        }
+        if (this.random.nextFloat() < 0.05f) {
+            EWItems.getItemsFromTag(EWTags.COMBINED_ELEMENT_FRAGMENTS).flatMap(items -> items.stream().findAny()).ifPresent(this::dropItem);
         }
     }
 
@@ -138,7 +142,7 @@ public class ElementalElfEntity extends PathAwareEntity {
                 MobEntity::canMobSpawn,
                 BiomeSelectors.foundInOverworld(),
                 SpawnGroup.CREATURE,
-                10,
+                30,
                 2,
                 4,
                 56063,

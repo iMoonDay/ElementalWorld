@@ -239,6 +239,7 @@ public class GoblinEntity extends HostileEntity implements BaseElement {
         @Override
         public void stop() {
             mob.setJumping(false);
+            this.cooldown = 0;
         }
 
         @Override

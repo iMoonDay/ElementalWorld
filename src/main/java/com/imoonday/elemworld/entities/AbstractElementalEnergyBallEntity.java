@@ -46,7 +46,7 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
     }
 
     public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack) {
-        this(type, owner, staffStack, 1.0f);
+        this(type, owner, staffStack, 1.5f);
     }
 
     public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack, float speed) {
@@ -77,24 +77,30 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
     public void tick() {
         HitResult hitResult;
         Entity owner = this.getOwner();
-        if (!this.world.isClient && (owner != null && owner.isRemoved() || !this.world.isChunkLoaded(this.getBlockPos()) || this.age > 30 * 20 || this.collided)) {
+        if (!this.world.isClient && (owner != null && owner.isRemoved() || !this.world.isChunkLoaded(this.getBlockPos()) || this.age > discardAge() || this.collided && discardOnCollision())) {
             this.discard();
             return;
         }
         super.tick();
-        if ((hitResult = ProjectileUtil.getCollision(this, entity1 -> canHit(entity1) && entity1 != owner)).getType() != HitResult.Type.MISS) {
+        if ((hitResult = ProjectileUtil.getCollision(this, entity1 -> canHit(entity1) && entity1 != owner)).getType() != HitResult.Type.MISS && !collided) {
             this.onCollision(hitResult);
             this.collided = true;
         }
         this.checkBlockCollision();
         Vec3d vec3d = this.getVelocity();
-        double d = this.getX() + vec3d.x;
-        double e = this.getY() + vec3d.y;
-        double f = this.getZ() + vec3d.z;
-        if (this.age % 20 == 0) {
+        Vec3d newPos = this.getPos().add(vec3d);
+        this.setPosition(newPos);
+        if (this.age % 20 == 0 || this.isTouchingWater()) {
             this.setVelocity(vec3d.multiply(0.95));
         }
-        this.setPosition(d, e, f);
+    }
+
+    protected int discardAge() {
+        return 30 * 20;
+    }
+
+    protected boolean discardOnCollision() {
+        return true;
     }
 
     public abstract Element getElement();
@@ -140,27 +146,27 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
      * @param damageFunc           Damage taken by each entity
      * @param predicate            Effective entity conditions
      * @param livingEntityConsumer Operations on each living entity
-     * @param elseToDo             Run when no entities are found
+     * @param particleAndSound Add particles and play sound
      */
-    protected void forEachLivingEntity(double range, Function<LivingEntity, Float> damageFunc, Predicate<LivingEntity> predicate, Consumer<LivingEntity> livingEntityConsumer, Runnable elseToDo) {
+    protected void forEachLivingEntity(double range, Function<LivingEntity, Float> damageFunc, Predicate<LivingEntity> predicate, Consumer<LivingEntity> livingEntityConsumer, boolean particleAndSound) {
         if (!world.isClient) {
             Entity owner = getOwner();
             List<Entity> entities = world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && predicate.test(living));
-            if (entities.isEmpty()) {
-                elseToDo.run();
-            } else {
-                for (Entity entity : entities) {
-                    LivingEntity livingEntity = (LivingEntity) entity;
-                    float amount = damageFunc.apply(livingEntity) * this.getStaffStack().getDamageMultiplier(livingEntity);
-                    if (amount > 0) {
-                        livingEntity.damage(owner != null ? owner.getDamageSources().indirectMagic(this, owner) : this.getDamageSources().magic(), amount);
-                    }
-                    livingEntityConsumer.accept(livingEntity);
+            for (Entity entity : entities) {
+                LivingEntity livingEntity = (LivingEntity) entity;
+                float amount = damageFunc.apply(livingEntity);
+                if (amount > 0) {
+                    livingEntity.damage(owner != null ? owner.getDamageSources().indirectMagic(this, owner) : this.getDamageSources().magic(), amount);
+                } else if (amount < 0) {
+                    livingEntity.heal(amount);
                 }
+                livingEntityConsumer.accept(livingEntity);
             }
         }
-        this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY(), this.getZ(), 1.0, 0, 0);
-        this.world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.VOICE);
+        if (particleAndSound) {
+            this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY(), this.getZ(), 1.0, 0, 0);
+            this.world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.VOICE);
+        }
     }
 
     private void spawnAreaEffectCloudEntity(Entity entity, float radius, int waitTime) {
@@ -203,7 +209,7 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
         @Override
         public void render(T entity, float yaw, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
             matrixStack.push();
-            matrixStack.scale(2.0f, 2.0f, 2.0f);
+            matrixStack.scale(1.5f, 1.5f, 1.5f);
             matrixStack.multiply(this.dispatcher.getRotation());
             matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));
             MatrixStack.Entry entry = matrixStack.peek();

@@ -25,8 +25,9 @@ import static com.imoonday.elemworld.init.EWIdentifiers.id;
 
 public class EWItems {
 
-    private static final HashMap<Item, Model> ITEM_MODELS = new HashMap<>();
-    private static final HashMap<Item, List<TagKey<Item>>> ITEM_TAGS = new HashMap<>();
+    private static final Map<Item, Model> ITEM_MODELS = new HashMap<>();
+    private static final Map<Item, List<TagKey<Item>>> ITEM_TAGS = new HashMap<>();
+    private static final Map<TagKey<Item>, Set<Item>> ITEMS_FROM_TAG = new HashMap<>();
     private static final Set<AbstractElementalStaffItem> ELEMENTAL_STAFFS = new HashSet<>();
 
     public static final Item ELEMENT_DETECTOR = register("element_detector", new ElementDetectorItem(), Models.HANDHELD, "Element Detector", "元素探测器");
@@ -91,6 +92,11 @@ public class EWItems {
             list.removeIf(Objects::isNull);
             if (list.size() > 0) {
                 ITEM_TAGS.put(item, list);
+                for (TagKey<Item> key : list) {
+                    Set<Item> items = Optional.ofNullable(ITEMS_FROM_TAG.get(key)).orElse(new HashSet<>());
+                    items.add(item);
+                    ITEMS_FROM_TAG.put(key, items);
+                }
             }
         }
         addTranslation(item, en_us, zh_cn);
@@ -133,5 +139,10 @@ public class EWItems {
 
     public static ImmutableSet<AbstractElementalStaffItem> getAllStaffs() {
         return ImmutableSet.copyOf(ELEMENTAL_STAFFS);
+    }
+
+    public static Optional<ImmutableSet<Item>> getItemsFromTag(TagKey<Item> key) {
+        Set<Item> set = ITEMS_FROM_TAG.get(key);
+        return set == null ? Optional.empty() : Optional.of(ImmutableSet.copyOf(set));
     }
 }

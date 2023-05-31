@@ -6,7 +6,6 @@ import com.imoonday.elemworld.ElementalWorldData;
 import com.imoonday.elemworld.api.EWRegistry;
 import com.imoonday.elemworld.api.Translation;
 import com.imoonday.elemworld.api.WeightRandom;
-import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItemGroups;
 import com.imoonday.elemworld.init.EWItems;
@@ -29,7 +28,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.damage.DamageSource;
@@ -398,7 +396,7 @@ public abstract class Element {
     public void addEffect(LivingEntity target, @Nullable Entity attacker) {
         int sec = this.getEffectTime(target);
         if (sec > 0) {
-            StatusEffectInstance effect = new StatusEffectInstance(this.getEffect(), sec * 20, 0);
+            StatusEffectInstance effect = new StatusEffectInstance(this.getEffect(), sec * 20, 0, false, false, true);
             target.addStatusEffect(effect, attacker);
         }
     }
