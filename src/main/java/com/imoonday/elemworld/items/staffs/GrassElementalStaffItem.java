@@ -4,18 +4,23 @@ import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.entities.energy_balls.GrassElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
+import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.Map;
 
 public class GrassElementalStaffItem extends AbstractElementalStaffItem {
 
-    public GrassElementalStaffItem(){
+    public GrassElementalStaffItem() {
         super(128);
     }
 
@@ -31,16 +36,24 @@ public class GrassElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     protected void addEffects(ItemStack stack, World world, LivingEntity user) {
-
+        user.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 5 * 20, 1));
     }
 
-    @Override
-    protected SoundEvent getSoundEvent(boolean isSneaking) {
-        return null;
-    }
-
+    /**
+     * @see com.imoonday.elemworld.mixin.ComposterBlockMixin
+     */
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
         return lootables;
     }
+
+    public static void spawnGrassElementalStaff(World world, BlockPos pos) {
+        if (world.random.nextFloat() < 0.05f) {
+            Vec3d vec3d = Vec3d.add(pos, 0.5, 1.01, 0.5).addRandom(world.random, 0.7f);
+            ItemEntity itemEntity = new ItemEntity(world, vec3d.getX(), vec3d.getY(), vec3d.getZ(), new ItemStack(EWItems.GRASS_ELEMENTAL_STAFF));
+            itemEntity.setToDefaultPickupDelay();
+            world.spawnEntity(itemEntity);
+        }
+    }
+
 }

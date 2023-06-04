@@ -55,6 +55,9 @@ public class EWEntities {
     public static final EntityType<WindElementalEnergyBallEntity> WIND_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WindElementalEnergyBallEntity::new);
     public static final EntityType<WoodElementalEnergyBallEntity> WOOD_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WoodElementalEnergyBallEntity::new);
 
+    public static final EntityType<MeteoriteEntity> METEORITE = register("meteorite", FabricEntityTypeBuilder.<MeteoriteEntity>create(SpawnGroup.MISC, MeteoriteEntity::new).dimensions(EntityDimensions.fixed(0, 0)).trackRangeChunks(8).trackedUpdateRate(1).forceTrackedVelocityUpdates(true).build(), "Meteorite", "陨石");
+    public static final EntityModelLayer MODEL_METEORITE_LAYER = registerModelLayer("meteorite");
+
     public static final EntityType<ElementalElfEntity> ELEMENTAL_ELF = ElementalElfEntity.register();
     public static final EntityModelLayer MODEL_ELEMENTAL_ELF_LAYER = registerModelLayer("elemental_elf");
 
@@ -72,6 +75,8 @@ public class EWEntities {
         EntityRendererRegistry.register(ELEMENTAL_ELF, ElementalElfEntity.Renderer::new);
         EntityRendererRegistry.register(GOBLIN, GoblinEntity.Renderer::new);
         EntityRendererRegistry.register(GOBLIN_TRADER, GoblinTraderEntity.Renderer::new);
+        EntityRendererRegistry.register(METEORITE, MeteoriteEntity.Renderer::new);
+        EntityModelLayerRegistry.registerModelLayer(MODEL_METEORITE_LAYER, MeteoriteEntity.Renderer::getTexturedModelData);
         ENTITIES_WITHOUT_RENDERER.forEach(entityType -> EntityRendererRegistry.register(entityType, ctx -> new EntityRenderer<Entity>(ctx) {
             @Override
             public Identifier getTexture(Entity entity) {

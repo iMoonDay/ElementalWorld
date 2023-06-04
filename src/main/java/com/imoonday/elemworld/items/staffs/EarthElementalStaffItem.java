@@ -6,8 +6,10 @@ import com.imoonday.elemworld.entities.energy_balls.EarthElementalEnergyBallEnti
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundEvent;
+import net.minecraft.loot.LootTables;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
@@ -31,16 +33,14 @@ public class EarthElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     protected void addEffects(ItemStack stack, World world, LivingEntity user) {
-
-    }
-
-    @Override
-    protected SoundEvent getSoundEvent(boolean isSneaking) {
-        return null;
+        user.removeStatusEffect(StatusEffects.MINING_FATIGUE);
+        user.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 30 * 20));
     }
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        lootables.put(LootTables.VILLAGE_DESERT_HOUSE_CHEST, 0.02f);
         return lootables;
     }
+
 }

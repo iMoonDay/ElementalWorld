@@ -6,6 +6,7 @@
   "mixins": [
     "ArgumentTypesMixin",
     "ArrowEntityAccessor",
+    "ComposterBlockMixin",
     "EnchantmentHelperMixin",
     "EnderPearlEntityMixin",
     "EntityMixin",
@@ -20,7 +21,9 @@
   "client": [
     "AbstractClientPlayerEntityMixin",
     "ClientPlayerEntityMixin",
-    "HeldItemRendererMixin"
+    "EntityRenderDispatcherMixin",
+    "HeldItemRendererMixin",
+    "InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1

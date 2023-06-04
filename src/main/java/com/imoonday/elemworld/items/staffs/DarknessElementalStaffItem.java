@@ -5,9 +5,11 @@ import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.entities.energy_balls.DarknessElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
@@ -26,21 +28,20 @@ public class DarknessElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public AbstractElementalEnergyBallEntity createEnergyBall(LivingEntity user, ItemStack stack) {
-        return new DarknessElementalEnergyBallEntity(user,stack);
+        return new DarknessElementalEnergyBallEntity(user, stack);
     }
 
     @Override
     protected void addEffects(ItemStack stack, World world, LivingEntity user) {
-
-    }
-
-    @Override
-    protected SoundEvent getSoundEvent(boolean isSneaking) {
-        return null;
+        user.removeStatusEffect(StatusEffects.DARKNESS);
+        user.removeStatusEffect(StatusEffects.BLINDNESS);
+        user.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 30 * 10));
     }
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        lootables.put(EntityType.WITHER.getLootTableId(), 0.5f);
         return lootables;
     }
+
 }

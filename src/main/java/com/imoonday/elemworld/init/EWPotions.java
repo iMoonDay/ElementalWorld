@@ -29,6 +29,9 @@ public class EWPotions {
     public static final Potion FREEZING_RESISTANCE = registerPotion("freezing_resistance", EWEffects.FREEZING_RESISTANCE, Potions.AWKWARD, EWElements.FIRE.getFragmentItem());
     public static final Potion DIZZY = registerPotion("dizzy", EWEffects.DIZZY);
     public static final Potion WATER_FEARING = registerPotion("water_fearing", EWEffects.WATER_FEARING);
+    public static final Potion PERSPECTIVE = registerPotion("perspective", EWEffects.PERSPECTIVE);
+    public static final Potion ROBBERY = registerPotion("robbery", EWEffects.ROBBERY);
+    public static final Potion NO_FRIENDLY_HURT = registerPotion("no_friendly_hurt", EWEffects.NO_FRIENDLY_HURT);
 
     public static void register() {
         LOGGER.info("Loading Potions");

@@ -92,4 +92,12 @@ public interface EWLivingEntity {
     default boolean hasAllElements() {
         return false;
     }
+
+    default boolean isInFreeze() {
+        return false;
+    }
+
+    default void setInFreeze(boolean inFreeze) {
+
+    }
 }

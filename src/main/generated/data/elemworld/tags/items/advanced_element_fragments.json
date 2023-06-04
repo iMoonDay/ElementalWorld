@@ -1,10 +1,10 @@
 {
   "replace": false,
   "values": [
-    "elemworld:rock_element_fragment",
+    "elemworld:wind_element_fragment",
     "elemworld:grass_element_fragment",
     "elemworld:thunder_element_fragment",
-    "elemworld:wind_element_fragment",
-    "elemworld:ice_element_fragment"
+    "elemworld:ice_element_fragment",
+    "elemworld:rock_element_fragment"
   ]
 }

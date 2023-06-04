@@ -1,13 +1,13 @@
-// 1.19.4	2023-05-29T16:45:49.0100824	Elemental World/Tags for minecraft:item
-89a3ea27568fba61fc651ed7dc91168198d82cad data\elemworld\tags\items\advanced_element_fragments.json
-65e2312e2afab38da1ed4a729b7861e1022a9b9d data\elemworld\tags\items\rare_element_fragments.json
-266ef64ac76f076498814597a2ff31bb11f82547 data\elemworld\tags\items\combined_element_fragments.json
+// 1.19.4	2023-06-04T23:37:08.6353419	Elemental World/Tags for minecraft:item
+a878eecb83e2252800c1634abe59fc711a09daef data\elemworld\tags\items\advanced_element_fragments.json
+c6e23a6bd67736e2cbf1750a2536199c8dc7e404 data\elemworld\tags\items\rare_element_fragments.json
+15bf5b3ed4ef58cf4d85ebb03bd433c5450f6b44 data\elemworld\tags\items\combined_element_fragments.json
 a5038259e2e66fec6e92b5157ab788038a9aa042 data\minecraft\tags\items\shovels.json
 fdfc65128fa4b9013c2d496f7e75c0736ffc5fcb data\minecraft\tags\items\swords.json
-c9ec969bd176665e7553799834d1ff93f7d49b23 data\elemworld\tags\items\element_staffs.json
+a5b1be9758c5163122e8a091bf9fc4f7ece9b7a7 data\elemworld\tags\items\element_staffs.json
 5572000cea4b3f12c7ebe1207869eeee797b4b93 data\minecraft\tags\items\axes.json
 483230e9c285bca40a1c1f3417d70178e532b128 data\minecraft\tags\items\pickaxes.json
 af98a5f82cb5cbc9ab6b6febcdbb05d51eb01931 data\minecraft\tags\items\hoes.json
-0911c14a2e0c530a49f0522568e205846d11dac0 data\elemworld\tags\items\base_element_fragments.json
-6b14be34fd49725d95c2f5764a36929cfb06c053 data\elemworld\tags\items\element_fragments.json
-a5fbd086a62304d740fa177057b78f9ce2143267 data\elemworld\tags\items\element_tools_and_weapons.json
+1d3d38355e9efc37d8b10672cc8d09f0e3c08961 data\elemworld\tags\items\base_element_fragments.json
+97e139cae378d85f0bb823173f822a47a4b7067a data\elemworld\tags\items\element_fragments.json
+77ec1f97d6c65793d6a0c740dd59a85eb9bb0703 data\elemworld\tags\items\element_tools_and_weapons.json

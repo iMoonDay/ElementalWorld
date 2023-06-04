@@ -6,8 +6,9 @@ import com.imoonday.elemworld.entities.energy_balls.WindElementalEnergyBallEntit
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
@@ -15,7 +16,7 @@ import java.util.Map;
 
 public class WindElementalStaffItem extends AbstractElementalStaffItem {
 
-    public WindElementalStaffItem(){
+    public WindElementalStaffItem() {
         super(192);
     }
 
@@ -31,16 +32,13 @@ public class WindElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     protected void addEffects(ItemStack stack, World world, LivingEntity user) {
-
-    }
-
-    @Override
-    protected SoundEvent getSoundEvent(boolean isSneaking) {
-        return null;
+        user.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 30 * 20));
+        user.addStatusEffect(new StatusEffectInstance(StatusEffects.JUMP_BOOST, 30 * 20));
     }
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
         return lootables;
     }
+
 }

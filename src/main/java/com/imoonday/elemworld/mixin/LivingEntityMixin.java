@@ -2,6 +2,8 @@ package com.imoonday.elemworld.mixin;
 
 import com.imoonday.elemworld.api.WeightRandom;
 import com.imoonday.elemworld.elements.Element;
+import com.imoonday.elemworld.entities.energy_balls.GoldElementalEnergyBallEntity;
+import com.imoonday.elemworld.init.EWEffects;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.interfaces.BaseElement;
@@ -11,6 +13,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Tameable;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
@@ -55,6 +58,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     private static final TrackedData<Integer> IMMUNE_COOLDOWN = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<ItemStack> ELEMENTS = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.ITEM_STACK);
     private static final TrackedData<ItemStack> EFFECT_ELEMENTS = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.ITEM_STACK);
+    private static final TrackedData<Boolean> IN_FREEZE = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
     protected Set<Element.Entry> elements = new HashSet<>();
     private int healTick = 0;
     private float health;
@@ -135,6 +139,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         entity.getDataTracker().startTracking(IMMUNE_COOLDOWN, 0);
         entity.getDataTracker().startTracking(ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(elements));
         entity.getDataTracker().startTracking(EFFECT_ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(getEffectElements(entity)));
+        entity.getDataTracker().startTracking(IN_FREEZE, false);
     }
 
     @NotNull
@@ -159,7 +164,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     }
 
     @Inject(method = "dropLoot", at = @At("TAIL"))
-    public void dropLoot(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
+    public void dropFragment(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
         if (!entity.dropElementFragmentRandomly() || !causedByPlayer) {
             return;
@@ -174,6 +179,20 @@ public class LivingEntityMixin implements EWLivingEntity {
             if (item != null) {
                 entity.dropItem(item);
             }
+        }
+    }
+
+    @Inject(method = "dropLoot", at = @At("TAIL"))
+    public void dropGoldCoin(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (source.getAttacker() instanceof LivingEntity living && living.hasStatusEffect(EWEffects.ROBBERY)) {
+            StatusEffectInstance effect = living.getStatusEffect(EWEffects.ROBBERY);
+            if (effect != null) {
+                int amplifier = effect.getAmplifier();
+                entity.dropStack(new ItemStack(EWItems.GOLD_COIN, entity.getRandom().nextBetween(1, 3) * (amplifier + 1)));
+            }
+        } else if (source.getSource() instanceof GoldElementalEnergyBallEntity) {
+            entity.dropStack(new ItemStack(EWItems.GOLD_COIN, entity.getRandom().nextBetween(1, 3)));
         }
     }
 
@@ -203,6 +222,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         LivingEntity entity = (LivingEntity) (Object) this;
         entity.getDataTracker().set(ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(elements));
         entity.getDataTracker().set(EFFECT_ELEMENTS, new ItemStack(Items.PLAYER_HEAD).withElements(getEffectElements(entity)));
+        entity.getDataTracker().set(IN_FREEZE, entity.hasStatusEffect(EWEffects.FREEZE));
     }
 
     public void checkElement() {
@@ -373,10 +393,19 @@ public class LivingEntityMixin implements EWLivingEntity {
         return entries;
     }
 
-    @Inject(method = "damage", at = @At("HEAD"))
+    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     public void getHealth(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
         this.health = entity.getHealth();
+        if (entity instanceof Tameable tameable) {
+            LivingEntity owner = tameable.getOwner();
+            Entity attacker = source.getAttacker();
+            if (attacker instanceof LivingEntity living) {
+                if (living == owner && living.hasStatusEffect(EWEffects.NO_FRIENDLY_HURT)) {
+                    cir.setReturnValue(false);
+                }
+            }
+        }
     }
 
     @Inject(method = "tryUseTotem", at = @At("RETURN"), cancellable = true)
@@ -611,5 +640,17 @@ public class LivingEntityMixin implements EWLivingEntity {
         int size = entity.getElements().size();
         int size1 = Element.getSizeOf(element -> element.isSuitableFor(entity) && !element.isInvalid());
         return size >= size1;
+    }
+
+    @Override
+    public boolean isInFreeze() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        return entity.getDataTracker().get(IN_FREEZE);
+    }
+
+    @Override
+    public void setInFreeze(boolean inFreeze) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        entity.getDataTracker().set(IN_FREEZE, inFreeze);
     }
 }

@@ -5,9 +5,13 @@ import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWEffects;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWEntities;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
@@ -21,8 +25,8 @@ import java.util.List;
 
 public class DarknessElementalEnergyBallEntity extends AbstractElementalEnergyBallEntity {
 
-    private static final String ATTRACT_TICKS_KEY = "AttractTicks";
-    private int attractTicks = 0;
+    private static final String ATTRACT_TICK_KEY = "AttractTick";
+    private static final TrackedData<Integer> ATTRACT_TICK = DataTracker.registerData(DarknessElementalEnergyBallEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public DarknessElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> entityType, World world) {
         super(entityType, world);
@@ -38,11 +42,40 @@ public class DarknessElementalEnergyBallEntity extends AbstractElementalEnergyBa
     }
 
     @Override
+    protected void initDataTracker() {
+        super.initDataTracker();
+        this.dataTracker.startTracking(ATTRACT_TICK, 0);
+    }
+
+    public int getAttractTick() {
+        return this.dataTracker.get(ATTRACT_TICK);
+    }
+
+    public void setAttractTick(int ticks) {
+        this.dataTracker.set(ATTRACT_TICK, Math.max(ticks, 0));
+    }
+
+    @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        this.setVelocity(this.getVelocity().multiply(0.1));
-        forEachLivingEntity(10, entity -> 7.0f, LivingEntity::isAlive, this::addStatusEffects, false);
-        attractTicks = 10 * 20;
+        forEachLivingEntity(2.0f, this::addStatusEffects, false);
+        setVelocity();
+    }
+
+    private void setVelocity() {
+        if (!world.isClient) {
+            Vec3d vec3d = this.getVelocity().multiply(0.1);
+            this.setVelocity(vec3d);
+            this.setAttractTick(10 * 20);
+        }
+    }
+
+    @Override
+    protected void onBlockCollision(BlockState state) {
+        super.onBlockCollision(state);
+        if (this.getAttractTick() > 0 && !state.isAir()) {
+            this.setVelocity(Vec3d.ZERO);
+        }
     }
 
     @Override
@@ -65,17 +98,19 @@ public class DarknessElementalEnergyBallEntity extends AbstractElementalEnergyBa
     @Override
     public void tick() {
         super.tick();
-        if (attractTicks > 0) {
-            List<Entity> entities = world.getOtherEntities(this.getOwner(), this.getBoundingBox().expand(10), entity -> entity instanceof LivingEntity living && living.isAlive());
+        int tick = this.getAttractTick();
+        if (tick > 0) {
+            List<Entity> entities = world.getOtherEntities(this.getOwner(), this.getBoundingBox().expand((double) tick / 20), entity -> entity instanceof LivingEntity living && living.isAlive());
             for (Entity entity : entities) {
                 LivingEntity living = (LivingEntity) entity;
                 Vec3d vec3d = this.getPos().subtract(living.getPos()).normalize().multiply(0.05);
                 living.setVelocity(vec3d);
-                if (attractTicks % 20 == 0) {
+                if (tick % 20 == 0) {
                     living.damage(this.getDamageSources().magic(), 2.0f);
                 }
             }
-            if (--attractTicks <= 0) {
+            this.setAttractTick(--tick);
+            if (tick <= 0) {
                 this.world.createExplosion(getOwner(), this.getX(), this.getY(), this.getZ(), 3.0f, true, World.ExplosionSourceType.MOB);
                 this.discard();
             }
@@ -85,14 +120,14 @@ public class DarknessElementalEnergyBallEntity extends AbstractElementalEnergyBa
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
-        if (nbt.contains(ATTRACT_TICKS_KEY, NbtElement.INT_TYPE)) {
-            this.attractTicks = nbt.getInt(ATTRACT_TICKS_KEY);
+        if (nbt.contains(ATTRACT_TICK_KEY, NbtElement.INT_TYPE)) {
+            this.setAttractTick(nbt.getInt(ATTRACT_TICK_KEY));
         }
     }
 
     @Override
     protected void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
-        nbt.putInt(ATTRACT_TICKS_KEY, this.attractTicks);
+        nbt.putInt(ATTRACT_TICK_KEY, this.getAttractTick());
     }
 }

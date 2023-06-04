@@ -31,9 +31,8 @@ public class FreezeEffect extends StatusEffect {
     @Override
     public void onRemoved(LivingEntity entity, AttributeContainer attributes, int amplifier) {
         super.onRemoved(entity, attributes, amplifier);
-        if (entity.hasStatusEffect(EWEffects.FREEZING_RESISTANCE)) {
-            return;
+        if (!entity.hasStatusEffect(EWEffects.FREEZING_RESISTANCE)) {
+            entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZING_RESISTANCE, 10 * 20, amplifier, false, false, false));
         }
-        entity.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZING_RESISTANCE, 10 * 20, amplifier, false, false, false));
     }
 }

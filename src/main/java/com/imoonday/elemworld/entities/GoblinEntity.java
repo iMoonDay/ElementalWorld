@@ -209,7 +209,7 @@ public class GoblinEntity extends HostileEntity implements BaseElement {
         public boolean canStart() {
             if (mob.getTarget() == null) return false;
             double distance = mob.getTarget().getPos().distanceTo(mob.getPos());
-            return distance >= 1 && distance <= 3;
+            return distance >= 1 && distance <= 3 && mob.isOnGround();
         }
 
         @Override
@@ -222,7 +222,6 @@ public class GoblinEntity extends HostileEntity implements BaseElement {
                 return;
             }
 
-            // Stop current movement and prepare to jump
             mob.getNavigation().stop();
             mob.setJumping(true);
 
@@ -239,7 +238,6 @@ public class GoblinEntity extends HostileEntity implements BaseElement {
         @Override
         public void stop() {
             mob.setJumping(false);
-            this.cooldown = 0;
         }
 
         @Override
@@ -249,7 +247,6 @@ public class GoblinEntity extends HostileEntity implements BaseElement {
 
         @Override
         public void tick() {
-            // Check if the entity is in the air
             LivingEntity target = mob.getTarget();
             if (!mob.isOnGround()) {
                 if (target != null) {

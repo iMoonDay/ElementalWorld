@@ -3,11 +3,13 @@ package com.imoonday.elemworld.items.staffs;
 import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.entities.energy_balls.IceElementalEnergyBallEntity;
+import com.imoonday.elemworld.init.EWEffects;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
@@ -15,7 +17,7 @@ import java.util.Map;
 
 public class IceElementalStaffItem extends AbstractElementalStaffItem {
 
-    public IceElementalStaffItem(){
+    public IceElementalStaffItem() {
         super(192);
     }
 
@@ -31,16 +33,13 @@ public class IceElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     protected void addEffects(ItemStack stack, World world, LivingEntity user) {
-
-    }
-
-    @Override
-    protected SoundEvent getSoundEvent(boolean isSneaking) {
-        return null;
+        user.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZING_RESISTANCE, 15 * 20));
     }
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        lootables.put(EntityType.SNOW_GOLEM.getLootTableId(), 0.02f);
         return lootables;
     }
+
 }

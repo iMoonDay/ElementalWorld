@@ -1,6 +1,7 @@
 package com.imoonday.elemworld.entities;
 
 import com.imoonday.elemworld.elements.Element;
+import com.imoonday.elemworld.entities.energy_balls.DarknessElementalEnergyBallEntity;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -8,17 +9,17 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.AreaEffectCloudEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.potion.Potion;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.HitResult;
@@ -29,9 +30,7 @@ import net.minecraft.world.World;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
@@ -51,13 +50,13 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
 
     public AbstractElementalEnergyBallEntity(EntityType<? extends AbstractElementalEnergyBallEntity> type, LivingEntity owner, ItemStack staffStack, float speed) {
         this(type, owner.world);
-        this.staffStack = staffStack;
         this.refreshPositionAndAngles(owner.getX(), owner.getEyeY(), owner.getZ(), owner.getYaw(), owner.getPitch());
         this.refreshPosition();
         this.setOwner(owner);
         this.staffStack = staffStack.copy();
         this.setNoGravity(true);
         this.setVelocity(owner, owner.getPitch(), owner.getYaw(), 0f, speed, 1.0f);
+        this.setGlowing(true);
     }
 
     @Override
@@ -82,7 +81,7 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
             return;
         }
         super.tick();
-        if ((hitResult = ProjectileUtil.getCollision(this, entity1 -> canHit(entity1) && entity1 != owner)).getType() != HitResult.Type.MISS && !collided) {
+        if ((hitResult = ProjectileUtil.getCollision(this, entity1 -> canHit(entity1) && entity1 != owner)).getType() != HitResult.Type.MISS && !collided && shouldCollide(hitResult)) {
             this.onCollision(hitResult);
             this.collided = true;
         }
@@ -93,6 +92,10 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
         if (this.age % 20 == 0 || this.isTouchingWater()) {
             this.setVelocity(vec3d.multiply(0.95));
         }
+    }
+
+    protected boolean shouldCollide(HitResult hitResult) {
+        return true;
     }
 
     protected int discardAge() {
@@ -142,36 +145,61 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
     }
 
     /**
+     * @param damage               Damage taken by each entity
+     * @param livingEntityConsumer Operations on each living entity
+     * @param particleAndSound     Add particles and play sound
+     */
+    protected void forEachLivingEntity(float damage, Consumer<LivingEntity> livingEntityConsumer, boolean particleAndSound) {
+        forEachLivingEntity(10, damage, living -> (!(living instanceof Tameable tameable) || this.getOwner() != tameable.getOwner()) && living.isAlive(), livingEntityConsumer, particleAndSound);
+    }
+
+    /**
      * @param range                Max distance from entity to this
-     * @param damageFunc           Damage taken by each entity
+     * @param damage               Damage taken by each entity
      * @param predicate            Effective entity conditions
      * @param livingEntityConsumer Operations on each living entity
-     * @param particleAndSound Add particles and play sound
+     * @param particleAndSound     Add particles and play sound
      */
-    protected void forEachLivingEntity(double range, Function<LivingEntity, Float> damageFunc, Predicate<LivingEntity> predicate, Consumer<LivingEntity> livingEntityConsumer, boolean particleAndSound) {
+    protected void forEachLivingEntity(double range, float damage, Predicate<LivingEntity> predicate, Consumer<LivingEntity> livingEntityConsumer, boolean particleAndSound) {
         if (!world.isClient) {
             Entity owner = getOwner();
-            List<Entity> entities = world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && predicate.test(living));
-            for (Entity entity : entities) {
-                LivingEntity livingEntity = (LivingEntity) entity;
-                float amount = damageFunc.apply(livingEntity);
-                if (amount > 0) {
-                    livingEntity.damage(owner != null ? owner.getDamageSources().indirectMagic(this, owner) : this.getDamageSources().magic(), amount);
-                } else if (amount < 0) {
-                    livingEntity.heal(amount);
-                }
-                livingEntityConsumer.accept(livingEntity);
-            }
+            world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && predicate.test(living))
+                    .stream().map(entity -> (LivingEntity) entity)
+                    .sorted((o1, o2) -> (int) (o1.getPos().distanceTo(this.getPos()) - o2.getPos().distanceTo(this.getPos())))
+                    .forEach(livingEntity -> {
+                        handleDamage(damage, owner, livingEntity);
+                        livingEntityConsumer.accept(livingEntity);
+                    });
         }
         if (particleAndSound) {
-            this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY(), this.getZ(), 1.0, 0, 0);
-            this.world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.VOICE);
+            addParticleAndPlaySound();
         }
     }
 
-    private void spawnAreaEffectCloudEntity(Entity entity, float radius, int waitTime) {
+    protected void addParticleAndPlaySound() {
+        this.world.addParticle(getParticleType(), true, this.getX(), this.getY(), this.getZ(), 1.0, 0, 0);
+        this.world.playSound(null, this.getBlockPos(), getSoundEvent(), SoundCategory.VOICE);
+    }
+
+    protected SoundEvent getSoundEvent() {
+        return SoundEvents.ENTITY_GENERIC_EXPLODE;
+    }
+
+    protected ParticleEffect getParticleType() {
+        return ParticleTypes.EXPLOSION_EMITTER;
+    }
+
+    protected void handleDamage(float damage, Entity owner, LivingEntity livingEntity) {
+        if (damage > 0) {
+            livingEntity.damage(owner != null ? owner.getDamageSources().indirectMagic(this, owner) : this.getDamageSources().magic(), damage);
+        } else if (damage < 0) {
+            livingEntity.heal(damage);
+        }
+    }
+
+    protected void spawnAreaEffectCloudEntity(float radius, int waitTime, Potion potion, double x, double y, double z, int color) {
         if (!this.world.isClient) {
-            AreaEffectCloudEntity areaEffectCloudEntity = new AreaEffectCloudEntity(this.world, entity.getX(), entity.getY(), entity.getZ());
+            AreaEffectCloudEntity areaEffectCloudEntity = new AreaEffectCloudEntity(this.world, x, y, z);
             if (getOwner() instanceof LivingEntity living) {
                 areaEffectCloudEntity.setOwner(living);
             }
@@ -179,7 +207,8 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
             areaEffectCloudEntity.setRadiusOnUse(-0.5f);
             areaEffectCloudEntity.setWaitTime(waitTime);
             areaEffectCloudEntity.setRadiusGrowth(-areaEffectCloudEntity.getRadius() / (float) areaEffectCloudEntity.getDuration());
-            areaEffectCloudEntity.setPotion(this.getElement().getElementPotion());
+            areaEffectCloudEntity.setPotion(potion);
+            areaEffectCloudEntity.setColor(color);
             this.world.spawnEntity(areaEffectCloudEntity);
         }
     }
@@ -210,6 +239,11 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
         public void render(T entity, float yaw, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
             matrixStack.push();
             matrixStack.scale(1.5f, 1.5f, 1.5f);
+            if (entity instanceof DarknessElementalEnergyBallEntity darkness && darkness.collided) {
+                int tick = darkness.getAttractTick();
+                float scale = tick / 10.0f;
+                matrixStack.scale(scale, scale, scale);
+            }
             matrixStack.multiply(this.dispatcher.getRotation());
             matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));
             MatrixStack.Entry entry = matrixStack.peek();

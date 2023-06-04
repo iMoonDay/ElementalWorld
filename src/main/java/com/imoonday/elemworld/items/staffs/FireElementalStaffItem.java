@@ -10,8 +10,6 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootTables;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
@@ -39,13 +37,9 @@ public class FireElementalStaffItem extends AbstractElementalStaffItem {
     }
 
     @Override
-    protected SoundEvent getSoundEvent(boolean isSneaking) {
-        return isSneaking ? SoundEvents.ENTITY_GENERIC_DRINK : SoundEvents.ENTITY_FIREWORK_ROCKET_SHOOT;
-    }
-
-    @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
         lootables.put(LootTables.NETHER_BRIDGE_CHEST, 0.05f);
         return lootables;
     }
+
 }
