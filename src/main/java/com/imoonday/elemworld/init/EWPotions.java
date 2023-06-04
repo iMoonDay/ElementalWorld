@@ -32,6 +32,7 @@ public class EWPotions {
     public static final Potion PERSPECTIVE = registerPotion("perspective", EWEffects.PERSPECTIVE);
     public static final Potion ROBBERY = registerPotion("robbery", EWEffects.ROBBERY);
     public static final Potion NO_FRIENDLY_HURT = registerPotion("no_friendly_hurt", EWEffects.NO_FRIENDLY_HURT);
+    public static final Potion LIGHT_FEARING = registerPotion("light_fearing", EWEffects.LIGHT_FEARING);
 
     public static void register() {
         LOGGER.info("Loading Potions");

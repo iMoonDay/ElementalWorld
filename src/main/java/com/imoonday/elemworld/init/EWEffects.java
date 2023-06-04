@@ -18,6 +18,7 @@ public class EWEffects {
     public static final StatusEffect PERSPECTIVE = register("perspective", new PerspectiveEffect(), "Perspective", "透视");
     public static final StatusEffect ROBBERY = register("robbery", new RobberyEffect(), "Robbery", "抢劫");
     public static final StatusEffect NO_FRIENDLY_HURT = register("no_friendly_hurt", new NoFriendlyHurtEffect(), "No Friendly Hurt", "友伤消除");
+    public static final StatusEffect LIGHT_FEARING = register("light_fearing", new LightFearingEffect(), "Light Fearing", "惧光");
 
     public static void register() {
         LOGGER.info("Loading Effects");

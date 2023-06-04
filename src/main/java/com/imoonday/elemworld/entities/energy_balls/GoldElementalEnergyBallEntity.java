@@ -4,6 +4,8 @@ import com.imoonday.elemworld.elements.Element;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWEntities;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -11,8 +13,10 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -37,6 +41,26 @@ public class GoldElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
         forEachLivingEntity(5.0f, this::spawnParticlesAndAddEffects, false);
+        spawnGoldOres();
+    }
+
+    private void spawnGoldOres() {
+        if (world.isClient) {
+            return;
+        }
+        int count = 0;
+        int max = this.random.nextBetween(4, 8);
+        for (int i = -5; i <= 5; i++) {
+            for (int j = -5; j <= 5; j++) {
+                for (int k = -5; k <= 5; k++) {
+                    BlockPos pos = this.getBlockPos().add(i, j, k);
+                    boolean replaceable = world.getBlockState(pos).isIn(BlockTags.STONE_ORE_REPLACEABLES);
+                    if (replaceable && count++ < max) {
+                        world.setBlockState(pos, Blocks.GOLD_ORE.getDefaultState(), Block.NOTIFY_LISTENERS);
+                    }
+                }
+            }
+        }
     }
 
     private void spawnParticlesAndAddEffects(LivingEntity entity) {

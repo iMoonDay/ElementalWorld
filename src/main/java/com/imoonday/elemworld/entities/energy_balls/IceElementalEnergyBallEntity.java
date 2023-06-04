@@ -9,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
@@ -38,6 +39,22 @@ public class IceElementalEnergyBallEntity extends AbstractElementalEnergyBallEnt
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
         forEachLivingEntity(3.0f, this::addStatusEffects, true);
+        spawnPackedIce();
+    }
+
+    private void spawnPackedIce() {
+        if (world.isClient) {
+            return;
+        }
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                for (int k = -1; k <= 1; k++) {
+                    FallingBlockEntity fallingBlock = FallingBlockEntity.spawnFromBlock(world, this.getBlockPos().up(3).add(i, j, k), Blocks.PACKED_ICE.getDefaultState());
+                    fallingBlock.setHurtEntities(3.0f, 6);
+                    fallingBlock.setVelocity(random.nextDouble() * 2 - 1, random.nextDouble() * 0.5 + 0.5, random.nextDouble() * 2 - 1);
+                }
+            }
+        }
     }
 
     @Override
@@ -51,7 +68,9 @@ public class IceElementalEnergyBallEntity extends AbstractElementalEnergyBallEnt
     }
 
     private void addStatusEffects(LivingEntity living) {
-        living.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, 15 * 20));
+        if (!living.hasStatusEffect(EWEffects.FREEZE)) {
+            living.addStatusEffect(new StatusEffectInstance(EWEffects.FREEZE, 15 * 20));
+        }
     }
 
     @Override
@@ -66,4 +85,5 @@ public class IceElementalEnergyBallEntity extends AbstractElementalEnergyBallEnt
                 .filter(pos -> world.getBlockState(pos).isOf(Blocks.WATER))
                 .forEach(pos -> world.setBlockState(pos, Blocks.FROSTED_ICE.getDefaultState(), Block.NOTIFY_LISTENERS));
     }
+
 }
