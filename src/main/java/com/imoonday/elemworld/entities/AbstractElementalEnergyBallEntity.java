@@ -10,11 +10,13 @@ import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.*;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.potion.Potion;
@@ -92,6 +94,7 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
         if (this.age % 20 == 0 || this.isTouchingWater()) {
             this.setVelocity(vec3d.multiply(0.95));
         }
+        this.world.addParticle(new DustParticleEffect(Vec3d.unpackRgb(this.getElement().getColor().getRGB()).toVector3f(), 255), true, this.getX(), this.getBoundingBox().getCenter().y, this.getZ(), 0, 0, 0);
     }
 
     protected boolean shouldCollide(HitResult hitResult) {
@@ -150,7 +153,7 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
      * @param particleAndSound     Add particles and play sound
      */
     protected void forEachLivingEntity(float damage, Consumer<LivingEntity> livingEntityConsumer, boolean particleAndSound) {
-        forEachLivingEntity(10, damage, living -> (!(living instanceof Tameable tameable) || this.getOwner() != tameable.getOwner()) && living.isAlive(), livingEntityConsumer, particleAndSound);
+        forEachLivingEntity(10, damage, this::defaultPredicate, livingEntityConsumer, particleAndSound);
     }
 
     /**
@@ -168,6 +171,7 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
                     .sorted((o1, o2) -> (int) (o1.getPos().distanceTo(this.getPos()) - o2.getPos().distanceTo(this.getPos())))
                     .forEach(livingEntity -> {
                         handleDamage(damage, owner, livingEntity);
+                        livingEntity.addStatusEffect(new StatusEffectInstance(this.getElement().getEffect(), 15 * 20));
                         livingEntityConsumer.accept(livingEntity);
                     });
         }
@@ -215,6 +219,10 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
 
     protected ItemStack getStaffStack() {
         return staffStack.copy();
+    }
+
+    public final boolean defaultPredicate(LivingEntity entity) {
+        return (!(entity instanceof Tameable tameable) || this.getOwner() != tameable.getOwner()) && entity.isAlive();
     }
 
     public static class EnergyBallEntityRenderer<T extends AbstractElementalEnergyBallEntity> extends EntityRenderer<T> {

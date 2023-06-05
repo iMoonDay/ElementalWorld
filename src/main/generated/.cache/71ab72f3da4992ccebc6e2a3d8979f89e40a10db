@@ -1,6 +1,6 @@
-// 1.19.4	2023-06-04T23:37:08.6393429	Elemental World/Model Definitions
-f5a0d3c60e5df596c9c09acd5b357780080673ac assets\elemworld\models\item\grass_element_fragment.json
+// 1.19.4	2023-06-05T15:04:00.0794471	Elemental World/Model Definitions
 a9bb9e2321537bbd00150d6f4a16f15e488fe18d assets\elemworld\models\item\element_sword.json
+f5a0d3c60e5df596c9c09acd5b357780080673ac assets\elemworld\models\item\grass_element_fragment.json
 da662c97144635b0fbc88244fca1f455508f901a assets\elemworld\models\item\sound_element_fragment.json
 c0c604ca13ebd3e517d15a5bf68e3249e0eb8308 assets\elemworld\models\item\time_elemental_staff.json
 fc874850688951574ec7c09c4db4e871dee84a14 assets\elemworld\models\item\space_element_fragment.json
@@ -34,8 +34,8 @@ d456494f1025c1cdd12d7cf033a79fc5d5749a0b assets\elemworld\models\item\water_elem
 8c1142213d1e832e0f6a1f453bba6f173b1796ba assets\elemworld\models\item\time_element_fragment.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets\elemworld\models\item\goblin_spawn_egg.json
 c5814bd55c3525480c66527d2209e4f4ee0df9bf assets\elemworld\models\item\ice_element_fragment.json
-77176390d4167c1feb16a18e5feb242d276edf7a assets\elemworld\models\item\water_elemental_staff.json
 87eb6c305fb0fab1ab94fbf5cdda7e051f9e4e5c assets\elemworld\models\item\ice_elemental_staff.json
+77176390d4167c1feb16a18e5feb242d276edf7a assets\elemworld\models\item\water_elemental_staff.json
 4ed1d8681a4389b2f19ed4d4f7cd79be6aba1624 assets\elemworld\models\item\element_smithing_table.json
 511491508c4c0c0cb5cfdd5947e113a1ee254aee assets\elemworld\models\item\gold_coin.json
 7a3e4c79b8ff6e7708a0c72b3fc5eaf01fdf5d57 assets\elemworld\models\item\element_ingot.json
@@ -45,7 +45,7 @@ f6905aaee43fd6c328761b74e58f55da85d9bcc0 assets\elemworld\models\item\base_eleme
 64d32ccda5f834547c72fbc8cc2d7e17c00040de assets\elemworld\models\item\wind_element_fragment.json
 9e8036c796460f78b1641f39243772884dca8cf2 assets\elemworld\models\item\wood_element_fragment.json
 6bc89fe8e1215faa9ff4d6f3c53c906f56ea3a60 assets\elemworld\models\item\thunder_elemental_staff.json
-7c64b1ebdf86f64ea42d827fafb65a53c1b985ad assets\elemworld\models\item\wind_elemental_staff.json
 6b47822cb2f655976f5dff8f40809a0bfbe9b2ff assets\elemworld\models\item\fire_element_fragment.json
+7c64b1ebdf86f64ea42d827fafb65a53c1b985ad assets\elemworld\models\item\wind_elemental_staff.json
 d648f74fd880bf8955b92e1b4be604f2aba66df2 assets\elemworld\blockstates\element_smithing_table.json
 b0cd44d98bcd9df66b03da6fea242f10bf08a0be assets\elemworld\models\item\element_stick.json

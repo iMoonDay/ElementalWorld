@@ -1,7 +1,6 @@
 package com.imoonday.elemworld.effects;
 
 import com.imoonday.elemworld.init.EWElements;
-import com.imoonday.elemworld.init.EWItems;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
@@ -9,9 +8,6 @@ import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
 import java.awt.*;
@@ -44,7 +40,7 @@ public class LightFearingEffect extends StatusEffect {
                     affected = false;
                 }
                 if (affected) {
-                    entity.setOnFireFor(8);
+                    entity.setOnFireFor(4 * (amplifier + 1));
                 }
             }
         }
@@ -52,6 +48,9 @@ public class LightFearingEffect extends StatusEffect {
 
     public static boolean isAffectedByDaylight(LivingEntity entity) {
         if (entity instanceof PlayerEntity player && (player.isCreative() || player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))) {
+            return false;
+        }
+        if (entity.hasElement(EWElements.LIGHT)) {
             return false;
         }
         if (entity.world.isDay() && !entity.world.isClient) {

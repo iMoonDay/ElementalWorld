@@ -43,14 +43,7 @@ public class DarknessElement extends Element {
 
     @Nullable
     private Float getMultiplier(World world, LivingEntity entity) {
-        long time = world.getTimeOfDay();
-        if (time < 1000 || time >= 13000) {
-            if (hasNoLight(world, entity)) {
-                return 2.0f;
-            }
-            return 1.0f;
-        }
-        return null;
+        return world.isNight() ? hasNoLight(world, entity) ? 2.0f : 1.0f : null;
     }
 
     private static boolean hasNoLight(World world, LivingEntity entity) {

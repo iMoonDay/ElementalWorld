@@ -32,14 +32,19 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 import static com.imoonday.elemworld.init.EWIdentifiers.id;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
-public class MeteoriteEntity extends Entity {
+public class MeteoriteEntity extends Entity implements Ownable {
 
     private static final TrackedData<Float> RADIUS = DataTracker.registerData(MeteoriteEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    @Nullable
+    private Entity owner;
 
     public MeteoriteEntity(EntityType<? extends MeteoriteEntity> type, World world) {
         super(type, world);
@@ -62,7 +67,7 @@ public class MeteoriteEntity extends Entity {
                     .peek(pos -> world.breakBlock(pos, this.getRadius() <= 50, this))
                     .count();
             if (this.shouldExplode(collideCount)) {
-                this.world.createExplosion(this, this.getX(), box.minY, this.getZ(), 2 + this.getRadius() * 2, true, World.ExplosionSourceType.TNT);
+                this.world.createExplosion(owner, this.getX(), box.minY, this.getZ(), 2 + this.getRadius() * 2, true, World.ExplosionSourceType.TNT);
                 this.discard();
             } else {
                 HitResult hitResult;
@@ -70,7 +75,7 @@ public class MeteoriteEntity extends Entity {
                     EntityHitResult result = (EntityHitResult) hitResult;
                     Entity entity = result.getEntity();
                     if (entity instanceof LivingEntity living) {
-                        living.damage(this.getDamageSources().inWall(), 2.0f);
+                        living.damage(Objects.requireNonNullElse(owner, this).getDamageSources().inWall(), 2.0f);
                     }
                 }
             }
@@ -142,6 +147,16 @@ public class MeteoriteEntity extends Entity {
                                     spawnMeteorite(context);
                                     return 0;
                                 }))));
+    }
+
+    @Nullable
+    @Override
+    public Entity getOwner() {
+        return owner;
+    }
+
+    public void setOwner(@Nullable Entity owner) {
+        this.owner = owner;
     }
 
     public static class Renderer extends EntityRenderer<MeteoriteEntity> {

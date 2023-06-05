@@ -8,6 +8,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.PiglinEntity;
 import net.minecraft.entity.mob.ZoglinEntity;
 import net.minecraft.entity.mob.ZombieEntity;
@@ -23,6 +25,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldEvents;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,7 +60,7 @@ public class GrassElementalEnergyBallEntity extends AbstractElementalEnergyBallE
 
     @Override
     protected SoundEvent getSoundEvent() {
-        return SoundEvents.ENTITY_TADPOLE_GROW_UP;
+        return SoundEvents.ENTITY_VILLAGER_CELEBRATE;
     }
 
     private void fertilizeOrGrass() {
@@ -82,9 +85,11 @@ public class GrassElementalEnergyBallEntity extends AbstractElementalEnergyBallE
         Collections.shuffle(list);
         for (BlockPos pos : list) {
             if (BoneMealItem.useOnFertilizable(new ItemStack(Items.BONE_MEAL), world, pos)) {
+                world.syncWorldEvent(WorldEvents.BONE_MEAL_USED, pos, 0);
                 count++;
             } else if (world.getBlockState(pos).isOf(Blocks.DIRT) && world.getBlockState(pos.up()).isAir()) {
                 world.setBlockState(pos, Blocks.GRASS_BLOCK.getDefaultState(), Block.NOTIFY_LISTENERS);
+                world.syncWorldEvent(WorldEvents.BONE_MEAL_USED, pos, 0);
                 count++;
             }
             if (count > 10) {
@@ -103,12 +108,12 @@ public class GrassElementalEnergyBallEntity extends AbstractElementalEnergyBallE
                 entity.setBaby(false);
             } else if (living instanceof PassiveEntity entity) {
                 entity.setBaby(false);
-            } else {
-                return;
             }
-            if (world instanceof ServerWorld serverWorld) {
-                serverWorld.spawnParticles(ParticleTypes.HEART, living.getX(), living.getY() + 1, living.getZ(), 10, 0, 1, 0, 1);
-            }
+        } else {
+            living.addStatusEffect(new StatusEffectInstance(StatusEffects.INSTANT_HEALTH, 1, 0));
+        }
+        if (world instanceof ServerWorld serverWorld) {
+            serverWorld.spawnParticles(ParticleTypes.HEART, living.getX(), living.getY() + 1, living.getZ(), 15, 0, 1, 0, 1);
         }
     }
 }

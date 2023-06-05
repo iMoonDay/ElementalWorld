@@ -21,6 +21,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class GoldElementalEnergyBallEntity extends AbstractElementalEnergyBallEntity {
 
@@ -48,18 +51,24 @@ public class GoldElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
         if (world.isClient) {
             return;
         }
-        int count = 0;
-        int max = this.random.nextBetween(4, 8);
-        for (int i = -5; i <= 5; i++) {
-            for (int j = -5; j <= 5; j++) {
-                for (int k = -5; k <= 5; k++) {
+        int size = 5;
+        List<BlockPos> list = new ArrayList<>();
+        for (int i = -size; i <= size; i++) {
+            for (int j = -size; j <= size; j++) {
+                for (int k = -size; k <= size; k++) {
                     BlockPos pos = this.getBlockPos().add(i, j, k);
                     boolean replaceable = world.getBlockState(pos).isIn(BlockTags.STONE_ORE_REPLACEABLES);
-                    if (replaceable && count++ < max) {
-                        world.setBlockState(pos, Blocks.GOLD_ORE.getDefaultState(), Block.NOTIFY_LISTENERS);
+                    if (replaceable) {
+                        list.add(pos);
                     }
                 }
             }
+        }
+        Collections.shuffle(list);
+        int max = Math.min(this.random.nextBetween(4, 8), list.size());
+        for (int i = 0; i < max; i++) {
+            BlockPos pos = list.get(i);
+            world.setBlockState(pos, Blocks.GOLD_ORE.getDefaultState(), Block.NOTIFY_LISTENERS);
         }
     }
 

@@ -48,11 +48,7 @@ public class LightElement extends Element {
 
     @Nullable
     private Float getMultiplier(World world) {
-        long time = world.getTimeOfDay();
-        if (time >= 1000 && time < 13000) {
-            return 0.5f;
-        }
-        return null;
+        return world.isDay() ? 0.5f : null;
     }
 
     @Override

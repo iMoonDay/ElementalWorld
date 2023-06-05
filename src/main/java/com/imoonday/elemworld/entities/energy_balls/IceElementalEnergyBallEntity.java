@@ -46,14 +46,10 @@ public class IceElementalEnergyBallEntity extends AbstractElementalEnergyBallEnt
         if (world.isClient) {
             return;
         }
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    FallingBlockEntity fallingBlock = FallingBlockEntity.spawnFromBlock(world, this.getBlockPos().up(3).add(i, j, k), Blocks.PACKED_ICE.getDefaultState());
-                    fallingBlock.setHurtEntities(3.0f, 6);
-                    fallingBlock.setVelocity(random.nextDouble() * 2 - 1, random.nextDouble() * 0.5 + 0.5, random.nextDouble() * 2 - 1);
-                }
-            }
+        for (int i = 0; i <= random.nextBetween(16, 32); i++) {
+            FallingBlockEntity fallingBlock = FallingBlockEntity.spawnFromBlock(world, this.getBlockPos().up(i), Blocks.PACKED_ICE.getDefaultState());
+            fallingBlock.setHurtEntities(3.0f, 20);
+            fallingBlock.setVelocity(random.nextDouble() * 2 - 1, random.nextDouble() * 0.5 + 0.5, random.nextDouble() * 2 - 1);
         }
     }
 
