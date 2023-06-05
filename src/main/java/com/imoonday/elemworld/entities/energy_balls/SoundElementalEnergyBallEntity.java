@@ -9,14 +9,20 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.event.EntityPositionSource;
+import net.minecraft.world.event.GameEvent;
+import net.minecraft.world.event.PositionSource;
+import net.minecraft.world.event.listener.GameEventListener;
 
 public class SoundElementalEnergyBallEntity extends AbstractElementalEnergyBallEntity {
 
@@ -36,13 +42,12 @@ public class SoundElementalEnergyBallEntity extends AbstractElementalEnergyBallE
     @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        forEachLivingEntity(10, 0, entity -> defaultPredicate(entity) && isMoving(entity), this::addStatusEffects, false);
+        forEachLivingEntity(16, 0, entity -> defaultPredicate(entity) && isMoving(entity), this::addStatusEffects, false);
+        //To do
     }
 
-    private boolean isMoving(LivingEntity entity){
-        //entity.getVelocity().length() > 0.0784000015258789
-        Vec3d vec3d = entity.getVelocity();
-        return Math.abs(vec3d.x) < 0.003 && Math.abs(vec3d.y) < 0.003 && Math.abs(vec3d.z) < 0.003;
+    private boolean isMoving(LivingEntity entity) {
+        return entity.getVelocity().length() > 0.0784000015258789 && !entity.isSneaking();
     }
 
     private void addStatusEffects(LivingEntity entity) {

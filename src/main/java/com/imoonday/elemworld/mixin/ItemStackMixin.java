@@ -251,21 +251,23 @@ public class ItemStackMixin implements EWItemStack {
         float maxHealth = stack.getMaxHealthMultiplier(player);
         float mine = stack.getMiningSpeedMultiplier(player);
         float durability = stack.getDurabilityMultiplier();
-        if (damage == 1.0f && maxHealth == 1.0f && mine == 1.0f && durability == 1.0f) {
-            return;
+        if (damage != 1.0f || maxHealth != 1.0f || mine != 1.0f || durability != 1.0f) {
+            list.add(index++, Text.translatable(ELEMENT_BUFFS, elements.size()).formatted(Formatting.GRAY));
+            if (damage != 1.0f) {
+                list.add(index++, Text.translatable(ELEMENT_DAMAGE, round(damage)).formatted(Formatting.DARK_GREEN));
+            }
+            if (maxHealth != 1.0f && (stack.getItem() instanceof Equipment || stack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof Equipment)) {
+                list.add(index++, Text.translatable(ELEMENT_MAX_HEALTH, round(maxHealth)).formatted(Formatting.BLUE));
+            }
+            if (mine != 1.0f) {
+                list.add(index++, Text.translatable(ELEMENT_MINING_SPEED, round(mine)).formatted(Formatting.RED));
+            }
+            if (durability != 1.0f) {
+                list.add(index++, Text.translatable(ELEMENT_DURABILITY, round(durability)).formatted(Formatting.WHITE));
+            }
         }
-        list.add(index++, Text.translatable(ELEMENT_BUFFS, elements.size()).formatted(Formatting.GRAY));
-        if (damage != 1.0f) {
-            list.add(index++, Text.translatable(ELEMENT_DAMAGE, round(damage)).formatted(Formatting.DARK_GREEN));
-        }
-        if (maxHealth != 1.0f && (stack.getItem() instanceof Equipment || stack.getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof Equipment)) {
-            list.add(index++, Text.translatable(ELEMENT_MAX_HEALTH, round(maxHealth)).formatted(Formatting.BLUE));
-        }
-        if (mine != 1.0f) {
-            list.add(index++, Text.translatable(ELEMENT_MINING_SPEED, round(mine)).formatted(Formatting.RED));
-        }
-        if (durability != 1.0f) {
-            list.add(index, Text.translatable(ELEMENT_DURABILITY, round(durability)).formatted(Formatting.WHITE));
+        if (stack.hasEnchantments()) {
+            list.add(index, Text.literal("------------").formatted(Formatting.GRAY));
         }
     }
 
