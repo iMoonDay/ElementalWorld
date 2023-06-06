@@ -56,14 +56,19 @@ public class EWEntities {
     public static final EntityType<WoodElementalEnergyBallEntity> WOOD_ELEMENTAL_ENERGY_BALL = registerEnergyBall(WoodElementalEnergyBallEntity::new);
 
     public static final EntityType<MeteoriteEntity> METEORITE = register("meteorite", FabricEntityTypeBuilder.<MeteoriteEntity>create(SpawnGroup.MISC, MeteoriteEntity::new).dimensions(EntityDimensions.fixed(0, 0)).trackRangeChunks(8).trackedUpdateRate(1).forceTrackedVelocityUpdates(true).build(), "Meteorite", "陨石");
-    public static final EntityModelLayer MODEL_METEORITE_LAYER = registerModelLayer("meteorite");
+    public static final EntityModelLayer METEORITE_MODEL_LAYER = registerModelLayer("meteorite");
 
     public static final EntityType<ElementalElfEntity> ELEMENTAL_ELF = ElementalElfEntity.register();
-    public static final EntityModelLayer MODEL_ELEMENTAL_ELF_LAYER = registerModelLayer("elemental_elf");
+    public static final EntityModelLayer ELEMENTAL_ELF_MODEL_LAYER = registerModelLayer("elemental_elf");
 
     public static final EntityType<GoblinEntity> GOBLIN = GoblinEntity.register();
+
     public static final EntityType<GoblinTraderEntity> GOBLIN_TRADER = GoblinTraderEntity.register();
+
     public static final EntityType<ApolloEntity> APOLLO = ApolloEntity.register();
+
+    public static final EntityType<SpatialCrackEntity> SPATIAL_CRACK = register("spatial_crack", FabricEntityTypeBuilder.<SpatialCrackEntity>create(SpawnGroup.MISC, SpatialCrackEntity::new).dimensions(EntityDimensions.fixed(0.75f, 1.75f)).build(), "Spatial Crack", "空间裂缝");
+    public static final EntityModelLayer SPATIAL_CRACK_MODEL_LAYER = registerModelLayer("spatial_crack");
 
     public static void register() {
         ElementalWorld.LOGGER.info("Loading Entities");
@@ -71,12 +76,14 @@ public class EWEntities {
 
     public static void registerClient() {
         ENERGY_BALLS.forEach((type, id) -> EntityRendererRegistry.register(type, ctx -> new AbstractElementalEnergyBallEntity.EnergyBallEntityRenderer<>(ctx, id)));
-        EntityModelLayerRegistry.registerModelLayer(MODEL_ELEMENTAL_ELF_LAYER, ElementalElfEntity.Model::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(ELEMENTAL_ELF_MODEL_LAYER, ElementalElfEntity.Model::getTexturedModelData);
         EntityRendererRegistry.register(ELEMENTAL_ELF, ElementalElfEntity.Renderer::new);
         EntityRendererRegistry.register(GOBLIN, GoblinEntity.Renderer::new);
         EntityRendererRegistry.register(GOBLIN_TRADER, GoblinTraderEntity.Renderer::new);
         EntityRendererRegistry.register(METEORITE, MeteoriteEntity.Renderer::new);
-        EntityModelLayerRegistry.registerModelLayer(MODEL_METEORITE_LAYER, MeteoriteEntity.Renderer::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(METEORITE_MODEL_LAYER, MeteoriteEntity.Renderer::getTexturedModelData);
+        EntityRendererRegistry.register(SPATIAL_CRACK, SpatialCrackEntity.Renderer::new);
+        EntityModelLayerRegistry.registerModelLayer(SPATIAL_CRACK_MODEL_LAYER, SpatialCrackEntity.Renderer::getTexturedModelData);
         ENTITIES_WITHOUT_RENDERER.forEach(entityType -> EntityRendererRegistry.register(entityType, ctx -> new EntityRenderer<Entity>(ctx) {
             @Override
             public Identifier getTexture(Entity entity) {

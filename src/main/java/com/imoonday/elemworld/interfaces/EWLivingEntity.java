@@ -100,4 +100,12 @@ public interface EWLivingEntity {
     default void setInFreeze(boolean inFreeze) {
 
     }
+
+    default boolean isImmuneFallDamage() {
+        return false;
+    }
+
+    default void setImmuneFallDamage(boolean immuneFallDamage) {
+
+    }
 }

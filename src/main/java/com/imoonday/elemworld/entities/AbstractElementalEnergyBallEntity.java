@@ -169,8 +169,8 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
             world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && predicate.test(living))
                     .stream().map(entity -> (LivingEntity) entity)
                     .sorted((o1, o2) -> (int) (o1.getPos().distanceTo(this.getPos()) - o2.getPos().distanceTo(this.getPos())))
+                    .filter(livingEntity -> handleDamage(damage, owner, livingEntity))
                     .forEach(livingEntity -> {
-                        handleDamage(damage, owner, livingEntity);
                         livingEntity.addStatusEffect(new StatusEffectInstance(this.getElement().getEffect(), 15 * 20));
                         livingEntityConsumer.accept(livingEntity);
                     });
@@ -193,12 +193,13 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
         return ParticleTypes.EXPLOSION_EMITTER;
     }
 
-    protected void handleDamage(float damage, Entity owner, LivingEntity livingEntity) {
+    protected boolean handleDamage(float damage, Entity owner, LivingEntity livingEntity) {
         if (damage > 0) {
             livingEntity.damage(owner != null ? owner.getDamageSources().indirectMagic(this, owner) : this.getDamageSources().magic(), damage);
         } else if (damage < 0) {
             livingEntity.heal(damage);
         }
+        return livingEntity.isAlive();
     }
 
     protected void spawnAreaEffectCloudEntity(float radius, int waitTime, Potion potion, double x, double y, double z, int color) {

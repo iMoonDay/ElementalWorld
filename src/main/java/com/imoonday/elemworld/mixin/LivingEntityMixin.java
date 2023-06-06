@@ -62,6 +62,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     protected Set<Element.Entry> elements = new HashSet<>();
     private int healTick = 0;
     private float health;
+    private boolean immuneFallDamage;
 
     @Override
     public Set<Element.Entry> getElements() {
@@ -357,6 +358,7 @@ public class LivingEntityMixin implements EWLivingEntity {
         nbt.put(ELEMENTS_KEY, getNbtList());
         nbt.putInt(HEAL_TICK_KEY, this.healTick);
         nbt.putInt(IMMUNE_COOLDOWN_KEY, getImmuneCooldown());
+        nbt.putBoolean("ImmuneFallDamage", this.immuneFallDamage);
     }
 
     @NotNull
@@ -376,6 +378,9 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
         if (nbt.contains(IMMUNE_COOLDOWN_KEY, NbtElement.INT_TYPE)) {
             setImmuneCooldown(nbt.getInt(IMMUNE_COOLDOWN_KEY));
+        }
+        if (nbt.contains("ImmuneFallDamage")) {
+            this.immuneFallDamage = nbt.getBoolean("ImmuneFallDamage");
         }
     }
 
@@ -405,6 +410,10 @@ public class LivingEntityMixin implements EWLivingEntity {
                     cir.setReturnValue(false);
                 }
             }
+        }
+        if (source.isIn(DamageTypeTags.IS_FALL) && this.immuneFallDamage) {
+            this.immuneFallDamage = false;
+            cir.setReturnValue(false);
         }
     }
 
@@ -652,5 +661,15 @@ public class LivingEntityMixin implements EWLivingEntity {
     public void setInFreeze(boolean inFreeze) {
         LivingEntity entity = (LivingEntity) (Object) this;
         entity.getDataTracker().set(IN_FREEZE, inFreeze);
+    }
+
+    @Override
+    public boolean isImmuneFallDamage() {
+        return immuneFallDamage;
+    }
+
+    @Override
+    public void setImmuneFallDamage(boolean immuneFallDamage) {
+        this.immuneFallDamage = immuneFallDamage;
     }
 }

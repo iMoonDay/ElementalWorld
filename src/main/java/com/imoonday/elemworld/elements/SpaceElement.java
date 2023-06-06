@@ -41,7 +41,7 @@ public class SpaceElement extends Element {
                     entity.world.setBlockState(pos, Blocks.AIR.getDefaultState());
                 }
             } else {
-                randomTeleport(entity);
+                randomTeleport(entity, 16.0);
                 entity.setVelocity(Vec3d.ZERO);
             }
             return 0.2f;
@@ -58,23 +58,23 @@ public class SpaceElement extends Element {
     @Override
     public boolean immuneDamageOnDeath(LivingEntity entity) {
         if (entity.getRandom().nextFloat() < 0.25f) {
-            randomTeleport(entity);
+            boolean teleport = randomTeleport(entity, 16);
             entity.world.sendEntityStatus(entity, EntityStatuses.USE_TOTEM_OF_UNDYING);
-            return true;
+            return teleport;
         }
         return super.immuneDamageOnDeath(entity);
     }
 
-    private static void randomTeleport(LivingEntity entity) {
+    public static boolean randomTeleport(LivingEntity entity, double range) {
         World world = entity.world;
         if (!world.isClient) {
             double d = entity.getX();
             double e = entity.getY();
             double f = entity.getZ();
             for (int i = 0; i < 16; ++i) {
-                double g = entity.getX() + (entity.getRandom().nextDouble() - 0.5) * 16.0;
-                double h = MathHelper.clamp(entity.getY() + (double) (entity.getRandom().nextInt(16) - 8), world.getBottomY(), world.getBottomY() + ((ServerWorld) world).getLogicalHeight() - 1);
-                double j = entity.getZ() + (entity.getRandom().nextDouble() - 0.5) * 16.0;
+                double g = entity.getX() + (entity.getRandom().nextDouble() - 0.5) * range * 2;
+                double h = MathHelper.clamp(entity.getY() + (entity.getRandom().nextInt((int) range) - range / 2), world.getBottomY(), world.getBottomY() + ((ServerWorld) world).getLogicalHeight() - 1);
+                double j = entity.getZ() + (entity.getRandom().nextDouble() - 0.5) * range * 2;
                 if (entity.hasVehicle()) {
                     entity.stopRiding();
                 }
@@ -84,9 +84,10 @@ public class SpaceElement extends Element {
                 SoundEvent soundEvent = entity instanceof FoxEntity ? SoundEvents.ENTITY_FOX_TELEPORT : SoundEvents.ENTITY_ENDERMAN_TELEPORT;
                 world.playSound(null, d, e, f, soundEvent, SoundCategory.PLAYERS, 1.0f, 1.0f);
                 entity.playSound(soundEvent, 1.0f, 1.0f);
-                break;
+                return true;
             }
         }
+        return false;
     }
 
     @Override

@@ -152,7 +152,7 @@ public class ElementalElfEntity extends PathAwareEntity {
     public static class Renderer extends MobEntityRenderer<ElementalElfEntity, Model> {
 
         public Renderer(EntityRendererFactory.Context context) {
-            super(context, new Model(context.getPart(EWEntities.MODEL_ELEMENTAL_ELF_LAYER)), 0.25f);
+            super(context, new Model(context.getPart(EWEntities.ELEMENTAL_ELF_MODEL_LAYER)), 0.25f);
         }
 
         @Override

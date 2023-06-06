@@ -167,7 +167,7 @@ public class MeteoriteEntity extends Entity implements Ownable {
 
         public Renderer(EntityRendererFactory.Context ctx) {
             super(ctx);
-            this.main = ctx.getPart(EWEntities.MODEL_METEORITE_LAYER);
+            this.main = ctx.getPart(EWEntities.METEORITE_MODEL_LAYER);
         }
 
         public static TexturedModelData getTexturedModelData() {
