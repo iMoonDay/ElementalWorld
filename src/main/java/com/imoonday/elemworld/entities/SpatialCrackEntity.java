@@ -56,12 +56,12 @@ public class SpatialCrackEntity extends Entity {
 
     public static void teleportRandomly(LivingEntity entity, int minDistance, int maxDistance) {
         World world = entity.getEntityWorld();
-        double distance = minDistance + ((maxDistance - minDistance) * world.random.nextDouble()); // 随机生成500到2000之间的距离
-        float direction = world.random.nextFloat() * 360; // 随机生成一个方向角度（0 ~ 359）
-        double x = entity.getPos().getX() + (distance * Math.sin(Math.toRadians(direction))); // 计算x坐标
-        double z = entity.getPos().getZ() + (distance * Math.cos(Math.toRadians(direction))); // 计算z坐标
-        entity.requestTeleport(x, 255, z);
+        double distance = minDistance + ((maxDistance - minDistance) * world.random.nextDouble());
+        float direction = world.random.nextFloat() * 360;
+        double x = entity.getPos().getX() + (distance * Math.sin(Math.toRadians(direction)));
+        double z = entity.getPos().getZ() + (distance * Math.cos(Math.toRadians(direction)));
         entity.setImmuneFallDamage(true);
+        entity.requestTeleport(x, 255, z);
     }
 
     @Override

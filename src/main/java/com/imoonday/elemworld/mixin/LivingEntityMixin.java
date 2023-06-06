@@ -215,8 +215,16 @@ public class LivingEntityMixin implements EWLivingEntity {
             addRandomElementsIfEmpty();
             removeEmptyElementIfNeeded();
             addRandomElementsToStackIfEmpty();
+            checkLanding();
         }
         checkElement();
+    }
+
+    private void checkLanding() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (this.immuneFallDamage && (entity.isOnGround() && entity.fallDistance <= 0 || entity.isSubmergedInWater())) {
+            this.immuneFallDamage = false;
+        }
     }
 
     private void updateDataTracker() {

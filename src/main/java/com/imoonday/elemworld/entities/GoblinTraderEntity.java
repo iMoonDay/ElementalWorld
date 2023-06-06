@@ -139,7 +139,7 @@ public class GoblinTraderEntity extends MerchantEntity implements BaseElement {
         this.goalSelector.add(1, new EscapeDangerGoal(this, 0.5));
         this.goalSelector.add(2, new StopFollowingCustomerGoal(this));
         this.goalSelector.add(3, new TemptGoal(this, 0.5, Ingredient.ofItems(EWItems.GOLD_COIN), false));
-        this.goalSelector.add(4, new FleeEntityGoal<>(this, PlayerEntity.class, 16.0F, 0.8D, 1.33D));
+        this.goalSelector.add(4, new FleeEntityGoal<>(this, PlayerEntity.class, 16.0F, 0.5, 0.8));
         this.goalSelector.add(5, new WanderAroundFarGoal(this, 0.25));
         this.goalSelector.add(6, new LookAtCustomerGoal(this));
         this.goalSelector.add(7, new GoToWalkTargetGoal(this, 0.6f));
