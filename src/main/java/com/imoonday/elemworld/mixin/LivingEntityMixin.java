@@ -64,6 +64,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     private int healTick = 0;
     private float health;
     private boolean immuneFallDamage;
+    private int backtrackTimes;
 
     @Override
     public Set<Element.Entry> getElements() {
@@ -217,23 +218,37 @@ public class LivingEntityMixin implements EWLivingEntity {
             removeEmptyElement();
             checkLanding();
             recordPos();
+            tickBacktrack();
         }
         checkElement();
     }
 
     private void recordPos() {
         LivingEntity entity = (LivingEntity) (Object) this;
-        if (this.posHistory.size() >= 60 * 20) {
-            this.posHistory.entrySet().stream()
-                    .min(Comparator.comparingLong(Map.Entry::getKey))
-                    .ifPresent(entry -> this.posHistory.remove(entry.getKey()));
+        if (!this.isBacktracking()) {
+            this.posHistory.put(entity.world.getTime(), entity.getPos());
         }
-        this.posHistory.put(entity.world.getTime(), entity.getPos());
+    }
+
+    @Override
+    public Optional<Map.Entry<Long, Vec3d>> getNewestPosEntry() {
+        return this.posHistory.entrySet().stream().max(Comparator.comparingLong(Map.Entry::getKey));
     }
 
     @Override
     public Map<Long, Vec3d> getPosHistory() {
         return posHistory;
+    }
+
+    @Override
+    public Optional<Vec3d> getPosOfTime(long time) {
+        return Optional.ofNullable(posHistory.get(time));
+    }
+
+    @Override
+    public Optional<Vec3d> getPosOfTimeBefore(long time) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        return entity.getPosOfTime(entity.world.getTime() - time);
     }
 
     private void checkLanding() {
@@ -692,5 +707,33 @@ public class LivingEntityMixin implements EWLivingEntity {
     @Override
     public void setImmuneFallDamage(boolean immuneFallDamage) {
         this.immuneFallDamage = immuneFallDamage;
+    }
+
+    @Override
+    public boolean isBacktracking() {
+        return backtrackTimes > 0;
+    }
+
+    @Override
+    public int getBacktrackTimes() {
+        return backtrackTimes;
+    }
+
+    @Override
+    public void setBacktracking(int times) {
+        this.backtrackTimes = times;
+    }
+
+    public void tickBacktrack() {
+        if (!this.isBacktracking()) {
+            return;
+        }
+        LivingEntity entity = (LivingEntity) (Object) this;
+        this.getNewestPosEntry().ifPresentOrElse(entry -> {
+            Vec3d vec3d = entry.getValue();
+            entity.requestTeleport(vec3d.x, vec3d.y, vec3d.z);
+            this.posHistory.remove(entry.getKey());
+            this.backtrackTimes--;
+        }, () -> this.backtrackTimes = 0);
     }
 }

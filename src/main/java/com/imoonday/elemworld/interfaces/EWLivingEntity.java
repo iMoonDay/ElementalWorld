@@ -51,8 +51,20 @@ public interface EWLivingEntity {
         return true;
     }
 
+    default Optional<Map.Entry<Long, Vec3d>> getNewestPosEntry() {
+        return Optional.empty();
+    }
+
     default Map<Long, Vec3d> getPosHistory() {
         return new HashMap<>();
+    }
+
+    default Optional<Vec3d> getPosOfTime(long time) {
+        return Optional.empty();
+    }
+
+    default Optional<Vec3d> getPosOfTimeBefore(long time) {
+        return Optional.empty();
     }
 
     default double getSpeed() {
@@ -108,6 +120,18 @@ public interface EWLivingEntity {
     }
 
     default void setImmuneFallDamage(boolean immuneFallDamage) {
+
+    }
+
+    default boolean isBacktracking() {
+        return false;
+    }
+
+    default int getBacktrackTimes() {
+        return 0;
+    }
+
+    default void setBacktracking(int times) {
 
     }
 }
