@@ -14,7 +14,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
-import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.EmptyEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.data.client.Model;
 import net.minecraft.entity.*;
@@ -84,12 +84,7 @@ public class EWEntities {
         EntityModelLayerRegistry.registerModelLayer(METEORITE_MODEL_LAYER, MeteoriteEntity.Renderer::getTexturedModelData);
         EntityRendererRegistry.register(SPATIAL_CRACK, SpatialCrackEntity.Renderer::new);
         EntityModelLayerRegistry.registerModelLayer(SPATIAL_CRACK_MODEL_LAYER, SpatialCrackEntity.Renderer::getTexturedModelData);
-        ENTITIES_WITHOUT_RENDERER.forEach(entityType -> EntityRendererRegistry.register(entityType, ctx -> new EntityRenderer<Entity>(ctx) {
-            @Override
-            public Identifier getTexture(Entity entity) {
-                return null;
-            }
-        }));
+        ENTITIES_WITHOUT_RENDERER.forEach(entityType -> EntityRendererRegistry.register(entityType, EmptyEntityRenderer::new));
     }
 
     public static EntityModelLayer registerModelLayer(String id) {

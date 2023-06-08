@@ -1,11 +1,9 @@
 package com.imoonday.elemworld.interfaces;
 
 import com.imoonday.elemworld.elements.Element;
+import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public interface EWLivingEntity {
 
@@ -51,6 +49,10 @@ public interface EWLivingEntity {
 
     default boolean dropElementFragmentRandomly() {
         return true;
+    }
+
+    default Map<Long, Vec3d> getPosHistory() {
+        return new HashMap<>();
     }
 
     default double getSpeed() {

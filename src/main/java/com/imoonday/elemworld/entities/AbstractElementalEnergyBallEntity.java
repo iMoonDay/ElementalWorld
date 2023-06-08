@@ -82,6 +82,9 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
             this.discard();
             return;
         }
+        if (this.getBlockY() > this.world.getTopY()) {
+            onSkyHeight();
+        }
         super.tick();
         if ((hitResult = ProjectileUtil.getCollision(this, entity1 -> canHit(entity1) && entity1 != owner)).getType() != HitResult.Type.MISS && !collided && shouldCollide(hitResult)) {
             this.onCollision(hitResult);
@@ -95,6 +98,9 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
             this.setVelocity(vec3d.multiply(0.95));
         }
         this.world.addParticle(new DustParticleEffect(Vec3d.unpackRgb(this.getElement().getColor().getRGB()).toVector3f(), 255), true, this.getX(), this.getBoundingBox().getCenter().y, this.getZ(), 0, 0, 0);
+    }
+
+    protected void onSkyHeight() {
     }
 
     protected boolean shouldCollide(HitResult hitResult) {

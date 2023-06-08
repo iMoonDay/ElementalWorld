@@ -67,8 +67,9 @@ public class SpaceElementalEnergyBallEntity extends AbstractElementalEnergyBallE
 
     private void spawnSpatialCrack() {
         if (!world.isClient) {
-            SpatialCrackEntity crack = new SpatialCrackEntity(world, this.getPos().add(0, 1, 0), 15 * 20);
+            SpatialCrackEntity crack = new SpatialCrackEntity(world, this.getPos().add(0, -0.25, 0), 15 * 20, 500, 2000);
             world.spawnEntity(crack);
+            world.playSound(null, this.getBlockPos(), SoundEvents.BLOCK_GLASS_PLACE, SoundCategory.BLOCKS);
         }
     }
 

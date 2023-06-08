@@ -5,6 +5,7 @@ import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWEntities;
 import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.interfaces.BaseElement;
+import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.client.model.ModelPart;
@@ -32,6 +33,7 @@ import net.minecraft.stat.Stats;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TradeOfferList;
 import net.minecraft.world.Heightmap;
@@ -106,15 +108,28 @@ public class GoblinTraderEntity extends MerchantEntity implements BaseElement {
             List<Item> list = new ArrayList<>(map.keySet());
             Collections.shuffle(list);
             Item item = list.get(0);
-            this.add(item, map.get(item));
+            if (item instanceof AbstractElementalStaffItem staffItem) {
+                Element element = staffItem.getBaseElement();
+                Item fragmentItem = element.getFragmentItem();
+                int count = MathHelper.clamp(random.nextBetween(11 * element.rareLevel, 22 * element.rareLevel), 1, 64);
+                this.add(new ItemStack(fragmentItem, count), new ItemStack(item, map.get(item)));
+            } else {
+                this.add(new ItemStack(item, map.get(item)));
+            }
             map.remove(item);
             f *= 0.75f;
         } while (this.random.nextFloat() < f);
     }
 
-    protected void add(Item sellItem, int count) {
+    protected void add(ItemStack sell) {
         if (this.offers != null) {
-            this.offers.add(new TradeOffer(new ItemStack(CURRENCY, getPrice()), new ItemStack(sellItem, count), BUY_USES, MAX_TRADES_PER_LEVEL, PRICE_MULTIPLIER));
+            this.offers.add(new TradeOffer(new ItemStack(CURRENCY, getPrice()), sell, BUY_USES, MAX_TRADES_PER_LEVEL, PRICE_MULTIPLIER));
+        }
+    }
+
+    protected void add(ItemStack buy, ItemStack sell) {
+        if (this.offers != null) {
+            this.offers.add(new TradeOffer(new ItemStack(CURRENCY, getPrice()), buy, sell, BUY_USES, MAX_TRADES_PER_LEVEL, PRICE_MULTIPLIER));
         }
     }
 

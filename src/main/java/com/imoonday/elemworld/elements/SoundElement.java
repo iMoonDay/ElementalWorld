@@ -55,7 +55,7 @@ public class SoundElement extends Element {
 
     @Override
     public void tick(LivingEntity entity) {
-        List<Entity> otherEntities = entity.world.getOtherEntities(entity, entity.getBoundingBox().expand(15), entity1 -> entity1 instanceof LivingEntity);
+        List<Entity> otherEntities = entity.world.getOtherEntities(entity, entity.getBoundingBox().expand(15), Entity::isLiving);
         for (Entity otherEntity : otherEntities) {
             if (otherEntity instanceof PlayerEntity) {
                 continue;

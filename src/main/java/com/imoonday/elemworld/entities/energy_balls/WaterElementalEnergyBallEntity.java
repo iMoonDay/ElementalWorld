@@ -7,6 +7,7 @@ import com.imoonday.elemworld.init.EWEntities;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
 
 public class WaterElementalEnergyBallEntity extends AbstractElementalEnergyBallEntity {
@@ -22,5 +23,10 @@ public class WaterElementalEnergyBallEntity extends AbstractElementalEnergyBallE
     @Override
     public Element getElement() {
         return EWElements.WATER;
+    }
+
+    @Override
+    protected void onCollision(HitResult hitResult) {
+        super.onCollision(hitResult);
     }
 }

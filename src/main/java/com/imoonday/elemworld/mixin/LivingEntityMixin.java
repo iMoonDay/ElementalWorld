@@ -59,6 +59,7 @@ public class LivingEntityMixin implements EWLivingEntity {
     private static final TrackedData<ItemStack> ELEMENTS = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.ITEM_STACK);
     private static final TrackedData<ItemStack> EFFECT_ELEMENTS = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.ITEM_STACK);
     private static final TrackedData<Boolean> IN_FREEZE = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
+    private final Map<Long, Vec3d> posHistory = new TreeMap<>();
     protected Set<Element.Entry> elements = new HashSet<>();
     private int healTick = 0;
     private float health;
@@ -213,11 +214,26 @@ public class LivingEntityMixin implements EWLivingEntity {
             updateDataTracker();
             onElementChanged();
             addRandomElementsIfEmpty();
-            removeEmptyElementIfNeeded();
-            addRandomElementsToStackIfEmpty();
+            removeEmptyElement();
             checkLanding();
+            recordPos();
         }
         checkElement();
+    }
+
+    private void recordPos() {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        if (this.posHistory.size() >= 60 * 20) {
+            this.posHistory.entrySet().stream()
+                    .min(Comparator.comparingLong(Map.Entry::getKey))
+                    .ifPresent(entry -> this.posHistory.remove(entry.getKey()));
+        }
+        this.posHistory.put(entity.world.getTime(), entity.getPos());
+    }
+
+    @Override
+    public Map<Long, Vec3d> getPosHistory() {
+        return posHistory;
     }
 
     private void checkLanding() {
@@ -333,19 +349,10 @@ public class LivingEntityMixin implements EWLivingEntity {
     }
 
     private void addRandomElementsIfEmpty() {
+        LivingEntity entity = (LivingEntity) (Object) this;
         if (hasSuitableElement() && this.elements.isEmpty()) {
             addRandomElements();
         }
-    }
-
-    private void removeEmptyElementIfNeeded() {
-        if (this.elements.size() > 1) {
-            this.elements.removeIf(entry -> entry.element().isInvalid());
-        }
-    }
-
-    private void addRandomElementsToStackIfEmpty() {
-        LivingEntity entity = (LivingEntity) (Object) this;
         ArrayList<ItemStack> stacks = new ArrayList<>();
         for (ItemStack stack : entity.getArmorItems()) {
             stacks.add(stack);
@@ -353,6 +360,12 @@ public class LivingEntityMixin implements EWLivingEntity {
         stacks.add(entity.getMainHandStack());
         stacks.add(entity.getOffHandStack());
         stacks.forEach(EWItemStack::checkElement);
+    }
+
+    private void removeEmptyElement() {
+        if (this.elements.size() > 1) {
+            this.elements.removeIf(entry -> entry.element().isInvalid());
+        }
     }
 
     public boolean hasSuitableElement() {
