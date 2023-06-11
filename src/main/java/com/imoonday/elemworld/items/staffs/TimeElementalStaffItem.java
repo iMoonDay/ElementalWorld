@@ -9,14 +9,14 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class TimeElementalStaffItem extends AbstractElementalStaffItem {
 
-    public TimeElementalStaffItem(){
+    public TimeElementalStaffItem() {
         super(128);
     }
 
@@ -37,8 +37,15 @@ public class TimeElementalStaffItem extends AbstractElementalStaffItem {
     }
 
     @Override
-    public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+    protected Map<Predicate<LivingEntity>, ItemStack[]> addLootables(Map<Predicate<LivingEntity>, ItemStack[]> lootables) {
+        lootables.put(this::randomTime, new ItemStack[]{new ItemStack(this)});
         return lootables;
     }
 
+    private boolean randomTime(LivingEntity entity) {
+        World world = entity.world;
+        long time = world.getTimeOfDay();
+        float chance = (1000 - time % 1000) / 20000.0f;
+        return world.random.nextFloat() < chance;
+    }
 }

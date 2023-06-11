@@ -5,6 +5,7 @@ import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.entities.energy_balls.WoodElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 public class WoodElementalStaffItem extends AbstractElementalStaffItem {
 
-    public WoodElementalStaffItem(){
+    public WoodElementalStaffItem() {
         super(64);
     }
 
@@ -37,6 +38,7 @@ public class WoodElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        lootables.put(Blocks.OAK_LOG.getLootTableId(), 0.00125f);
         return lootables;
     }
 

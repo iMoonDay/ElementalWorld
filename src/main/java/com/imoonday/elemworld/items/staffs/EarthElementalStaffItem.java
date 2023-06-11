@@ -39,7 +39,7 @@ public class EarthElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
-        lootables.put(LootTables.VILLAGE_DESERT_HOUSE_CHEST, 0.02f);
+        lootables.put(LootTables.VILLAGE_DESERT_HOUSE_CHEST, 0.002f);
         return lootables;
     }
 

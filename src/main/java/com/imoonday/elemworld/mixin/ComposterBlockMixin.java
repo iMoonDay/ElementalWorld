@@ -16,6 +16,6 @@ public class ComposterBlockMixin {
 
     @Inject(method = "emptyFullComposter", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;spawnEntity(Lnet/minecraft/entity/Entity;)Z", shift = At.Shift.AFTER))
     private static void spawnGrassElementalStaff(Entity user, BlockState state, World world, BlockPos pos, CallbackInfoReturnable<BlockState> cir) {
-        GrassElementalStaffItem.spawnGrassElementalStaff(world, pos);
+        GrassElementalStaffItem.trySpawnGrassElementalStaff(world, pos);
     }
 }

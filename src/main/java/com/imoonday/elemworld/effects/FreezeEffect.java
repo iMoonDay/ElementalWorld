@@ -6,7 +6,7 @@ import net.minecraft.entity.attribute.AttributeContainer;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.entity.effect.StatusEffects;
 
 import java.awt.*;
 
@@ -22,10 +22,9 @@ public class FreezeEffect extends StatusEffect {
 
     @Override
     public void applyUpdateEffect(LivingEntity entity, int amplifier) {
-        if (entity.isSpectator()) {
-            return;
+        if (!entity.isSpectator() && !entity.hasStatusEffect(EWEffects.FREEZING_RESISTANCE)) {
+            entity.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 2, 5));
         }
-        entity.setVelocity(Vec3d.ZERO);
     }
 
     @Override

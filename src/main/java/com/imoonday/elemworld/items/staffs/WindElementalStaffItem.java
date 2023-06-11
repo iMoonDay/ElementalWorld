@@ -5,6 +5,7 @@ import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.entities.energy_balls.WindElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -38,6 +39,7 @@ public class WindElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        lootables.put(EntityType.ALLAY.getLootTableId(), 0.002f);
         return lootables;
     }
 

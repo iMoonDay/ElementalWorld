@@ -11,7 +11,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundCategory;
@@ -20,6 +19,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
@@ -62,29 +62,29 @@ public class WaterElementalEnergyBallEntity extends AbstractElementalEnergyBallE
         if (world.isClient) {
             return;
         }
-        replaceBlocks(blockState -> blockState.isOf(Blocks.LAVA) && !blockState.getFluidState().isStill(), Blocks.STONE, true);
-        replaceBlocks(blockState -> blockState.getFluidState().isEqualAndStill(Fluids.LAVA), Blocks.OBSIDIAN, true);
-        replaceBlocks(blockState -> blockState.isOf(Blocks.WATER) && !blockState.getFluidState().isStill(), Blocks.WATER, false);
-        replaceBlocks(Blocks.FIRE, Blocks.WATER, true);
-        replaceBlocks(Blocks.PACKED_ICE, Blocks.BLUE_ICE, false);
-        replaceBlocks(Blocks.ICE, Blocks.PACKED_ICE, false);
-        replaceBlocks(Blocks.FROSTED_ICE, Blocks.ICE, false);
-        replaceBlocks(Blocks.SNOW_BLOCK, Blocks.FROSTED_ICE, false);
-        replaceBlocks(Blocks.SNOW, Blocks.SNOW_BLOCK, false);
+        replaceBlocks(blockState -> blockState.isOf(Blocks.LAVA) && !blockState.getFluidState().isStill(), Blocks.STONE, SoundEvents.BLOCK_FIRE_EXTINGUISH);
+        replaceBlocks(blockState -> blockState.getFluidState().isEqualAndStill(Fluids.LAVA), Blocks.OBSIDIAN, SoundEvents.BLOCK_FIRE_EXTINGUISH);
+        replaceBlocks(blockState -> blockState.isOf(Blocks.WATER) && !blockState.getFluidState().isStill(), Blocks.WATER, SoundEvents.ITEM_BUCKET_EMPTY);
+        replaceBlocks(Blocks.FIRE, Blocks.WATER, SoundEvents.BLOCK_FIRE_EXTINGUISH);
+        replaceBlocks(Blocks.PACKED_ICE, Blocks.BLUE_ICE, null);
+        replaceBlocks(Blocks.ICE, Blocks.PACKED_ICE, null);
+        replaceBlocks(Blocks.FROSTED_ICE, Blocks.ICE, null);
+        replaceBlocks(Blocks.SNOW_BLOCK, Blocks.FROSTED_ICE, null);
+        replaceBlocks(Blocks.SNOW, Blocks.SNOW_BLOCK, null);
     }
 
-    private void replaceBlocks(Predicate<BlockState> predicate, Block block, boolean playSound) {
+    private void replaceBlocks(Predicate<BlockState> predicate, Block block, @Nullable SoundEvent sound) {
         BlockPos.stream(this.getBoundingBox().expand(15))
                 .filter(blockPos -> predicate.test(world.getBlockState(blockPos)))
                 .forEach(blockPos -> {
                     world.setBlockState(blockPos, block.getDefaultState(), Block.NOTIFY_LISTENERS);
-                    if (playSound) {
-                        world.playSound(null, blockPos, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS);
+                    if (sound != null) {
+                        world.playSound(null, blockPos, sound, SoundCategory.BLOCKS);
                     }
                 });
     }
 
-    private void replaceBlocks(Block filter, Block block, boolean playSound) {
-        replaceBlocks(blockState -> blockState.isOf(filter), block, playSound);
+    private void replaceBlocks(Block filter, Block block, @Nullable SoundEvent sound) {
+        replaceBlocks(blockState -> blockState.isOf(filter), block, sound);
     }
 }

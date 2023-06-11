@@ -102,6 +102,7 @@ public class GoblinEntity extends HostileEntity implements BaseElement {
 
     @Override
     protected void dropLoot(DamageSource source, boolean causedByPlayer) {
+        super.dropLoot(source, causedByPlayer);
         if (causedByPlayer) {
             this.dropStack(new ItemStack(EWItems.GOLD_COIN, this.random.nextBetween(1, 3) + this.extraCoins));
         }

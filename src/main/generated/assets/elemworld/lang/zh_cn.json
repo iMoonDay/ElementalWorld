@@ -356,6 +356,7 @@
   "key.categories.elemworld": "元素世界",
   "key.elemworld.display": "打开元素界面",
   "key.elemworld.toggle_visibility": "切换生物元素显示",
+  "subtitles.elemworld.use_staff": "使用法杖",
   "text.elemworld.commands.add.fail": "添加失败(可能原因：已存在/不兼容)",
   "text.elemworld.commands.add.success": "添加成功",
   "text.elemworld.commands.add.success.empty": "但是添加空元素有什么意义呢？",

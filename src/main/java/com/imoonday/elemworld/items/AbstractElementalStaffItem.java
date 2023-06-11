@@ -1,7 +1,9 @@
 package com.imoonday.elemworld.items;
 
+import com.google.common.collect.ImmutableMap;
 import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWEnchantments;
+import com.imoonday.elemworld.init.EWSounds;
 import com.imoonday.elemworld.interfaces.BaseElement;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -19,9 +21,13 @@ import net.minecraft.util.UseAction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public abstract class AbstractElementalStaffItem extends Item implements BaseElement {
+
+    private static final Map<Predicate<LivingEntity>, ItemStack[]> LOOTABLES = new HashMap<>();
 
     public AbstractElementalStaffItem(int maxDamage) {
         this(new FabricItemSettings().maxCount(1).maxDamage(maxDamage));
@@ -111,10 +117,24 @@ public abstract class AbstractElementalStaffItem extends Item implements BaseEle
 
     @Nullable
     protected SoundEvent getSoundEvent(boolean isSneaking) {
-        return isSneaking ? SoundEvents.ENTITY_GENERIC_DRINK : SoundEvents.ENTITY_FIREWORK_ROCKET_SHOOT;
+        return isSneaking ? SoundEvents.ENTITY_GENERIC_DRINK : EWSounds.USE_STAFF;
     }
 
-    public abstract Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables);
+    public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        return new HashMap<>();
+    }
+
+    protected Map<Predicate<LivingEntity>, ItemStack[]> addLootables(Map<Predicate<LivingEntity>, ItemStack[]> lootables) {
+        return new HashMap<>();
+    }
+
+    public static ImmutableMap<Predicate<LivingEntity>, ItemStack[]> getLootables() {
+        return ImmutableMap.copyOf(LOOTABLES);
+    }
+
+    public static <T extends AbstractElementalStaffItem> void registerLootables(T staff) {
+        LOOTABLES.putAll(staff.addLootables(new HashMap<>()));
+    }
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {

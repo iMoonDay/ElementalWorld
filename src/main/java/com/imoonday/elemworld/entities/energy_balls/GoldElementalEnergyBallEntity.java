@@ -13,11 +13,15 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 
 import java.awt.*;
@@ -48,7 +52,7 @@ public class GoldElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
     }
 
     private void spawnGoldOres() {
-        if (world.isClient) {
+        if (!(world instanceof ServerWorld serverWorld)) {
             return;
         }
         int size = 5;
@@ -58,6 +62,7 @@ public class GoldElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
                 for (int k = -size; k <= size; k++) {
                     BlockPos pos = this.getBlockPos().add(i, j, k);
                     boolean replaceable = world.getBlockState(pos).isIn(BlockTags.STONE_ORE_REPLACEABLES);
+
                     if (replaceable) {
                         list.add(pos);
                     }
@@ -69,6 +74,9 @@ public class GoldElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
         for (int i = 0; i < max; i++) {
             BlockPos pos = list.get(i);
             world.setBlockState(pos, Blocks.GOLD_ORE.getDefaultState(), Block.NOTIFY_LISTENERS);
+            world.playSound(null, pos, SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.BLOCKS);
+            Vec3d centerPos = pos.toCenterPos();
+            serverWorld.spawnParticles(ParticleTypes.GLOW, centerPos.x, serverWorld.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()), centerPos.z, 15, 0, 1, 0, 1);
         }
     }
 

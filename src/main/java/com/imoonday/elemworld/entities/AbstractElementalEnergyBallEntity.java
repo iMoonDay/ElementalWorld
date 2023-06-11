@@ -29,6 +29,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
@@ -119,11 +120,11 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
 
     @Override
     protected boolean canHit(Entity entity) {
-        return super.canHit(entity) && !entity.noClip;
+        return super.canHit(entity) && !entity.noClip && !(entity instanceof AbstractElementalEnergyBallEntity);
     }
 
     @Override
-    public boolean canHit() {
+    public boolean isImmuneToExplosion() {
         return true;
     }
 
@@ -174,7 +175,7 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
             Entity owner = getOwner();
             world.getOtherEntities(owner, this.getBoundingBox().expand(range), entity -> entity instanceof LivingEntity living && predicate.test(living))
                     .stream().map(entity -> (LivingEntity) entity)
-                    .sorted((o1, o2) -> (int) (o1.getPos().distanceTo(this.getPos()) - o2.getPos().distanceTo(this.getPos())))
+                    .sorted((o1, o2) -> (int) ((o1.distanceTo(this) - o2.distanceTo(this)) * 1000))
                     .filter(livingEntity -> handleDamage(damage, owner, livingEntity))
                     .forEach(livingEntity -> {
                         livingEntity.addStatusEffect(new StatusEffectInstance(this.getElement().getEffect(), 15 * 20));
@@ -187,14 +188,22 @@ public abstract class AbstractElementalEnergyBallEntity extends ProjectileEntity
     }
 
     protected void addParticleAndPlaySound() {
-        this.world.addParticle(getParticleType(), true, this.getX(), this.getY(), this.getZ(), 1.0, 0, 0);
-        this.world.playSound(null, this.getBlockPos(), getSoundEvent(), SoundCategory.VOICE);
+        ParticleEffect particleType = getParticleType();
+        if (particleType != null) {
+            this.world.addParticle(particleType, true, this.getX(), this.getY(), this.getZ(), 1.0, 0, 0);
+        }
+        SoundEvent soundEvent = getSoundEvent();
+        if (soundEvent != null) {
+            this.world.playSound(null, this.getBlockPos(), soundEvent, SoundCategory.VOICE);
+        }
     }
 
+    @Nullable
     protected SoundEvent getSoundEvent() {
         return SoundEvents.ENTITY_GENERIC_EXPLODE;
     }
 
+    @Nullable
     protected ParticleEffect getParticleType() {
         return ParticleTypes.EXPLOSION_EMITTER;
     }

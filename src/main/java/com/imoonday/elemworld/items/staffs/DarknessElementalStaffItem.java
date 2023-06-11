@@ -40,7 +40,7 @@ public class DarknessElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
-        lootables.put(EntityType.WITHER.getLootTableId(), 0.5f);
+        lootables.put(EntityType.WITHER.getLootTableId(), 0.05f);
         return lootables;
     }
 

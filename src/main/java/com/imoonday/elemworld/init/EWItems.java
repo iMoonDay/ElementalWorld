@@ -125,6 +125,7 @@ public class EWItems {
 
     public static <T extends AbstractElementalStaffItem> T registerStaff(T item) {
         ELEMENTAL_STAFFS.add(item);
+        AbstractElementalStaffItem.registerLootables(item);
         Element element = item.getBaseElement();
         return register(element.getName() + "_elemental_staff", item, Models.HANDHELD, element.getTranslation().get() + " Elemental Staff", element.getTranslation().get("zh_cn") + "元素法杖", EWTags.ELEMENT_STAFFS);
     }

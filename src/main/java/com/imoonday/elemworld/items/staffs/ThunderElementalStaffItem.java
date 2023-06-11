@@ -8,15 +8,16 @@ import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class ThunderElementalStaffItem extends AbstractElementalStaffItem {
 
-    public ThunderElementalStaffItem(){
+    public ThunderElementalStaffItem() {
         super(64);
     }
 
@@ -36,8 +37,8 @@ public class ThunderElementalStaffItem extends AbstractElementalStaffItem {
     }
 
     @Override
-    public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+    protected Map<Predicate<LivingEntity>, ItemStack[]> addLootables(Map<Predicate<LivingEntity>, ItemStack[]> lootables) {
+        lootables.put(entity -> entity instanceof CreeperEntity creeper && creeper.shouldRenderOverlay() && creeper.getRandom().nextFloat() < 0.0125f, new ItemStack[]{new ItemStack(this)});
         return lootables;
     }
-
 }

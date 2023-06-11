@@ -134,10 +134,8 @@ public class GoblinTraderEntity extends MerchantEntity implements BaseElement {
     }
 
     protected int getPrice() {
-        double mean = 32;
-        double stdDev = 10;
-        double randomValue = this.random.nextGaussian() * stdDev + mean;
-        return (int) randomValue;
+        double randomValue = this.random.nextGaussian() * 10 + 32;
+        return (int) MathHelper.clamp(randomValue, 1, 64);
     }
 
     @Override
@@ -238,6 +236,7 @@ public class GoblinTraderEntity extends MerchantEntity implements BaseElement {
 
     @Override
     protected void dropLoot(DamageSource source, boolean causedByPlayer) {
+        super.dropLoot(source, causedByPlayer);
         if (causedByPlayer) {
             this.dropStack(new ItemStack(EWItems.GOLD_COIN, this.random.nextBetween(5, 10)));
         }

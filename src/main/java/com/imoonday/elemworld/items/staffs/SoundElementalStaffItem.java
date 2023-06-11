@@ -6,6 +6,7 @@ import com.imoonday.elemworld.entities.energy_balls.SoundElementalEnergyBallEnti
 import com.imoonday.elemworld.init.EWEffects;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
@@ -37,6 +38,7 @@ public class SoundElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        lootables.put(EntityType.WARDEN.getLootTableId(), 0.0075f);
         return lootables;
     }
 

@@ -32,14 +32,18 @@ public class TimeElementalEnergyBallEntity extends AbstractElementalEnergyBallEn
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
         forEachLivingEntity(3.0f, this::setBacktracking, true);
-        addTime(random.nextBetween(50, 100));
+        addTime(random.nextInt(200) - 100);
     }
 
     private void addTime(int time) {
         if (world instanceof ServerWorld serverWorld) {
             serverWorld.setTimeOfDay(serverWorld.getTimeOfDay() + time);
             if (this.getOwner() instanceof PlayerEntity player) {
-                player.sendMessage(Text.literal("时间 + " + time + " s"), true);
+                long timeOfDay = serverWorld.getTimeOfDay();
+                while (timeOfDay > 24000) {
+                    timeOfDay -= 24000;
+                }
+                player.sendMessage(Text.literal("时间 + " + time + " (" + timeOfDay + "/24000)"), true);
             }
         }
     }

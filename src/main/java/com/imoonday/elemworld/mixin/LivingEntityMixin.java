@@ -9,6 +9,7 @@ import com.imoonday.elemworld.init.EWItems;
 import com.imoonday.elemworld.interfaces.BaseElement;
 import com.imoonday.elemworld.interfaces.EWItemStack;
 import com.imoonday.elemworld.interfaces.EWLivingEntity;
+import com.imoonday.elemworld.items.AbstractElementalStaffItem;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
@@ -199,6 +200,15 @@ public class LivingEntityMixin implements EWLivingEntity {
         }
     }
 
+    @Inject(method = "dropLoot", at = @At("TAIL"))
+    public void dropStaff(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
+        LivingEntity entity = (LivingEntity) (Object) this;
+        AbstractElementalStaffItem.getLootables()
+                .entrySet().stream()
+                .filter(entry -> entry.getKey().test(entity))
+                .forEach(entry -> Arrays.asList(entry.getValue()).forEach(entity::dropStack));
+    }
+
     @Override
     public boolean dropElementFragmentRandomly() {
         LivingEntity entity = (LivingEntity) (Object) this;
@@ -209,9 +219,9 @@ public class LivingEntityMixin implements EWLivingEntity {
     public void tick(CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
         addPersistentStatusEffects();
-        addEffect();
         cooldownTick();
         if (!entity.world.isClient) {
+            addEffect();
             updateDataTracker();
             onElementChanged();
             addRandomElementsIfEmpty();

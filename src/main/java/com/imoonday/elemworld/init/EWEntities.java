@@ -84,6 +84,7 @@ public class EWEntities {
         EntityModelLayerRegistry.registerModelLayer(METEORITE_MODEL_LAYER, MeteoriteEntity.Renderer::getTexturedModelData);
         EntityRendererRegistry.register(SPATIAL_CRACK, SpatialCrackEntity.Renderer::new);
         EntityModelLayerRegistry.registerModelLayer(SPATIAL_CRACK_MODEL_LAYER, SpatialCrackEntity.Renderer::getTexturedModelData);
+        EntityRendererRegistry.register(APOLLO, ApolloEntity.Renderer::new);
         ENTITIES_WITHOUT_RENDERER.forEach(entityType -> EntityRendererRegistry.register(entityType, EmptyEntityRenderer::new));
     }
 

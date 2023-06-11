@@ -20,10 +20,10 @@
   ],
   "client": [
     "AbstractClientPlayerEntityMixin",
-    "ClientPlayerEntityMixin",
     "EntityRenderDispatcherMixin",
     "HeldItemRendererMixin",
-    "InGameHudMixin"
+    "InGameHudMixin",
+    "LivingEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

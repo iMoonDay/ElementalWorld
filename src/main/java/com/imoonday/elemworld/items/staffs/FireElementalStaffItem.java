@@ -38,7 +38,7 @@ public class FireElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
-        lootables.put(LootTables.NETHER_BRIDGE_CHEST, 0.05f);
+        lootables.put(LootTables.NETHER_BRIDGE_CHEST, 0.005f);
         return lootables;
     }
 

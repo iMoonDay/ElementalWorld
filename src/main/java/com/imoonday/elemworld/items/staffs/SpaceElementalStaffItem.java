@@ -5,6 +5,7 @@ import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.entities.energy_balls.SpaceElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.items.AbstractElementalStaffItem;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 public class SpaceElementalStaffItem extends AbstractElementalStaffItem {
 
-    public SpaceElementalStaffItem(){
+    public SpaceElementalStaffItem() {
         super(192);
     }
 
@@ -38,6 +39,7 @@ public class SpaceElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        lootables.put(EntityType.ENDERMITE.getLootTableId(), 0.003f);
         return lootables;
     }
 

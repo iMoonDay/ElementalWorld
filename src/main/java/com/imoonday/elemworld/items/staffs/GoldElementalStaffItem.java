@@ -38,8 +38,7 @@ public class GoldElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
-        lootables.put(LootTables.DESERT_PYRAMID_CHEST, 0.05f);
+        lootables.put(LootTables.DESERT_PYRAMID_CHEST, 0.005f);
         return lootables;
     }
-
 }

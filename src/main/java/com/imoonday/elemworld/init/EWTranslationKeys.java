@@ -31,21 +31,21 @@ public class EWTranslationKeys {
     public static final String ELEMENT_INVALID = registerElementText("invalid", "Invalid element: %s", "无效的元素: %s");
     public static final String ELEMENT_NAME_PREFIX = registerElementText("name.prefix", "[Elements]", "[元素]");
     public static final String ELEMENT_FRAGMENT_NAME = registerElementText("name.fragment", "Element fragment", "元素碎片");
-    public static final String ELEMENT_NOT_GENERATED = registerElementText("not_generated","The element has not yet been generated","暂未生成元素");
-    public static final String ELEMENT_BUFFS = registerElementText("buffs","Element Buffs (%d):","元素增幅(%d)：");
-    public static final String ELEMENT_DAMAGE = registerElementText("damage","×%s Attack Damage", "×%s 攻击伤害");
-    public static final String ELEMENT_DAMAGE_BEHIND = registerElementText("damage_behind","Attack Damage × %s", "攻击伤害 × %s");
-    public static final String ELEMENT_MAX_HEALTH = registerElementText("max_health","×%s Max Health", "×%s 生命上限");
-    public static final String ELEMENT_MAX_HEALTH_BEHIND = registerElementText("max_health_behind","Max Health × %s", "生命上限 × %s");
-    public static final String ELEMENT_MINING_SPEED = registerElementText("mining_speed","×%s Mining Speed", "×%s 挖掘速度");
-    public static final String ELEMENT_DURABILITY = registerElementText("durability","×%s Durability", "×%s 耐久度");
-    public static final String ELEMENT_COUNT = registerElementText("count","Number of elements - %d", "元素个数 - %d");
+    public static final String ELEMENT_NOT_GENERATED = registerElementText("not_generated", "The element has not yet been generated", "暂未生成元素");
+    public static final String ELEMENT_BUFFS = registerElementText("buffs", "Element Buffs (%d):", "元素增幅(%d)：");
+    public static final String ELEMENT_DAMAGE = registerElementText("damage", "×%s Attack Damage", "×%s 攻击伤害");
+    public static final String ELEMENT_DAMAGE_BEHIND = registerElementText("damage_behind", "Attack Damage × %s", "攻击伤害 × %s");
+    public static final String ELEMENT_MAX_HEALTH = registerElementText("max_health", "×%s Max Health", "×%s 生命上限");
+    public static final String ELEMENT_MAX_HEALTH_BEHIND = registerElementText("max_health_behind", "Max Health × %s", "生命上限 × %s");
+    public static final String ELEMENT_MINING_SPEED = registerElementText("mining_speed", "×%s Mining Speed", "×%s 挖掘速度");
+    public static final String ELEMENT_DURABILITY = registerElementText("durability", "×%s Durability", "×%s 耐久度");
+    public static final String ELEMENT_COUNT = registerElementText("count", "Number of elements - %d", "元素个数 - %d");
 
     public static final String KEY_CATEGORY = register("key.categories.elemworld", "Elemental World", "元素世界");
     public static final String KEY_DISPLAY = register("key.elemworld.display", "Open the element screen", "打开元素界面");
     public static final String KEY_TOGGLE_VISIBILITY = register("key.elemworld.toggle_visibility", "Toggle the display of entities' elements", "切换生物元素显示");
 
-    public static final String GOLD_COIN_TOOLTIP = registerToolTip(EWItems.GOLD_COIN,"1", "Used to trade with goblin merchants", "用于与哥布林商人交易");
+    public static final String GOLD_COIN_TOOLTIP = registerToolTip(EWItems.GOLD_COIN, "1", "Used to trade with goblin merchants", "用于与哥布林商人交易");
 
     public static void register() {
         LOGGER.info("Loading Translations");

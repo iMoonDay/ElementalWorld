@@ -9,6 +9,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootTables;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
@@ -37,7 +38,7 @@ public class WaterElementalStaffItem extends AbstractElementalStaffItem {
 
     @Override
     public Map<Identifier, Float> getLootables(Map<Identifier, Float> lootables) {
+        lootables.put(LootTables.FISHING_TREASURE_GAMEPLAY, 0.0025f);
         return lootables;
     }
-
 }

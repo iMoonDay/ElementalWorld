@@ -356,6 +356,7 @@
   "key.categories.elemworld": "Elemental World",
   "key.elemworld.display": "Open the element screen",
   "key.elemworld.toggle_visibility": "Toggle the display of entities' elements",
+  "subtitles.elemworld.use_staff": "Use staff",
   "text.elemworld.commands.add.fail": "Add failed (possible cause: already existing/incompatible)",
   "text.elemworld.commands.add.success": "Add succeeded",
   "text.elemworld.commands.add.success.empty": "But what's the point of adding empty element?",

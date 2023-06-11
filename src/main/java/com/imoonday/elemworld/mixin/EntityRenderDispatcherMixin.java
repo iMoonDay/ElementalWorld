@@ -8,6 +8,7 @@ import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -15,31 +16,27 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.imoonday.elemworld.init.EWIdentifiers.id;
-
 @Mixin(EntityRenderDispatcher.class)
 public class EntityRenderDispatcherMixin {
 
-    @Shadow public Camera camera;
+    @Shadow
+    public Camera camera;
 
-    private static final SpriteIdentifier ICE_0 = new SpriteIdentifier(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE, id("block/ice_0"));
-    private static final SpriteIdentifier ICE_1 = new SpriteIdentifier(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE, id("block/ice_1"));
+    private static final SpriteIdentifier ICE = new SpriteIdentifier(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE, new Identifier("block/ice"));
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/EntityRenderer;render(Lnet/minecraft/entity/Entity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V"))
     public <E extends Entity> void render(E entity, double x, double y, double z, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         if (entity instanceof LivingEntity living && living.isInFreeze()) {
-            renderIce(matrices,vertexConsumers,entity);
+            renderIce(matrices, vertexConsumers, entity);
         }
     }
 
     private void renderIce(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Entity entity) {
-        Sprite sprite = ICE_0.getSprite();
-        Sprite sprite2 = ICE_1.getSprite();
+        Sprite sprite = ICE.getSprite();
         matrices.push();
-        float f = entity.getWidth() * 1.4f;
+        float f = entity.getWidth();
         matrices.scale(f, f, f);
         float g = 0.5f;
-        float h = 0.0f;
         float i = entity.getHeight() / f;
         float j = 0.0f;
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-this.camera.getYaw()));
@@ -49,11 +46,10 @@ public class EntityRenderDispatcherMixin {
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(TexturedRenderLayers.getEntityCutout());
         MatrixStack.Entry entry = matrices.peek();
         while (i > 0.0f) {
-            Sprite sprite3 = l % 2 == 0 ? sprite : sprite2;
-            float m = sprite3.getMinU();
-            float n = sprite3.getMinV();
-            float o = sprite3.getMaxU();
-            float p = sprite3.getMaxV();
+            float m = sprite.getMinU();
+            float n = sprite.getMinV();
+            float o = sprite.getMaxU();
+            float p = sprite.getMaxV();
             if (l / 2 % 2 == 0) {
                 float q = o;
                 o = m;

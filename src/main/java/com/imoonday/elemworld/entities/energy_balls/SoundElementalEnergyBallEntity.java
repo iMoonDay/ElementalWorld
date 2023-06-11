@@ -5,24 +5,20 @@ import com.imoonday.elemworld.entities.AbstractElementalEnergyBallEntity;
 import com.imoonday.elemworld.init.EWElements;
 import com.imoonday.elemworld.init.EWEntities;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LargeEntitySpawnHelper;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.event.EntityPositionSource;
-import net.minecraft.world.event.GameEvent;
-import net.minecraft.world.event.PositionSource;
-import net.minecraft.world.event.listener.GameEventListener;
 
 public class SoundElementalEnergyBallEntity extends AbstractElementalEnergyBallEntity {
 
@@ -43,11 +39,21 @@ public class SoundElementalEnergyBallEntity extends AbstractElementalEnergyBallE
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
         forEachLivingEntity(16, 0, entity -> defaultPredicate(entity) && isMoving(entity), this::addStatusEffects, false);
-        //To do
+        trySpawnWarden();
+    }
+
+    private void trySpawnWarden() {
+        if (!(world instanceof ServerWorld serverWorld)) {
+            return;
+        }
+        for (int i = 0; i < 5; i++) {
+            LargeEntitySpawnHelper.trySpawnAt(EntityType.WARDEN, SpawnReason.TRIGGERED, serverWorld, this.getBlockPos(), 20, 10, 10, LargeEntitySpawnHelper.Requirements.WARDEN);
+        }
     }
 
     private boolean isMoving(LivingEntity entity) {
-        return entity.getVelocity().length() > 0.0784000015258789 && !entity.isSneaking();
+        double length = entity.getVelocity().length();
+        return length != 0.0784000015258789 && length != 0 && !entity.isSneaking();
     }
 
     private void addStatusEffects(LivingEntity entity) {
